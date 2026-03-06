@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mental Edge — Assessment Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f4f2ee;
+  --surface: #ffffff;
+  --surface2: #f9f8f6;
+  --border: #e2ddd7;
+  --border2: #ccc8c0;
+  --accent: #1a56db;
+  --accent-light: #e8edfc;
+  --accent2: #0f3db5;
+  --green: #16a34a;
+  --green-light: #dcfce7;
+  --red: #dc2626;
+  --red-light: #fee2e2;
+  --yellow: #ca8a04;
+  --yellow-light: #fef9c3;
+  --text: #1a1916;
+  --text2: #4a4740;
+  --muted: #9c9690;
+  --shadow: 0 1px 3px rgba(0,0,0,.07), 0 4px 16px rgba(0,0,0,.05);
+  --shadow-lg: 0 4px 24px rgba(0,0,0,.1);
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+/* ─── DASHBOARD ─── */
+#dashboard { display: block; }
+.dash-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 40px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.dash-logo { font-family: 'Instrument Serif', serif; font-size: 1.4rem; color: var(--text); }
+.dash-logo span { color: var(--accent); font-style: italic; }
+.dash-sub { font-size: .75rem; color: var(--muted); letter-spacing: .12em; text-transform: uppercase; font-weight: 500; }
+.dash-body { max-width: 1060px; margin: 0 auto; padding: 48px 32px 80px; }
+.dash-intro { margin-bottom: 40px; }
+.dash-intro h2 { font-family: 'Instrument Serif', serif; font-size: 2rem; font-weight: 400; margin-bottom: 6px; }
+.dash-intro p { color: var(--text2); font-size: .9rem; line-height: 1.6; }
+.games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 18px; }
+.game-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  cursor: pointer;
+  transition: box-shadow .2s, border-color .2s, transform .2s;
+}
+.game-card:hover { box-shadow: var(--shadow-lg); border-color: var(--border2); transform: translateY(-2px); }
+.card-tag { display: inline-block; font-size: .68rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); background: var(--accent-light); border-radius: 20px; padding: 3px 10px; margin-bottom: 14px; }
+.card-icon-row { font-size: 1.8rem; margin-bottom: 10px; }
+.card-title { font-family: 'Instrument Serif', serif; font-size: 1.25rem; margin-bottom: 6px; }
+.card-desc { color: var(--text2); font-size: .83rem; line-height: 1.55; margin-bottom: 18px; }
+.card-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+.chip { font-family: 'DM Mono', monospace; font-size: .7rem; padding: 3px 9px; border-radius: 5px; background: var(--surface2); border: 1px solid var(--border); color: var(--text2); }
+.chip.hi { color: var(--accent); border-color: #c3cff7; background: var(--accent-light); }
+.play-btn { width: 100%; padding: 11px; background: var(--text); color: white; border: none; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: .85rem; cursor: pointer; transition: background .15s; }
+.play-btn:hover { background: #111; }
+/* ─── GAME SCREEN ─── */
+#game-screen { display: none; flex-direction: column; min-height: 100vh; }
+.game-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.back-btn { display: flex; align-items: center; gap: 6px; font-size: .83rem; font-weight: 600; color: var(--text2); background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 14px; cursor: pointer; transition: border-color .15s; font-family: 'DM Sans', sans-serif; }
+.back-btn:hover { border-color: var(--border2); color: var(--text); }
+.game-name-bar { font-family: 'Instrument Serif', serif; font-size: 1.05rem; }
+.stat-strip { display: flex; gap: 8px; margin-left: auto; }
+.stat-pill { font-family: 'DM Mono', monospace; font-size: .72rem; padding: 4px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; color: var(--text2); }
+.stat-pill b { color: var(--accent); font-weight: 500; }
+.game-wrap { flex: 1; display: flex; align-items: flex-start; justify-content: center; padding: 40px 20px 60px; overflow-y: auto; }
+.game-panel {
+  width: 100%; max-width: 660px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 44px 48px;
+  min-height: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.game-panel.top { justify-content: flex-start; }
+/* progress */
+.prog-track { width: 100%; height: 3px; background: var(--border); border-radius: 2px; margin-bottom: 32px; }
+.prog-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width .4s ease; }
+/* ── SHAPESHIFT ── */
+.ss-arena { width: 100%; height: 320px; position: relative; border-radius: 12px; background: var(--surface2); border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; }
+/* crosshair in centre */
+.ss-crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); color: var(--border2); font-size: 1.8rem; line-height: 1; pointer-events: none; user-select: none; }
+/* shape slots — left and right, vertically centred */
+.ss-slot { position: absolute; top: 50%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; }
+.ss-slot.left  { left: 18%; transform: translate(-50%, -50%); }
+.ss-slot.right { right: 18%; transform: translate(50%, -50%); }
+.ss-shape-svg { opacity: 0; transition: none !important; animation: none !important; }
+.ss-shape-svg.show { opacity: 1; }
+.ss-keys { display: flex; gap: 12px; justify-content: center; }
+.ss-key-chip { display: flex; align-items: center; gap: 8px; font-size: .8rem; color: var(--text2); background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 18px; font-weight: 500; }
+.ss-key-chip kbd { font-family: 'DM Mono', monospace; background: var(--border); border-radius: 4px; padding: 1px 6px; font-size: .75rem; }
+.ss-flash { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 2.8rem; font-weight: 700; pointer-events: none; animation: flashFade .5s ease forwards; z-index: 5; }
+@keyframes flashFade { 0% { opacity:1; transform:translate(-50%,-50%) scale(1.3); } 100% { opacity:0; transform:translate(-50%,-75%) scale(1); } }
+/* ── CODECOMPARE ── */
+.cc-target-label { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; text-align: center; }
+.cc-target-code { font-family: 'DM Mono', monospace; font-size: 2.2rem; font-weight: 500; letter-spacing: 10px; color: var(--accent); background: var(--accent-light); border-radius: 10px; padding: 14px 28px; display: inline-block; margin-bottom: 20px; }
+.cc-timer-track { width: 100%; height: 5px; background: var(--border); border-radius: 3px; margin-bottom: 22px; overflow: hidden; }
+.cc-timer-fill { height: 100%; background: var(--accent); border-radius: 3px; }
+.cc-choices { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.cc-choice { font-family: 'DM Mono', monospace; font-size: 1.3rem; letter-spacing: 6px; text-align: center; padding: 14px 20px; background: var(--surface2); border: 2px solid var(--border); border-radius: 10px; cursor: pointer; transition: border-color .12s, background .12s; color: var(--text); }
+.cc-choice:hover { border-color: var(--accent); background: var(--accent-light); }
+.cc-choice.correct { border-color: var(--green) !important; background: var(--green-light) !important; color: var(--green); }
+.cc-choice.wrong { border-color: var(--red) !important; background: var(--red-light) !important; color: var(--red); }
+/* timeout red flash overlay */
+#cc-timeout-flash { position:fixed; inset:0; background:rgba(220,38,38,0); pointer-events:none; z-index:999; transition:background .08s ease-in; }
+#cc-timeout-flash.on { background:rgba(220,38,38,0.22); }
+#cc-timeout-flash.off { background:rgba(220,38,38,0); transition:background .35s ease-out; }
+/* ── PINCODE ── */
+.pc-mode-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 20px; font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 16px; }
+.pc-mode-pill.m0 { background: var(--accent-light); color: var(--accent); border: 1px solid #c3cff7; }
+.pc-mode-pill.m1 { background: #f3e8ff; color: #7c3aed; border: 1px solid #ddd6fe; }
+.pc-mode-pill.m2 { background: var(--yellow-light); color: var(--yellow); border: 1px solid #fde68a; }
+.pc-seq { font-family: 'DM Mono', monospace; font-size: 2.4rem; font-weight: 500; letter-spacing: 12px; color: var(--text); margin-bottom: 8px; min-height: 60px; text-align: center; }
+.pc-instruction { color: var(--muted); font-size: .82rem; margin-bottom: 22px; text-align: center; }
+.pc-entry { font-family: 'DM Mono', monospace; font-size: 1.9rem; letter-spacing: 10px; color: var(--text); background: var(--surface2); border: 2px solid var(--border); border-radius: 10px; padding: 12px 24px; min-width: 240px; text-align: center; margin-bottom: 20px; min-height: 56px; transition: border-color .15s, background .15s; }
+.pc-entry.ok { border-color: var(--green); background: var(--green-light); color: var(--green); }
+.pc-entry.err { border-color: var(--red); background: var(--red-light); color: var(--red); }
+.pc-pad { display: grid; grid-template-columns: repeat(3, 62px); gap: 8px; }
+.pc-btn { width: 62px; height: 62px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 1.2rem; font-weight: 600; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .12s, border-color .12s; }
+.pc-btn:hover { background: var(--accent-light); border-color: var(--accent); }
+.pc-btn.del { color: var(--muted); font-size: .9rem; }
+.pc-mistakes { display: flex; gap: 6px; margin-bottom: 14px; }
+.pc-life { width: 9px; height: 9px; border-radius: 50%; background: var(--red); }
+.pc-life.gone { background: var(--border); }
+/* ── NUMBERBOX ── */
+.nb-wrap { display: flex; flex-direction: column; align-items: center; }
+.nb-grid { display: grid; grid-template-columns: 130px 68px 130px; grid-template-rows: 130px 68px 130px; }
+.nb-num { background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-family: 'Instrument Serif', serif; font-size: 2.2rem; cursor: pointer; border: 4px solid var(--surface); border-radius: 10px; transition: background .12s, box-shadow .12s; user-select: none; }
+.nb-num:hover { background: var(--accent2); }
+.nb-num.sel { background: #0f3db5; box-shadow: 0 0 0 3px #93b5f8; }
+.nb-num.used { background: var(--border); color: var(--muted); cursor: default; pointer-events: none; }
+.nb-center-cell { grid-column:2; grid-row:2; display:flex; align-items:center; justify-content:center; background: var(--surface); border: 4px solid var(--surface); z-index:2; }
+.nb-target-ring { width:60px; height:60px; border-radius:50%; background:var(--surface2); border:2px solid var(--border2); display:flex; align-items:center; justify-content:center; font-family:'Instrument Serif',serif; font-size:1.4rem; color:var(--text); transition:all .2s; }
+.nb-target-ring.achieved { border-color:var(--green); color:var(--green); background:var(--green-light); }
+.nb-gap { background:var(--surface); border:4px solid var(--surface); }
+.nb-ops { display:flex; gap:8px; margin-top:18px; }
+.nb-op { width:50px; height:50px; background:var(--surface2); border:2px solid var(--border); border-radius:var(--radius-sm); font-size:1.2rem; font-weight:700; color:var(--text2); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .12s; font-family:'DM Mono',monospace; }
+.nb-op:hover { border-color:var(--accent); color:var(--accent); }
+.nb-op.sel { border-color:var(--accent); background:var(--accent-light); color:var(--accent); }
+/* intermediate result chips — shown below the grid when a step produces a partial result */
+.nb-intermediates { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; min-height:0; margin-top:14px; }
+.nb-inter { background: #7c3aed; color: white; font-family:'Instrument Serif',serif; font-size:1.3rem; width:70px; height:70px; border-radius:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; border:4px solid var(--surface); transition:background .12s, box-shadow .12s; user-select:none; }
+.nb-inter:hover { background:#6d28d9; }
+.nb-inter.sel { background:#5b21b6; box-shadow: 0 0 0 3px #c4b5fd; }
+.nb-inter.used { background:var(--border); color:var(--muted); cursor:default; pointer-events:none; }
+.nb-expr { font-family:'DM Mono',monospace; font-size:.92rem; color:var(--muted); margin-top:12px; min-height:22px; letter-spacing:.5px; }
+.nb-expr .cur { color:var(--accent); font-weight:500; }
+.nb-row-btns { display:flex; gap:10px; margin-top:12px; }
+.nb-small { padding:8px 20px; border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; font-weight:600; font-size:.8rem; cursor:pointer; border:1px solid var(--border); background:var(--surface2); color:var(--text2); transition:all .12s; }
+.nb-small:hover { border-color:var(--border2); color:var(--text); }
+.nb-small.go { background:var(--green); color:#fff; border-color:var(--green); }
+.nb-small.go:disabled { opacity:.35; cursor:default; }
+/* ── FIGUREITOUT ── */
+.fi-wrap { width:100%; }
+.fi-sec-label { font-size:.7rem; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+.fi-prev-row { display:flex; gap:10px; flex-wrap:wrap; min-height:30px; margin-bottom:4px; }
+.fi-past { display:flex; flex-direction:column; align-items:center; gap:4px; }
+.fi-mini { width:50px; height:66px; border-radius:7px; border:2px solid var(--border2); background:white; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+.fi-cnt { font-family:'DM Mono',monospace; font-size:.68rem; color:var(--text2); background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:2px 7px; }
+.fi-cnt.all { background:var(--green-light); color:var(--green); border-color:#86efac; }
+.fi-divider { width:100%; height:1px; background:var(--border); margin:16px 0; }
+.fi-row { display:flex; align-items:center; gap:8px; margin-bottom:10px; padding:10px 14px; background:var(--surface2); border-radius:10px; border:1px solid var(--border); }
+.fi-row-lbl { font-size:.7rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); width:58px; flex-shrink:0; }
+.fi-opt { flex:1; padding:7px 8px; border-radius:var(--radius-sm); border:2px solid var(--border); background:var(--surface); color:var(--text2); font-size:.8rem; font-weight:600; cursor:pointer; transition:all .12s; display:flex; align-items:center; justify-content:center; gap:5px; font-family:'DM Sans',sans-serif; text-align:center; }
+.fi-opt:hover { border-color:var(--border2); color:var(--text); }
+.fi-opt.sel { border-color:var(--accent); background:var(--accent-light); color:var(--accent); }
+.fi-submit { width:100%; padding:13px; background:var(--text); color:white; font-family:'DM Sans',sans-serif; font-weight:700; font-size:.88rem; letter-spacing:.04em; text-transform:uppercase; border:none; border-radius:var(--radius-sm); cursor:pointer; margin-top:14px; transition:background .15s; }
+.fi-submit:hover:not(:disabled) { background:#111; }
+.fi-submit:disabled { opacity:.35; cursor:default; }
+/* ── THE SWITCH ── */
+.sw-wrap { width:100%; display:flex; flex-direction:column; gap:16px; }
+.sw-block {
+  border-radius: 16px; padding: 22px 28px;
+  transition: all .25s ease;
+  position: relative; overflow: hidden;
+}
+.sw-block.active {
+  background: var(--surface); border: 2px solid var(--border2);
+  box-shadow: var(--shadow-lg);
+}
+.sw-block.inactive {
+  background: var(--surface2); border: 2px solid var(--border);
+  opacity: .55; transform: scale(.93);
+  pointer-events: none;
+}
+.sw-q { font-size:.72rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+.sw-block.active .sw-q { color: var(--accent); }
+.sw-content { display:flex; align-items:center; gap:28px; flex-wrap:wrap; }
+.sw-math { font-family:'Instrument Serif',serif; font-size:2.4rem; font-weight:400; color:var(--text); white-space:nowrap; }
+.sw-arrows { font-size:1.6rem; letter-spacing:2px; color:var(--text); display:flex; gap:6px; align-items:center; }
+.sw-sep { width:2px; height:32px; background:var(--border2); border-radius:2px; margin:0 8px; flex-shrink:0; }
+.sw-btns { display:flex; gap:14px; margin-top:8px; }
+.sw-btn { flex:1; padding:14px; font-family:'DM Sans',sans-serif; font-weight:700; font-size:1rem; border-radius:var(--radius-sm); border:2px solid var(--border); background:var(--surface); color:var(--text); cursor:pointer; transition:all .12s; }
+.sw-btn:hover { border-color:var(--accent); background:var(--accent-light); color:var(--accent); }
+.sw-btn.yes { border-color:var(--green); background:var(--green-light); color:var(--green); }
+.sw-btn.no  { border-color:var(--red);   background:var(--red-light);   color:var(--red);   }
+/* ── STOCK MASTER ── */
+.sm-arena {
+  width:100%; flex:1; position:relative;
+  background: #6b7fc4;
+  border-radius:16px; overflow:hidden;
+  min-height:420px;
+}
+.sm-timer-bar { width:100%; height:8px; background:var(--border); border-radius:4px; overflow:hidden; margin-bottom:6px; }
+.sm-timer-fill { height:100%; background: var(--accent); border-radius:4px; transition:width .5s linear; }
+.sm-time-label { font-family:'DM Mono',monospace; font-size:.75rem; font-weight:700; color:var(--muted); text-align:center; letter-spacing:.12em; text-transform:uppercase; margin-bottom:14px; }
+.sm-gauge-wrap {
+  position:absolute; cursor:pointer;
+  transition: opacity .4s ease;
+}
+.sm-gauge-wrap.fading { opacity:0; pointer-events:none; }
+.sm-score-pop {
+  position:absolute; font-family:'DM Sans',sans-serif; font-weight:700; font-size:1.1rem;
+  color:#fff; pointer-events:none; z-index:10;
+  animation: smPop .7s ease forwards;
+}
+@keyframes smPop {
+  0%  { opacity:1; transform:translateY(0) scale(1.2); }
+  100%{ opacity:0; transform:translateY(-40px) scale(1); }
+}
+/* ── SHARED ── */
+.start-card { text-align:center; }
+.start-card h3 { font-family:'Instrument Serif',serif; font-size:1.6rem; margin-bottom:8px; font-weight:400; }
+.start-card p { color:var(--text2); font-size:.88rem; line-height:1.6; margin-bottom:28px; max-width:400px; }
+.big-btn { padding:13px 40px; background:var(--text); color:white; border:none; border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; font-weight:700; font-size:.95rem; cursor:pointer; transition:background .15s; }
+.big-btn:hover { background:#111; }
+.result-card { text-align:center; }
+.result-card h3 { font-family:'Instrument Serif',serif; font-size:1.3rem; font-weight:400; color:var(--muted); margin-bottom:6px; }
+.result-num { font-family:'Instrument Serif',serif; font-size:5rem; line-height:1; color:var(--accent); margin:12px 0; }
+.result-sub { color:var(--muted); font-size:.85rem; margin-bottom:32px; }
+.again-btn { padding:12px 36px; background:var(--text); color:white; border:none; border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; font-weight:700; font-size:.88rem; cursor:pointer; transition:background .15s; }
+.again-btn:hover { background:#111; }
+</style>
+</head>
+<body>
+
+<div id="cc-timeout-flash"></div>
+
+<div id="dashboard">
+  <header class="dash-header">
+    <div class="dash-logo">Mental<span>Edge</span></div>
+    <div class="dash-sub">Assessment Suite</div>
+  </header>
+  <div class="dash-body">
+    <div class="dash-intro">
+      <h2>Select an exercise</h2>
+      <p>Practice the cognitive skills assessed in trading and finance hiring. Each game is self-contained and progressively challenging.</p>
+    </div>
+    <div class="games-grid" id="games-grid"></div>
+  </div>
+</div>
+
+<div id="game-screen">
+  <header class="game-header">
+    <button class="back-btn" onclick="showDashboard()">&#8592; Dashboard</button>
+    <div class="game-name-bar" id="gs-name"></div>
+    <div class="stat-strip" id="gs-stats"></div>
+  </header>
+  <div class="game-wrap">
+    <div class="game-panel" id="game-panel"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  GAME REGISTRY — add entries here to add new games
+// ══════════════════════════════════════════════════════
+const GAMES = [
+  { id:'shapeshift',  title:'ShapeShift',  icon:'◑', tag:'Reaction',   desc:'A shape flashes briefly on screen. Press ← for Square, → for Circle. 60 rounds.',                            meta:['60 rounds','~3 min'],          start:startShapeShift  },
+  { id:'codecompare', title:'CodeCompare', icon:'≋', tag:'Attention',   desc:'Spot the sequence identical to the target. Timer shrinks from 5 s to 3 s over 30 rounds.',                   meta:['30 rounds','5 s → 3 s'],       start:startCodeCompare },
+  { id:'pincode',     title:'PinCode',     icon:'⌨', tag:'Memory',      desc:'Memorise a number sequence, then type it forward, reversed, or sorted low-to-high.',                          meta:['3 modes','Growing length'],    start:startPinCode     },
+  { id:'numberbox',   title:'NumberBox',   icon:'⊞', tag:'Arithmetic',  desc:'Use four numbers and basic operations to reach the target in the centre. 5 puzzles.',                         meta:['5 rounds','All ops'],          start:startNumberBox   },
+  { id:'figureitout', title:'FigureItOut', icon:'◈', tag:'Logic',       desc:'Deduce the hidden figure\'s shape, colour, and stripe pattern. Feedback shows how many properties match.', meta:['5 rounds','3 properties'],    start:startFigureItOut },
+  { id:'theswitch',   title:'The Switch',  icon:'⇅', tag:'Switching',   desc:'Two questions flash on two boxes — math answer odd/even, or arrows matching. Answer the active box. 35 rounds.', meta:['35 rounds','~3 min'],      start:startTheSwitch   },
+  { id:'stockmaster', title:'Stock Master',icon:'◉', tag:'Timing',      desc:'Click a gauge when its needle is in the green zone to buy a stock. Gauges appear and vanish quickly. 2 minutes.', meta:['2 min','Reflex'],         start:startStockMaster }
+];
+
+// ── scores ──
+let scores = {};
+try { scores = JSON.parse(localStorage.getItem('me_scores')||'{}'); } catch(e){}
+function saveScore(id,v) {
+  if (scores[id]==null||v>scores[id]) {
+    scores[id]=v;
+    try{localStorage.setItem('me_scores',JSON.stringify(scores));}catch(e){}
+  }
+}
+
+// ── game generation guard — incremented on every showDashboard/launchGame ──
+// Each game closure captures the generation at start; any async callback checks
+// it before doing anything, so stale timers from abandoned games are silently dropped.
+let _gen = 0;
+function myGen() { return _gen; }
+
+// ── dashboard ──
+function renderDashboard() {
+  document.getElementById('games-grid').innerHTML = GAMES.map(g=>`
+    <div class="game-card" onclick="launchGame('${g.id}')">
+      <div class="card-tag">${g.tag}</div>
+      <div class="card-icon-row">${g.icon}</div>
+      <div class="card-title">${g.title}</div>
+      <div class="card-desc">${g.desc}</div>
+      <div class="card-meta">
+        ${g.meta.map(m=>`<span class="chip">${m}</span>`).join('')}
+        ${scores[g.id]!=null?`<span class="chip hi">Best: ${scores[g.id]}</span>`:''}
+      </div>
+      <button class="play-btn">Start exercise →</button>
+    </div>`).join('');
+}
+
+function showDashboard() {
+  _gen++; // invalidate all running game callbacks
+  clearKeys();
+  document.getElementById('dashboard').style.display='';
+  document.getElementById('game-screen').style.display='none';
+  renderDashboard();
+}
+
+function launchGame(id) {
+  _gen++; // invalidate any previous game
+  const g = GAMES.find(x=>x.id===id);
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('game-screen').style.display='flex';
+  document.getElementById('gs-name').textContent = g.title;
+  document.getElementById('gs-stats').innerHTML = '';
+  const p = document.getElementById('game-panel');
+  p.innerHTML=''; p.className='game-panel';
+  g.start();
+}
+
+// ── helpers ──
+function setStats(html){document.getElementById('gs-stats').innerHTML=html;}
+function setPanel(html,top){const p=document.getElementById('game-panel');p.className='game-panel'+(top?' top':'');p.innerHTML=html;}
+function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+let _kfn=null;
+function setKey(fn){clearKeys();_kfn=fn;document.addEventListener('keydown',_kfn);}
+function clearKeys(){if(_kfn){document.removeEventListener('keydown',_kfn);_kfn=null;}}
+
+// ══════════════════════════════════════════════════════
+//  GAME 1 · SHAPESHIFT
+// ══════════════════════════════════════════════════════
+function startShapeShift(){
+  const TOTAL=60;
+  let round=0,score=0;
+  const g=myGen(); // capture generation
+  window._ssH=null;
+
+  function alive(){return myGen()===g;}
+  function stat(){if(!alive())return;setStats(`<div class="stat-pill">Round <b>${round}</b>/${TOTAL}</div><div class="stat-pill">Score <b>${score}</b></div>`);}
+
+  setKey(e=>{
+    if(!alive())return;
+    if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight')return;
+    e.preventDefault();
+    if(window._ssH)window._ssH(e.key);
+  });
+
+  setPanel(`<div class="start-card">
+    <h3>ShapeShift</h3>
+    <p>A shape flashes briefly on the left or right. Press <strong>←</strong> for a square and <strong>→</strong> for a circle. Focus on the + in the centre and react quickly — 60 rounds.</p>
+    <button class="big-btn" onclick="ssGo()">Begin</button>
+  </div>`);
+  stat();
+
+  window.ssGo=()=>{
+    if(!alive())return;
+    setPanel(`
+      <div class="prog-track"><div class="prog-fill" id="ss-prog" style="width:0%"></div></div>
+      <div class="ss-arena" id="ss-arena">
+        <div class="ss-crosshair">+</div>
+        <div class="ss-slot left"  id="ss-left"></div>
+        <div class="ss-slot right" id="ss-right"></div>
+      </div>
+      <div class="ss-keys">
+        <div class="ss-key-chip"><kbd>←</kbd> Square</div>
+        <div class="ss-key-chip"><kbd>→</kbd> Circle</div>
+      </div>`);
+    nextRound();
+  };
+
+  const SIZE=160; // large fixed shape size
+  function makeSVG(isCircle){
+    return isCircle
+      ?`<svg class="ss-shape-svg" width="${SIZE}" height="${SIZE}"><circle cx="${SIZE/2}" cy="${SIZE/2}" r="${SIZE/2-6}" fill="#d1d9e6" stroke="#7a8db5" stroke-width="7"/></svg>`
+      :`<svg class="ss-shape-svg" width="${SIZE}" height="${SIZE}"><rect x="6" y="6" width="${SIZE-12}" height="${SIZE-12}" fill="#d1d9e6" stroke="#7a8db5" stroke-width="7"/></svg>`;
+  }
+
+  function nextRound(){
+    if(!alive())return;
+    if(round>=TOTAL){endGame();return;}
+    round++;stat();
+    const prog=document.getElementById('ss-prog');
+    if(prog)prog.style.width=((round-1)/TOTAL*100)+'%';
+    window._ssH=null;
+    // clear both slots
+    const l=document.getElementById('ss-left'),r=document.getElementById('ss-right');
+    if(l)l.innerHTML=''; if(r)r.innerHTML='';
+    setTimeout(()=>{if(alive())showShape();},rand(400,1100));
+  }
+
+  function showShape(){
+    if(!alive())return;
+    const arena=document.getElementById('ss-arena');if(!arena)return;
+    const isCircle=Math.random()<.5;
+    const onLeft=Math.random()<.5;
+    const slot=document.getElementById(onLeft?'ss-left':'ss-right');
+    if(!slot)return;
+    slot.innerHTML=makeSVG(isCircle);
+    // Show immediately — no transition, no rAF delay
+    const svg=slot.querySelector('.ss-shape-svg');
+    if(svg)svg.classList.add('show');
+
+    const vis=rand(300,750);
+    let answered=false;
+    const autoMiss=setTimeout(()=>{
+      if(!alive()||answered)return;
+      answered=true;showFb(false);
+    },vis+400);
+
+    window._ssH=key=>{
+      if(!alive()||answered)return;
+      answered=true;clearTimeout(autoMiss);
+      const correct=(key==='ArrowRight')===isCircle;
+      if(correct)score++;
+      showFb(correct);
+    };
+
+    // hide shape after vis ms — instantly, no fade
+    setTimeout(()=>{
+      if(!answered){
+        const svg=slot.querySelector('.ss-shape-svg');
+        if(svg)svg.classList.remove('show');
+      }
+    },vis);
+  }
+
+  function showFb(ok){
+    if(!alive())return;
+    const arena=document.getElementById('ss-arena');if(!arena)return;
+    // clear slots
+    const l=document.getElementById('ss-left'),r=document.getElementById('ss-right');
+    if(l)l.innerHTML=''; if(r)r.innerHTML='';
+    const fb=document.createElement('div');
+    fb.className='ss-flash';fb.textContent=ok?'✓':'✗';
+    fb.style.color=ok?'var(--green)':'var(--red)';
+    arena.appendChild(fb);
+    stat();
+    setTimeout(()=>{if(!alive())return;if(fb.parentNode)fb.remove();nextRound();},550);
+  }
+
+  function endGame(){
+    if(!alive())return;
+    clearKeys();saveScore('shapeshift',score);setStats('');
+    setPanel(`<div class="result-card">
+      <h3>ShapeShift complete</h3>
+      <div class="result-num">${score}<span style="font-size:2rem;color:var(--muted)">/${TOTAL}</span></div>
+      <div class="result-sub">Accuracy: ${Math.round(score/TOTAL*100)}%</div>
+      <button class="again-btn" onclick="startShapeShift()">Play again</button>
+    </div>`);
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  GAME 2 · CODECOMPARE
+// ══════════════════════════════════════════════════════
+function startCodeCompare(){
+  const TOTAL=30;
+  let round=0,score=0,timer=null;
+  const g=myGen();
+  function alive(){return myGen()===g;}
+
+  const C='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const rnd=len=>Array.from({length:len},()=>C[rand(0,C.length-1)]).join('');
+  function mut(c){const a=c.split('');const i=rand(0,a.length-1);let ch;do{ch=C[rand(0,C.length-1)];}while(ch===a[i]);a[i]=ch;return a.join('');}
+
+  function flashRed(){
+    const el=document.getElementById('cc-timeout-flash');
+    if(!el)return;
+    el.className='on';
+    setTimeout(()=>{if(el)el.className='off';},80);
+    setTimeout(()=>{if(el)el.className='';},500);
+  }
+
+  function next(){
+    if(!alive())return;
+    if(round>=TOTAL){endGame();return;}
+    round++;clearTimeout(timer);
+    const t=5000-(round/TOTAL)*2000;
+    const len=rand(5,7),target=rnd(len),ci=rand(0,3);
+    const opts=Array.from({length:4},(_,i)=>i===ci?target:mut(target));
+    setStats(`<div class="stat-pill">Round <b>${round}</b>/${TOTAL}</div><div class="stat-pill">Score <b>${score}</b></div>`);
+    setPanel(`
+      <div class="prog-track"><div class="prog-fill" style="width:${(round-1)/TOTAL*100}%"></div></div>
+      <div class="cc-target-label">Target sequence</div>
+      <div class="cc-target-code">${target}</div>
+      <div class="cc-timer-track"><div class="cc-timer-fill" id="cc-fill" style="width:100%"></div></div>
+      <div class="cc-choices">
+        ${opts.map((o,i)=>`<button class="cc-choice" onclick="ccPick(${i===ci},this)">${o}</button>`).join('')}
+      </div>`);
+    // Double-rAF ensures the browser has committed the 100% width before we start the transition
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      if(!alive())return;
+      const f=document.getElementById('cc-fill');
+      if(f){f.style.transition=`width ${t}ms linear`;f.style.width='0%';}
+    }));
+    timer=setTimeout(()=>{if(alive())ccPick(false,null,true);},t);
+  }
+
+  window.ccPick=(correct,btn,timeout=false)=>{
+    if(!alive())return;
+    clearTimeout(timer);
+    if(correct)score++;
+    if(timeout)flashRed();
+    if(btn)btn.classList.add(correct?'correct':'wrong');
+    document.querySelectorAll('.cc-choice').forEach(b=>b.disabled=true);
+    setStats(`<div class="stat-pill">Round <b>${round}</b>/${TOTAL}</div><div class="stat-pill">Score <b>${score}</b></div>`);
+    setTimeout(()=>{if(alive())next();},650);
+  };
+
+  function endGame(){
+    if(!alive())return;
+    saveScore('codecompare',score);setStats('');
+    setPanel(`<div class="result-card">
+      <h3>CodeCompare complete</h3>
+      <div class="result-num">${score}<span style="font-size:2rem;color:var(--muted)">/${TOTAL}</span></div>
+      <div class="result-sub">Accuracy: ${Math.round(score/TOTAL*100)}%</div>
+      <button class="again-btn" onclick="startCodeCompare()">Play again</button>
+    </div>`);
+  }
+  setStats('');
+  setPanel(`<div class="start-card">
+    <h3>CodeCompare</h3>
+    <p>A target sequence is shown at the top. Find the identical match among four options before the timer runs out. The timer shrinks from 5 s to 3 s over 30 rounds.</p>
+    <button class="big-btn" onclick="ccGo()">Begin</button>
+  </div>`);
+
+  window.ccGo=()=>{ if(!alive())return; next(); };
+}
+
+// ══════════════════════════════════════════════════════
+//  GAME 3 · PINCODE
+// ══════════════════════════════════════════════════════
+function startPinCode(){
+  const MODES=[
+    {label:'Forward', cls:'m0', hint:'Type the sequence as shown',         xform:s=>s},
+    {label:'Reverse', cls:'m1', hint:'Type the sequence in reverse order', xform:s=>s.split('').reverse().join('')},
+    {label:'Sorted ↑',cls:'m2', hint:'Type the digits sorted low → high',  xform:s=>s.split('').sort().join('')}
+  ];
+  let mode=0,len=3,mistakes=0,seqScore=0,seq='',input='',phase='show';
+  const g=myGen();
+  function alive(){return myGen()===g;}
+
+  function stat(){if(!alive())return;setStats(`<div class="stat-pill">Mode <b>${mode+1}</b>/3</div><div class="stat-pill">Length <b>${len}</b></div><div class="stat-pill">Score <b>${seqScore}</b></div>`);}
+
+  function newSeq(){
+    if(!alive())return;
+    seq=Array.from({length:len},()=>rand(0,9)).join('');
+    input='';phase='show';
+    showDigits();
+  }
+
+  // Show exactly one digit at a time: "– – –" → "1 – –" → "– 2 –" → "– – 3" → "– – –" → activate pad
+  function showDigits(){
+    if(!alive())return;
+    stat();const m=MODES[mode];
+
+    // Build display: only slot i is shown if it is the activeSlot, else dash
+    function buildDisplay(activeSlot){
+      return Array.from({length:seq.length},(_,i)=>
+        activeSlot>=0&&i===activeSlot ? seq[i] : '–'
+      ).join(' ');
+    }
+
+    // Render the panel with a disabled keypad visible
+    function renderShowing(displayStr){
+      setPanel(`<div style="display:flex;flex-direction:column;align-items:center">
+        <div class="pc-mode-pill ${m.cls}">${m.label}</div>
+        <div class="pc-instruction">${m.hint}</div>
+        <div class="pc-entry" id="pc-entry">${displayStr}</div>
+        <p style="color:var(--muted);font-size:.8rem;margin-top:0;margin-bottom:16px" id="pc-show-sub">Memorising…</p>
+        <div class="pc-pad" style="opacity:.25;pointer-events:none">
+          ${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="pc-btn">${n}</button>`).join('')}
+          <button class="pc-btn">0</button>
+          <button class="pc-btn del">⌫</button>
+        </div>
+      </div>`);
+    }
+
+    renderShowing(buildDisplay(-1));
+
+    let i=0;
+    function showNext(){
+      if(!alive())return;
+      if(i<seq.length){
+        // Show only digit i, all others dash
+        const el=document.getElementById('pc-entry');
+        if(el) el.textContent=buildDisplay(i);
+        i++;
+        setTimeout(showNext,900);
+      } else {
+        // All shown — blank and immediately activate input
+        const el=document.getElementById('pc-entry');
+        if(el) el.textContent=buildDisplay(-1);
+        setTimeout(()=>{ if(alive()) activateInput(); },500);
+      }
+    }
+    setTimeout(showNext,400);
+  }
+
+  // Transition straight to input phase — no Ready button
+  function activateInput(){
+    if(!alive())return;
+    phase='input';input='';stat();const m=MODES[mode];
+
+    function buildInputDisplay(typed){
+      return Array.from({length:seq.length},(_,i)=>i<typed.length?typed[i]:'–').join(' ');
+    }
+    window._pcBuildDisplay=buildInputDisplay;
+
+    setPanel(`<div style="display:flex;flex-direction:column;align-items:center">
+      <div class="pc-mode-pill ${m.cls}">${m.label}</div>
+      <div class="pc-instruction">${m.hint}</div>
+      <div class="pc-entry" id="pc-entry">${buildInputDisplay('')}</div>
+      <div class="pc-mistakes">
+        ${[0,1].map(i=>`<div class="pc-life${i<mistakes?' gone':''}"></div>`).join('')}
+      </div>
+      <div class="pc-pad">
+        ${[1,2,3,4,5,6,7,8,9].map(n=>`<button class="pc-btn" onclick="pcKey('${n}')">${n}</button>`).join('')}
+        <button class="pc-btn" onclick="pcKey('0')">0</button>
+        <button class="pc-btn del" onclick="pcDel()">⌫</button>
+      </div>
+    </div>`);
+    setKey(e=>{if(!alive())return;if(/^[0-9]$/.test(e.key))pcKey(e.key);if(e.key==='Backspace')pcDel();});
+  }
+
+  // pcReady kept as no-op alias (not used anymore but avoids stale-HTML errors)
+  window.pcReady=()=>{};
+
+  window.pcKey=k=>{
+    if(!alive()||phase!=='input')return;
+    const expected=MODES[mode].xform(seq);
+    if(input.length>=expected.length)return;
+    input+=k;
+    const el=document.getElementById('pc-entry');
+    if(el&&window._pcBuildDisplay)el.textContent=window._pcBuildDisplay(input);
+    if(input.length<expected.length)return;
+    phase='done';
+    const ok=input===expected;
+    if(el)el.classList.add(ok?'ok':'err');
+    if(ok){seqScore++;len++;setTimeout(()=>{if(!alive())return;clearKeys();newSeq();},500);}
+    else{
+      mistakes++;
+      setTimeout(()=>{
+        if(!alive())return;
+        clearKeys();
+        if(mistakes>=2){mode++;if(mode>=MODES.length){endGame();return;}len=3;mistakes=0;}
+        input='';newSeq();
+      },600);
+    }
+  };
+
+  window.pcDel=()=>{
+    if(!alive()||phase!=='input')return;
+    input=input.slice(0,-1);
+    const el=document.getElementById('pc-entry');
+    if(el&&window._pcBuildDisplay)el.textContent=window._pcBuildDisplay(input);
+  };
+
+  function endGame(){
+    if(!alive())return;
+    clearKeys();saveScore('pincode',seqScore);setStats('');
+    setPanel(`<div class="result-card">
+      <h3>PinCode complete</h3>
+      <div class="result-num">${seqScore}</div>
+      <div class="result-sub">Sequences recalled correctly</div>
+      <button class="again-btn" onclick="startPinCode()">Play again</button>
+    </div>`);
+  }
+  setStats('');
+  setPanel(`<div class="start-card">
+    <h3>PinCode</h3>
+    <p>A number sequence will be revealed one digit at a time. Memorise it, then type it back. Mode 1: forward. Mode 2: reversed. Mode 3: sorted low to high. The sequence grows longer with each success.</p>
+    <button class="big-btn" onclick="pcGo()">Begin</button>
+  </div>`);
+
+  window.pcGo=()=>{ if(!alive())return; newSeq(); };
+}
+
+// ══════════════════════════════════════════════════════
+//  GAME 4 · NUMBERBOX
+// ══════════════════════════════════════════════════════
+function startNumberBox(){
+  const TOTAL=5;
+  let round=0,score=0,puzzle=null;
+  // State: pool of available blocks [{id,val,isInter}], pending selection, pending op
+  let pool=[],selId=null,pendingOp=null,interCount=0;
+  const g=myGen();
+  function alive(){return myGen()===g;}
+
+  const opSym={'+':'+','-':'−','*':'×','/':'÷'};
+
+  function apply(a,b,o){
+    if(o==='+')return a+b;
+    if(o==='-')return a-b;
+    if(o==='*')return a*b;
+    if(o==='/'){if(b===0||a%b!==0)return null;return a/b;}
+    return null;
+  }
+
+  // Generate a puzzle using the same pool-reduction model the player uses:
+  // repeatedly pick two values from the pool, apply an op, replace them with the result.
+  // This guarantees the target IS reachable with those exact numbers.
+  // We try many random reduction paths; if any yields a nice target we return it.
+  function genPuzzle(){
+    const ops=['+','-','*','/'];
+
+    for(let attempt=0;attempt<600;attempt++){
+      const nums=Array.from({length:4},()=>rand(1,12));
+      // Simulate a random sequence of 3 pool-reduction steps
+      let pool=[...nums];
+      let ok=true;
+      for(let step=0;step<3;step++){
+        // Pick two distinct indices
+        const i=rand(0,pool.length-1);
+        let j; do{j=rand(0,pool.length-1);}while(j===i);
+        const o=ops[rand(0,3)];
+        const a=pool[i],b=pool[j];
+        const r=apply(a,b,o);
+        if(r===null||!Number.isInteger(r)){ok=false;break;}
+        // Replace the two values with the result
+        const next=pool.filter((_,k)=>k!==i&&k!==j);
+        next.push(r);
+        pool=next;
+      }
+      if(!ok||pool.length!==1)continue;
+      const target=pool[0];
+      if(target>=2&&target<=48&&Number.isInteger(target)){
+        return{nums,target};
+      }
+    }
+    // Guaranteed fallback: (1+2)*4-3=9. Verify: 1+2=3, 3*4=12, 12-3=9 ✓ uses all 4
+    return{nums:[1,2,3,4],target:9};
+  }
+
+  function startRound(){
+    if(!alive())return;
+    if(round>=TOTAL){endGame();return;}
+    round++;
+    puzzle=genPuzzle();
+    interCount=0;
+    // pool starts as the 4 corner numbers
+    pool=puzzle.nums.map((v,i)=>({id:'orig'+i,val:v,isInter:false}));
+    selId=null;pendingOp=null;
+    stat();
+    renderRound();
+  }
+
+  function stat(){if(!alive())return;setStats(`<div class="stat-pill">Round <b>${round}</b>/${TOTAL}</div><div class="stat-pill">Score <b>${score}</b></div>`);}
+
+  // Count how many original numbers have been consumed (used into intermediate blocks)
+  // A number is consumed if it's not in pool (either used in an intermediate, or the intermediate itself was used)
+  // We track this by: origUsed = orig blocks no longer in pool
+  function origUsedCount(){
+    const origInPool=pool.filter(b=>!b.isInter).length;
+    return 4-origInPool;
+  }
+  // All 4 originals consumed = they've all been used in operations
+  function allOrigUsed(){return origUsedCount()===4;}
+
+  function renderRound(){
+    if(!alive())return;
+    const{nums,target}=puzzle;
+    // Determine which original slots are still available or used
+    const origBlocks=pool.filter(b=>!b.isInter);
+    const origUsedIds=new Set(
+      puzzle.nums.map((_,i)=>'orig'+i).filter(id=>!pool.find(b=>b.id===id))
+    );
+    const interBlocks=pool.filter(b=>b.isInter);
+
+    // Rebuild grid: orig blocks in their fixed corner positions
+    function cornerHTML(idx){
+      const inPool=pool.find(b=>b.id==='orig'+idx);
+      if(inPool){
+        const isSel=selId===inPool.id;
+        return`<div class="nb-num${isSel?' sel':''}" id="nb-orig${idx}" onclick="nbSel('orig${idx}')">${inPool.val}</div>`;
+      } else {
+        return`<div class="nb-num used">—</div>`;
+      }
+    }
+
+    const interHTML=interBlocks.length>0
+      ?`<div class="nb-intermediates" id="nb-inters">
+          ${interBlocks.map(b=>`<div class="nb-inter${selId===b.id?' sel':''}" id="nb-${b.id}" onclick="nbSel('${b.id}')">${b.val}</div>`).join('')}
+        </div>`
+      :`<div class="nb-intermediates" id="nb-inters"></div>`;
+
+    // Check if solution is complete: pool has exactly 1 block whose value = target AND all 4 originals consumed
+    const canSubmit=pool.length===1&&allOrigUsed()&&Math.abs(pool[0].val-target)<0.001;
+
+    setPanel(`<div class="nb-wrap">
+      <div class="prog-track"><div class="prog-fill" style="width:${(round-1)/TOTAL*100}%"></div></div>
+      <div class="nb-grid">
+        ${cornerHTML(0)}<div class="nb-gap"></div>
+        ${cornerHTML(1)}
+        <div class="nb-gap"></div>
+        <div class="nb-center-cell"><div class="nb-target-ring${canSubmit?' achieved':''}" id="nb-tgt">${target}</div></div>
+        <div class="nb-gap"></div>
+        ${cornerHTML(2)}<div class="nb-gap"></div>
+        ${cornerHTML(3)}
+      </div>
+      ${interHTML}
+      <div class="nb-ops">
+        ${['+','-','×','÷'].map((s,i)=>`<button class="nb-op${pendingOp===['+','-','*','/'][i]?' sel':''}" id="nbop${i}" onclick="nbOp('${['+','-','*','/'][i]}')">${s}</button>`).join('')}
+      </div>
+      <div class="nb-expr" id="nb-expr">—</div>
+      <div class="nb-row-btns">
+        <button class="nb-small" onclick="nbReset()">Reset</button>
+        <button class="nb-small go" id="nb-go" onclick="nbSubmit()" ${canSubmit?'':'disabled'}>Submit ✓</button>
+      </div>
+    </div>`);
+    updExpr();
+  }
+
+  window.nbSel=blockId=>{
+    if(!alive())return;
+    const block=pool.find(b=>b.id===blockId);
+    if(!block)return;
+
+    if(selId===null){
+      // First selection
+      selId=blockId;
+      const el=document.getElementById('nb-'+blockId);
+      if(el)el.classList.add('sel');
+      updExpr();
+    } else if(selId===blockId){
+      // Deselect
+      selId=null;
+      const el=document.getElementById('nb-'+blockId);
+      if(el)el.classList.remove('sel');
+      updExpr();
+    } else if(pendingOp!==null){
+      // Second selection with an op — compute result
+      const a=pool.find(b=>b.id===selId);
+      const b=block;
+      if(!a||!b)return;
+      const r=apply(a.val,b.val,pendingOp);
+      if(r===null){flashEl('nb-tgt');return;}
+
+      // Remove both from pool, add intermediate result
+      const newId='inter'+(interCount++);
+      pool=pool.filter(x=>x.id!==a.id&&x.id!==b.id);
+      pool.push({id:newId,val:r,isInter:true});
+      selId=null;pendingOp=null;
+      renderRound();
+    }
+  };
+
+  // Fix element ID for orig blocks: 'orig0' → element id is 'nb-orig0'
+  // But we set onclick="nbSel('orig0')" and element id="nb-orig0"
+  // Unified: all blocks use id="nb-{blockId}" and onclick="nbSel('{blockId}')"
+
+  window.nbOp=o=>{
+    if(!alive()||selId===null)return;
+    pendingOp=o;
+    // Update op button highlights
+    ['+','-','*','/'].forEach((op,i)=>{
+      const b=document.getElementById('nbop'+i);
+      if(b)b.classList.toggle('sel',op===o);
+    });
+    updExpr();
+  };
+
+  function updExpr(){
+    const el=document.getElementById('nb-expr');if(!el)return;
+    if(selId===null){el.innerHTML='—';return;}
+    const block=pool.find(b=>b.id===selId);
+    if(!block){el.innerHTML='—';return;}
+    if(pendingOp){
+      el.innerHTML=`<b>${block.val}</b> ${opSym[pendingOp]} <span style="color:var(--muted)">?</span>`;
+    } else {
+      el.innerHTML=`<b>${block.val}</b>`;
+    }
+  }
+
+  function flashEl(id){
+    const el=document.getElementById(id);if(!el)return;
+    el.style.outline='2px solid var(--red)';
+    setTimeout(()=>{if(el)el.style.outline='';},400);
+  }
+
+  window.nbReset=()=>{
+    if(!alive())return;
+    // Restore pool to original 4 numbers
+    interCount=0;
+    pool=puzzle.nums.map((v,i)=>({id:'orig'+i,val:v,isInter:false}));
+    selId=null;pendingOp=null;
+    renderRound();
+  };
+
+  window.nbSubmit=()=>{
+    if(!alive())return;
+    const go=document.getElementById('nb-go');
+    if(go){go.disabled=true;}  // prevent double-submit
+    const canSubmit=pool.length===1&&allOrigUsed()&&Math.abs(pool[0].val-puzzle.target)<0.001;
+    if(canSubmit){score++;setTimeout(()=>{if(alive())startRound();},600);}
+  };
+
+  function endGame(){
+    if(!alive())return;
+    saveScore('numberbox',score);setStats('');
+    setPanel(`<div class="result-card">
+      <h3>NumberBox complete</h3>
+      <div class="result-num">${score}<span style="font-size:2rem;color:var(--muted)">/${TOTAL}</span></div>
+      <div class="result-sub">Puzzles solved correctly</div>
+      <button class="again-btn" onclick="startNumberBox()">Play again</button>
+    </div>`);
+  }
+
+  setStats('');
+  setPanel(`<div class="start-card">
+    <h3>NumberBox</h3>
+    <p>Four numbers sit at the corners. Combine any two using +&nbsp;−&nbsp;×&nbsp;÷ to create an intermediate result (shown in purple). Keep combining — using all four originals — until you reach the target. 5 puzzles.</p>
+    <button class="big-btn" onclick="nbGo()">Begin</button>
+  </div>`);
+
+  window.nbGo=()=>{ if(!alive())return; startRound(); };
+}
+
+// ══════════════════════════════════════════════════════
+//  GAME 5 · FIGUREITOUT
+// ══════════════════════════════════════════════════════
+function startFigureItOut(){
+  const SHAPES=['square','circle','triangle'];
+  const COLORS=['blue','red','yellow'];
+  const PATTERNS=['horizontal','vertical','grid'];
+  const ROUNDS=5;
+  let round=0,totalMoves=0,secret=null,guesses=[],pick={shape:null,color:null,pattern:null};
+  const g=myGen();
+  function alive(){return myGen()===g;}
+
+  const cHex={blue:'#3b82f6',red:'#ef4444',yellow:'#eab308'};
+  const cBg={blue:'#eff6ff',red:'#fff1f2',yellow:'#fefce8'};
+
+  function shpIcon(s,sz=13){
+    if(s==='square')return`<svg width="${sz}" height="${sz}"><rect x="1" y="1" width="${sz-2}" height="${sz-2}" rx="1" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
+    if(s==='circle')return`<svg width="${sz}" height="${sz}"><circle cx="${sz/2}" cy="${sz/2}" r="${sz/2-1}" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
+    return`<svg width="${sz}" height="${sz}"><polygon points="${sz/2},1 ${sz-1},${sz-1} 1,${sz-1}" fill="none" stroke="currentColor" stroke-width="2"/></svg>`;
+  }
+  function cDot(c){return`<span style="width:10px;height:10px;border-radius:50%;background:${cHex[c]};display:inline-block;border:1px solid rgba(0,0,0,.12)"></span>`;}
+  const pLbl={horizontal:'≡ horizontal',vertical:'||| vertical',grid:'⊞ grid'};
+
+  function miniSVG(gg){
+    const c=cHex[gg.color]||'#888',bg=cBg[gg.color]||'#fff';
+    const W=50,H=66;
+    let shp='',clip='';
+    if(gg.shape==='square'){shp=`<rect x="5" y="9" width="40" height="48" rx="3" fill="${c}"/>`;clip=`<rect x="5" y="9" width="40" height="48" rx="3"/>`;}
+    else if(gg.shape==='circle'){shp=`<circle cx="25" cy="33" r="21" fill="${c}"/>`;clip=`<circle cx="25" cy="33" r="21"/>`;}
+    else{shp=`<polygon points="25,9 47,59 3,59" fill="${c}"/>`;clip=`<polygon points="25,9 47,59 3,59"/>`;}
+    const uid='u'+(Math.random()*1e7|0);
+    let ln='';
+    if(gg.pattern==='horizontal')ln=`<line x1="0" y1="27" x2="${W}" y2="27" stroke="${bg}" stroke-width="3.5"/><line x1="0" y1="35" x2="${W}" y2="35" stroke="${bg}" stroke-width="3.5"/><line x1="0" y1="43" x2="${W}" y2="43" stroke="${bg}" stroke-width="3.5"/>`;
+    else if(gg.pattern==='vertical')ln=`<line x1="17" y1="0" x2="17" y2="${H}" stroke="${bg}" stroke-width="3.5"/><line x1="25" y1="0" x2="25" y2="${H}" stroke="${bg}" stroke-width="3.5"/><line x1="33" y1="0" x2="33" y2="${H}" stroke="${bg}" stroke-width="3.5"/>`;
+    else ln=`<line x1="0" y1="27" x2="${W}" y2="27" stroke="${bg}" stroke-width="2.5"/><line x1="0" y1="35" x2="${W}" y2="35" stroke="${bg}" stroke-width="2.5"/><line x1="0" y1="43" x2="${W}" y2="43" stroke="${bg}" stroke-width="2.5"/><line x1="17" y1="0" x2="17" y2="${H}" stroke="${bg}" stroke-width="2.5"/><line x1="25" y1="0" x2="25" y2="${H}" stroke="${bg}" stroke-width="2.5"/><line x1="33" y1="0" x2="33" y2="${H}" stroke="${bg}" stroke-width="2.5"/>`;
+    return`<svg width="${W}" height="${H}" style="background:${bg}"><defs><clipPath id="${uid}">${clip}</clipPath></defs>${shp}<g clip-path="url(#${uid})">${ln}</g></svg>`;
+  }
+
+  function newRound(){
+    if(!alive())return;
+    round++;guesses=[];
+    secret={shape:SHAPES[rand(0,2)],color:COLORS[rand(0,2)],pattern:PATTERNS[rand(0,2)]};
+    pick={shape:null,color:null,pattern:null};
+    render();
+  }
+
+  function stat(){if(!alive())return;setStats(`<div class="stat-pill">Round <b>${round}</b>/${ROUNDS}</div><div class="stat-pill">Moves <b>${totalMoves}</b></div>`);}
+
+  function render(){
+    if(!alive())return;
+    stat();
+    setPanel(`<div class="fi-wrap">
+      <div class="prog-track"><div class="prog-fill" style="width:${(round-1)/ROUNDS*100}%"></div></div>
+      <div class="fi-sec-label">Previous guesses — round ${round}</div>
+      <div class="fi-prev-row" id="fi-prev"></div>
+      <div class="fi-divider"></div>
+      <div class="fi-sec-label" style="margin-bottom:12px">Your guess</div>
+      <div class="fi-row">
+        <div class="fi-row-lbl">Shape</div>
+        ${SHAPES.map(s=>`<button class="fi-opt" id="fis-${s}" onclick="fiPick('shape','${s}')">${shpIcon(s)} ${s}</button>`).join('')}
+      </div>
+      <div class="fi-row">
+        <div class="fi-row-lbl">Color</div>
+        ${COLORS.map(c=>`<button class="fi-opt" id="fic-${c}" onclick="fiPick('color','${c}')">${cDot(c)} ${c}</button>`).join('')}
+      </div>
+      <div class="fi-row">
+        <div class="fi-row-lbl">Pattern</div>
+        ${PATTERNS.map(p=>`<button class="fi-opt" id="fip-${p}" onclick="fiPick('pattern','${p}')">${pLbl[p]}</button>`).join('')}
+      </div>
+      <button class="fi-submit" id="fi-sub" onclick="fiSubmit()" disabled>Submit Guess</button>
+    </div>`,true);
+    renderPrev();
+  }
+
+  function renderPrev(){
+    if(!alive())return;
+    const el=document.getElementById('fi-prev');if(!el)return;
+    if(!guesses.length){el.innerHTML='<span style="color:var(--muted);font-size:.8rem">None yet</span>';return;}
+    el.innerHTML=guesses.map(gg=>{
+      const cnt=[gg.fb.shape,gg.fb.color,gg.fb.pattern].filter(Boolean).length;
+      return`<div class="fi-past">
+        <div class="fi-mini">${miniSVG(gg.guess)}</div>
+        <div class="fi-cnt${cnt===3?' all':''}">${cnt}/3</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Row groups for toggling — only clear within the same row
+  const rowGroups={shape:SHAPES,color:COLORS,pattern:PATTERNS};
+  const rowPfx={shape:'fis',color:'fic',pattern:'fip'};
+
+  window.fiPick=(prop,val)=>{
+    if(!alive())return;
+    pick[prop]=val;
+    // Only clear buttons in the same property row
+    rowGroups[prop].forEach(v=>{
+      const el=document.getElementById(`${rowPfx[prop]}-${v}`);
+      if(el)el.classList.toggle('sel',v===val);
+    });
+    const btn=document.getElementById('fi-sub');
+    if(btn)btn.disabled=!(pick.shape&&pick.color&&pick.pattern);
+  };
+
+  window.fiSubmit=()=>{
+    if(!alive()||!pick.shape||!pick.color||!pick.pattern)return;
+    totalMoves++;
+    const fb={shape:pick.shape===secret.shape,color:pick.color===secret.color,pattern:pick.pattern===secret.pattern};
+    guesses.push({guess:{...pick},fb});
+    stat();
+
+    if(fb.shape&&fb.color&&fb.pattern){
+      // Correct! Show result in prev area and a Next Round / End button
+      renderPrev();
+      // Disable submit and selection
+      document.querySelectorAll('.fi-opt').forEach(el=>{el.style.pointerEvents='none';el.style.opacity='.5';});
+      const subBtn=document.getElementById('fi-sub');
+      if(subBtn){
+        subBtn.textContent=round>=ROUNDS?'See Results →':'Next Round →';
+        subBtn.disabled=false;
+        subBtn.onclick=()=>{if(!alive())return;if(round>=ROUNDS)endGame();else newRound();};
+      }
+    } else {
+      // Wrong — reset picks, keep previous guesses visible
+      pick={shape:null,color:null,pattern:null};
+      renderPrev();
+      // Clear all sel classes
+      Object.keys(rowGroups).forEach(pr=>rowGroups[pr].forEach(v=>{
+        const el=document.getElementById(`${rowPfx[pr]}-${v}`);
+        if(el)el.classList.remove('sel');
+      }));
+      const btn=document.getElementById('fi-sub');if(btn)btn.disabled=true;
+    }
+  };
+
+  function endGame(){
+    if(!alive())return;
+    saveScore('figureitout',Math.max(0,ROUNDS*10-totalMoves));setStats('');
+    setPanel(`<div class="result-card">
+      <h3>FigureItOut complete</h3>
+      <div class="result-num">${totalMoves}</div>
+      <div class="result-sub">Total moves across ${ROUNDS} rounds — lower is better</div>
+      <button class="again-btn" onclick="startFigureItOut()">Play again</button>
+    </div>`);
+  }
+  setStats('');
+  setPanel(`<div class="start-card">
+    <h3>FigureItOut</h3>
+    <p>A hidden figure has three properties: shape, colour, and pattern. Submit a guess and you'll see how many of the three properties you got right — but not which ones. Deduce the figure in as few guesses as possible. 5 rounds.</p>
+    <button class="big-btn" onclick="fiGo()">Begin</button>
+  </div>`);
+
+  window.fiGo=()=>{ if(!alive())return; newRound(); };
+}
+
+// ══════════════════════════════════════════════════════
+//  GAME 6 · THE SWITCH
+// ══════════════════════════════════════════════════════
+function startTheSwitch(){
+  const TOTAL=35;
+  let round=0,score=0,answered=false;
+  const g=myGen();
+  function alive(){return myGen()===g;}
+  function stat(){if(!alive())return;setStats(`<div class="stat-pill">Round <b>${round}</b>/${TOTAL}</div><div class="stat-pill">Score <b>${score}</b></div>`);}
+
+  const ARR=['←','→'];
+  function makeArrows(){return Array.from({length:4},()=>ARR[rand(0,1)]);}
+  function arrsEq(a,b){return a.join('')===b.join('');}
+
+  function genRound(){
+    // Math: addition and subtraction only
+    const op=Math.random()<.5?'+':'-';
+    let a,b,ans;
+    if(op==='+'){a=rand(1,19);b=rand(1,19);ans=a+b;}
+    else        {a=rand(2,20);b=rand(1,a-1);ans=a-b;}
+    const mathStr=`${a} ${op} ${b}`;
+    const isEven=ans%2===0;
+
+    // Arrow question — always 4 arrows, 50% match
+    const setA=makeArrows();
+    const match=Math.random()<.5;
+    let setB=match?[...setA]:makeArrows();
+    // If by chance random setB happens to equal setA when we wanted different, flip one arrow
+    if(!match&&arrsEq(setA,setB)){
+      const idx=rand(0,3);
+      setB[idx]=setB[idx]==='←'?'→':'←';
+    }
+    const arrsMatch=arrsEq(setA,setB);
+
+    // Which box is active: 0=top (math/even), 1=bottom (arrows)
+    const activeBox=rand(0,1);
+    const correctYes=activeBox===0?isEven:arrsMatch;
+
+    return{mathStr,setA,setB,activeBox,correctYes};
+  }
+
+  function renderRound(rd){
+    if(!alive())return;
+    answered=false;
+    const{mathStr,setA,setB,activeBox}=rd;
+
+    const topActive=activeBox===0;
+    const topQ='Is the answer an even number?';
+    const botQ='Are both sets of arrows the same?';
+
+    const arrowHTML=arr=>arr.map(a=>`<span>${a}</span>`).join('');
+
+    // Both boxes show the same data; only the active box shows its question label
+    const boxContent=`
+      <div class="sw-content">
+        <div class="sw-math">${mathStr}</div>
+        <div class="sw-sep"></div>
+        <div class="sw-arrows">${arrowHTML(setA)}</div>
+        <div class="sw-sep"></div>
+        <div class="sw-arrows">${arrowHTML(setB)}</div>
+      </div>`;
+
+    setPanel(`<div class="sw-wrap">
+      <div class="prog-track"><div class="prog-fill" style="width:${(round-1)/TOTAL*100}%"></div></div>
+      <div class="sw-block ${topActive?'active':'inactive'}">
+        ${topActive?`<div class="sw-q">${topQ}</div>`:''}
+        ${boxContent}
+      </div>
+      <div class="sw-block ${topActive?'inactive':'active'}">
+        ${!topActive?`<div class="sw-q">${botQ}</div>`:''}
+        ${boxContent}
+      </div>
+      <div class="sw-btns">
+        <button class="sw-btn" id="sw-yes" onclick="swAnswer(true)">Yes</button>
+        <button class="sw-btn" id="sw-no"  onclick="swAnswer(false)">No</button>
+      </div>
+    </div>`,true);
+  }
+
+  window.swAnswer=yes=>{
+    if(!alive()||answered)return;
+    answered=true;
+    const correct=yes===_swRound.correctYes;
+    if(correct)score++;
+    // Flash the pressed button
+    const btn=document.getElementById(yes?'sw-yes':'sw-no');
+    if(btn)btn.classList.add(yes?'yes':'no');
+    stat();
+    setTimeout(()=>{
+      if(!alive())return;
+      if(round>=TOTAL){endGame();return;}
+      _swRound=genRound();
+      round++;
+      renderRound(_swRound);
+      stat();
+    },420);
+  };
+
+  setKey(e=>{
+    if(!alive())return;
+    if(e.key==='y'||e.key==='Y')swAnswer(true);
+    if(e.key==='n'||e.key==='N')swAnswer(false);
+  });
+
+  function endGame(){
+    if(!alive())return;
+    clearKeys();saveScore('theswitch',score);setStats('');
+    setPanel(`<div class="result-card">
+      <h3>The Switch complete</h3>
+      <div class="result-num">${score}<span style="font-size:2rem;color:var(--muted)">/${TOTAL}</span></div>
+      <div class="result-sub">Accuracy: ${Math.round(score/TOTAL*100)}%</div>
+      <button class="again-btn" onclick="startTheSwitch()">Play again</button>
+    </div>`);
+  }
+
+  let _swRound=genRound();
+  setStats('');
+  setPanel(`<div class="start-card">
+    <h3>The Switch</h3>
+    <p>Two boxes appear each round — one asks if the math answer is even, the other asks if the two arrow sequences match. Only the <strong>larger, brighter box</strong> is your task for that round. Answer <strong>Yes</strong> or <strong>No</strong>. 35 rounds.</p>
+    <button class="big-btn" onclick="swGo()">Begin</button>
+  </div>`);
+  window.swGo=()=>{if(!alive())return;round++;renderRound(_swRound);stat();};
+}
+
+// ══════════════════════════════════════════════════════
+//  GAME 7 · STOCK MASTER
+// ══════════════════════════════════════════════════════
+function startStockMaster(){
+  const DURATION=120; // 2 minutes in seconds
+  let score=0,timeLeft=DURATION,gameOver=false;
+  let gauges=[]; // [{id,x,y,angle,speed,dir,greenStart,greenEnd,lifeLeft,maxLife,fading}]
+  let nextId=0,rafId=null,lastTs=null,spawnTimer=0;
+  const g=myGen();
+  function alive(){return myGen()===g;}
+
+  // Gauge dimensions
+  const GR=54; // radius
+
+  function spawnGauge(arenaW,arenaH){
+    const margin=GR+14;
+    const minDist=GR*2+18; // minimum centre-to-centre distance to avoid overlap
+    let x,y,attempts=0;
+    do {
+      x=rand(margin,arenaW-margin);
+      y=rand(margin,arenaH-margin);
+      attempts++;
+    } while(
+      attempts<40 &&
+      gauges.some(g=>{const dx=g.x-x,dy=g.y-y;return dx*dx+dy*dy<minDist*minDist;})
+    );
+    const greenStart=rand(20,160);
+    const greenSpan=rand(35,75);
+    const speed=(Math.random()*1.8+0.4);
+    const maxLife=rand(4000,9000);
+    return{id:nextId++,x,y,angle:rand(0,359),speed,dir:Math.random()<.5?1:-1,
+           greenStart,greenEnd:greenStart+greenSpan,lifeLeft:maxLife,maxLife,fading:false};
+  }
+
+  function drawGauge(ctx,gau,scale=1){
+    const{x,y,angle,greenStart,greenEnd,fading,lifeLeft,maxLife}=gau;
+    const r=GR*scale;
+    const alpha=fading?Math.max(0,lifeLeft/400):1;
+    ctx.save();
+    ctx.globalAlpha=alpha;
+    ctx.translate(x,y);
+
+    // Background circle
+    ctx.beginPath();
+    ctx.arc(0,0,r,0,Math.PI*2);
+    ctx.fillStyle='rgba(100,120,190,0.85)';
+    ctx.fill();
+
+    // Green zone arc
+    const toRad=d=>(d-90)*Math.PI/180; // 0deg = top
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.arc(0,0,r,toRad(greenStart),toRad(greenEnd));
+    ctx.closePath();
+    ctx.fillStyle='#22c55e';
+    ctx.fill();
+
+    // Inner circle overlay (makes it look like a gauge face)
+    ctx.beginPath();
+    ctx.arc(0,0,r*0.18,0,Math.PI*2);
+    ctx.fillStyle='rgba(80,100,170,0.9)';
+    ctx.fill();
+
+    // Needle
+    const needleRad=(angle-90)*Math.PI/180;
+    const nx=Math.cos(needleRad)*r*0.82;
+    const ny=Math.sin(needleRad)*r*0.82;
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.lineTo(nx,ny);
+    ctx.strokeStyle='white';
+    ctx.lineWidth=2.5*scale;
+    ctx.lineCap='round';
+    ctx.stroke();
+
+    // Rim
+    ctx.beginPath();
+    ctx.arc(0,0,r,0,Math.PI*2);
+    ctx.strokeStyle='rgba(255,255,255,0.25)';
+    ctx.lineWidth=2*scale;
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  function isInGreen(gau){
+    let a=((gau.angle%360)+360)%360;
+    let s=gau.greenStart, e=gau.greenEnd;
+    return a>=s&&a<=e;
+  }
+
+  function loop(ts){
+    if(!alive()||gameOver){return;}
+    rafId=requestAnimationFrame(loop);
+    const dt=lastTs?Math.min(ts-lastTs,100):16;
+    lastTs=ts;
+
+    // Update time
+    timeLeft=Math.max(0,timeLeft-dt/1000);
+    if(timeLeft<=0){endGame();return;}
+
+    const arena=document.getElementById('sm-arena');
+    const canvas=document.getElementById('sm-canvas');
+    if(!arena||!canvas)return;
+    const W=arena.clientWidth,H=arena.clientHeight;
+    canvas.width=W;canvas.height=H;
+    const ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,W,H);
+
+    // Spawn timer
+    spawnTimer-=dt;
+    if(spawnTimer<=0&&gauges.length<7){
+      gauges.push(spawnGauge(W,H));
+      spawnTimer=rand(600,1800);
+    }
+
+    // Update & draw gauges
+    gauges=gauges.filter(gau=>{
+      gau.angle=(gau.angle+gau.speed*gau.dir*(dt/16))%360;
+      gau.lifeLeft-=dt;
+      if(gau.lifeLeft<=400)gau.fading=true;
+      if(gau.lifeLeft<=0)return false;
+      drawGauge(ctx,gau);
+      return true;
+    });
+
+    // Timer bar
+    const fill=document.getElementById('sm-fill');
+    if(fill)fill.style.width=(timeLeft/DURATION*100)+'%';
+    const label=document.getElementById('sm-time');
+    if(label){
+      const m=Math.floor(timeLeft/60);
+      const s=Math.floor(timeLeft%60);
+      label.textContent=`${m}:${s.toString().padStart(2,'0')}`;
+    }
+    // Stats
+    setStats(`<div class="stat-pill">Score <b>${score}</b></div><div class="stat-pill">Time <b>${Math.ceil(timeLeft)}s</b></div>`);
+  }
+
+  function handleClick(e){
+    if(!alive()||gameOver)return;
+    const canvas=document.getElementById('sm-canvas');
+    if(!canvas)return;
+    const rect=canvas.getBoundingClientRect();
+    const cx=e.clientX-rect.left;
+    const cy=e.clientY-rect.top;
+    // Find clicked gauge (top of z-stack = last drawn = last in array)
+    for(let i=gauges.length-1;i>=0;i--){
+      const gau=gauges[i];
+      const dx=cx-gau.x,dy=cy-gau.y;
+      if(dx*dx+dy*dy<=GR*GR){
+        if(isInGreen(gau)){
+          score++;
+          // +1 score pop
+          const arena=document.getElementById('sm-arena');
+          if(arena){
+            const pop=document.createElement('div');
+            pop.className='sm-score-pop';
+            pop.textContent='+1';
+            pop.style.left=(gau.x-16)+'px';
+            pop.style.top=(gau.y-GR-10)+'px';
+            arena.appendChild(pop);
+            setTimeout(()=>{if(pop.parentNode)pop.remove();},800);
+          }
+          gauges.splice(i,1);
+        } else {
+          // Miss — deduct point, full-screen red flash
+          score=Math.max(0,score-1);
+          const flash=document.getElementById('cc-timeout-flash');
+          if(flash){flash.className='on';setTimeout(()=>{if(flash)flash.className='off';},80);setTimeout(()=>{if(flash)flash.className='';},500);}
+          // -1 pop at gauge location
+          const arena2=document.getElementById('sm-arena');
+          if(arena2){
+            const pop=document.createElement('div');
+            pop.className='sm-score-pop';
+            pop.textContent='−1';
+            pop.style.color='#fca5a5';
+            pop.style.left=(gau.x-16)+'px';
+            pop.style.top=(gau.y-GR-10)+'px';
+            arena2.appendChild(pop);
+            setTimeout(()=>{if(pop.parentNode)pop.remove();},800);
+          }
+        }
+        break;
+      }
+    }
+  }
+
+  function endGame(){
+    if(!alive())return;
+    gameOver=true;
+    cancelAnimationFrame(rafId);
+    saveScore('stockmaster',score);setStats('');
+    setPanel(`<div class="result-card">
+      <h3>Stock Master complete</h3>
+      <div class="result-num">${score}</div>
+      <div class="result-sub">Stocks bought in 2 minutes</div>
+      <button class="again-btn" onclick="startStockMaster()">Play again</button>
+    </div>`);
+  }
+
+  function startGame(){
+    if(!alive())return;
+    setPanel(`<div style="display:flex;flex-direction:column;width:100%;gap:6px">
+      <div class="sm-timer-bar"><div class="sm-timer-fill" id="sm-fill" style="width:100%"></div></div>
+      <div class="sm-time-label" id="sm-time">2:00</div>
+      <div class="sm-arena" id="sm-arena">
+        <canvas id="sm-canvas" style="display:block;width:100%;height:100%"></canvas>
+      </div>
+    </div>`,true);
+
+    // Initial spawn burst
+    const arena=document.getElementById('sm-arena');
+    setTimeout(()=>{
+      if(!alive())return;
+      const W=arena.clientWidth,H=arena.clientHeight;
+      for(let i=0;i<rand(3,5);i++)gauges.push(spawnGauge(W,H));
+      spawnTimer=rand(800,1500);
+    },100);
+
+    document.getElementById('sm-arena').addEventListener('click',handleClick);
+    lastTs=null;
+    rafId=requestAnimationFrame(loop);
+  }
+
+  setStats('');
+  setPanel(`<div class="start-card">
+    <h3>Stock Master</h3>
+    <p>Gauges appear across the screen, each with a spinning needle and a <strong>green zone</strong>. Click a gauge when its needle is inside the green zone to buy a stock. Gauges fade in and out — act fast. 2 minutes on the clock.</p>
+    <button class="big-btn" onclick="smGo()">Begin</button>
+  </div>`);
+  window.smGo=()=>{if(!alive())return;startGame();};
+}
+
+// ── init ──
+renderDashboard();
+</script>
+</body>
+</html>
