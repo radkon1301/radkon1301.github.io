@@ -316,18 +316,38 @@ const GAMES = [
 // lowerBetter ids use lower-is-better comparison
 const LOWER_BETTER=new Set(['shapeshift','numberbox','figureitout','theswitch']);
 let scores = {};
-try { scores = JSON.parse(localStorage.getItem('me_scores')||'{}'); } catch(e){}
+try {
+  const raw = JSON.parse(localStorage.getItem('me_scores')||'{}');
+  let anyKept = false;
+  Object.keys(raw).forEach(k=>{
+    const v = raw[k];
+    if(v != null && typeof v === 'object' && typeof v.label === 'string' && typeof v.v === 'number'){
+      scores[k] = v;
+      anyKept = true;
+    }
+  });
+  // If nothing survived the filter the storage only had old-format data — wipe it
+  if(!anyKept) localStorage.removeItem('me_scores');
+} catch(e){ try{localStorage.removeItem('me_scores');}catch(_){} }
+
 function saveScore(id, v, label) {
-  // v is the numeric comparison value; label is the display string
   const entry = {v, label: label||String(v)};
   const cur = scores[id];
-  const better = cur==null
+  const curV = cur!=null && typeof cur==='object' ? cur.v : null;
+  const better = curV==null
     ? true
-    : LOWER_BETTER.has(id) ? v < cur.v : v > cur.v;
+    : LOWER_BETTER.has(id) ? v < curV : v > curV;
   if(better){
     scores[id]=entry;
     try{localStorage.setItem('me_scores',JSON.stringify(scores));}catch(e){}
   }
+}
+
+function getScoreLabel(id){
+  const s=scores[id];
+  if(s==null) return null;
+  if(typeof s==='object' && s.label!=null) return s.label;
+  return null; // discard anything malformed
 }
 
 // ── game generation guard — incremented on every showDashboard/launchGame ──
@@ -346,7 +366,7 @@ function renderDashboard() {
       <div class="card-desc">${g.desc}</div>
       <div class="card-meta">
         ${g.meta.map(m=>`<span class="chip">${m}</span>`).join('')}
-        ${scores[g.id]!=null?`<span class="chip hi">Best: ${scores[g.id].label}</span>`:''}
+        ${getScoreLabel(g.id)!=null?`<span class="chip hi">Best: ${getScoreLabel(g.id)}</span>`:''}
       </div>
       <button class="play-btn">Start exercise →</button>
     </div>`).join('');
