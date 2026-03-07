@@ -109,6 +109,31 @@ body {
   justify-content: center;
 }
 .game-panel.top { justify-content: flex-start; }
+.game-panel.wide { max-width: 860px; padding: 32px 36px; }
+/* ── SKYSCRAPER ── */
+.sky-wrap { width:100%; display:flex; flex-direction:column; gap:0; }
+.sky-target-label { font-size:.68rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--accent); margin-bottom:6px; text-align:center; }
+.sky-target-area { width:100%; background:linear-gradient(135deg,#1a1e3a 0%,#2a3060 100%); border-radius:12px 12px 0 0; border:1px solid #3a4070; border-bottom:2px solid #4a50a0; padding:14px 0 10px; }
+.sky-game-area { width:100%; background:linear-gradient(180deg,#1e2245 0%,#16193a 100%); border-radius:0 0 12px 12px; border:1px solid #3a4070; border-top:none; padding:16px 0 14px; cursor:pointer; position:relative; }
+.sky-piles-row { display:flex; justify-content:space-around; align-items:flex-end; padding:0 10px; }
+.sky-pile-col { display:flex; flex-direction:column; align-items:center; gap:0; flex:1; padding:0 8px; min-height:inherit; justify-content:flex-end; }
+.sky-base { width:96px; height:10px; background:#4a4a7a; border-radius:3px; margin-top:2px; border:1px solid #6a6aaa; }
+.sky-block { width:84px; height:52px; border-radius:7px; display:flex; align-items:center; justify-content:center; margin:3px 0; transition:transform .12s,box-shadow .12s; user-select:none; position:relative; }
+.sky-block::after { content:''; position:absolute; top:4px; left:8px; right:8px; height:6px; border-radius:3px; background:rgba(255,255,255,.22); pointer-events:none; }
+.sky-block.mini { width:62px; height:36px; border-radius:5px; margin:2px 0; }
+.sky-block.mini::after { top:3px; left:6px; right:6px; height:4px; }
+.sky-pile-slot { width:84px; min-height:52px; }
+.sky-pile-slot.mini { width:62px; min-height:36px; }
+.sky-selected-pile { outline:2px dashed #e94560; outline-offset:4px; border-radius:8px; }
+.sky-floating { animation:skyFloat .5s ease-in-out infinite alternate; }
+@keyframes skyFloat { from{transform:translateY(0)} to{transform:translateY(-5px)} }
+.sky-status { font-family:'DM Mono',monospace; font-size:.72rem; color:rgba(255,255,255,.5); text-align:center; padding:8px 0 4px; min-height:22px; }
+.sky-info-row { display:flex; justify-content:space-between; align-items:center; padding:10px 24px 0; }
+.sky-move-count { font-family:'DM Mono',monospace; font-size:.75rem; color:rgba(255,255,255,.6); }
+.sky-win-overlay { position:absolute; inset:0; background:rgba(20,24,60,.92); border-radius:0 0 12px 12px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; cursor:pointer; z-index:10; }
+.sky-win-title { font-family:'Instrument Serif',serif; font-size:1.8rem; color:#e8bc30; }
+.sky-win-sub { font-family:'DM Mono',monospace; font-size:.82rem; color:rgba(255,255,255,.75); text-align:center; line-height:1.7; }
+.sky-win-hint { font-family:'DM Mono',monospace; font-size:.72rem; color:rgba(255,255,255,.35); margin-top:4px; }
 /* progress */
 .prog-track { width: 100%; height: 3px; background: var(--border); border-radius: 2px; margin-bottom: 32px; }
 .prog-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width .4s ease; }
@@ -375,13 +400,14 @@ const GAMES = [
   { id:'theswitch',   title:'The Switch',  icon:'⇅', tag:'Switching',   desc:'Two questions flash on two boxes — math answer odd/even, or arrows matching. Answer the active box. 35 rounds.', meta:['35 rounds','~3 min'],      start:startTheSwitch   },
   { id:'stockmaster', title:'Stock Master',icon:'◉', tag:'Timing',      desc:'Click a gauge when its needle is in the green zone to buy a stock. Gauges appear and vanish quickly. 2 minutes.', meta:['2 min','Reflex'],         start:startStockMaster },
   { id:'bart',        title:'BART',        icon:'✴︎', tag:'Risk',         desc:'Pump balloons to earn money — but pump too much and they pop. Balance risk and reward across two rounds of escalating stakes.', meta:['2 rounds','~8 min'], start:startBART },
-  { id:'test',        title:'Full Test',   icon:'▶', tag:'Test',          desc:'Play all 8 exercises back-to-back in a random order. Your scores are saved and compared against your personal bests at the end.', meta:['All games','~30 min'], start:startTest }
+  { id:'skyscraper',  title:'Skyscraper',  icon:'⬚', tag:'Planning',     desc:'Rearrange coloured blocks across three piles to match the target pattern. 10 levels, from 4 to 7 blocks. Fewest moves wins.', meta:['10 levels','4–7 blocks'], start:startSkyscraper },
+  { id:'test',        title:'Full Test',   icon:'▶', tag:'Test',          desc:'Play all 8 exercises back-to-back in a random order. Your scores are saved and compared against your personal bests at the end.', meta:['All games','~35 min'], start:startTest }
 ];
 
 // ── scores ──
 // Each entry: {v: numeric value for comparison, label: display string}
 // lowerBetter ids use lower-is-better comparison
-const LOWER_BETTER=new Set(['shapeshift','numberbox','figureitout','theswitch']);
+const LOWER_BETTER=new Set(['shapeshift','numberbox','figureitout','theswitch','skyscraper']);
 let scores = {};
 try {
   const raw = JSON.parse(localStorage.getItem('me_scores')||'{}');
@@ -2123,7 +2149,7 @@ function startBART(){
 //  FULL TEST — runs all 8 games in random order
 // ══════════════════════════════════════════════════════
 function startTest(){
-  const TEST_IDS=['shapeshift','codecompare','pincode','numberbox','figureitout','theswitch','stockmaster','bart'];
+  const TEST_IDS=['shapeshift','codecompare','pincode','numberbox','figureitout','theswitch','stockmaster','bart','skyscraper'];
   const order=[...TEST_IDS].sort(()=>Math.random()-.5);
   let idx=0;
   const testScores={};
@@ -2200,6 +2226,320 @@ function startTest(){
     <p style="font-size:.85rem;color:var(--muted);margin-top:8px">Order: ${order.map(id=>GAMES.find(x=>x.id===id).title).join(' → ')}</p>
     <button class="big-btn" onclick="window._testAdvance&&window._testAdvance()">Begin</button>
   </div>`);
+}
+
+// ══════════════════════════════════════════════════════
+//  GAME 9 · SKYSCRAPER — block rearrangement puzzle
+// ══════════════════════════════════════════════════════
+function startSkyscraper(){
+  const g=myGen();
+  function alive(){return myGen()===g;}
+
+  // ── Block colours ────────────────────────────────
+  const COLORS={
+    red:    {bg:'#E84040',dark:'#C02020',label:'red'},
+    green:  {bg:'#4CC94C',dark:'#2EA02E',label:'grn'},
+    blue:   {bg:'#5B8EF0',dark:'#3060C0',label:'blu'},
+    yellow: {bg:'#F5D34B',dark:'#C8A800',label:'yel'},
+    pink:   {bg:'#F075C8',dark:'#C040A0',label:'pnk'},
+    orange: {bg:'#F09040',dark:'#C06010',label:'org'},
+    teal:   {bg:'#40C8C0',dark:'#209090',label:'tel'},
+  };
+  const COLOR_KEYS=Object.keys(COLORS);
+
+  // ── Level config: [nBlocks, minOptimal] ──────────
+  const LEVELS=[
+    [4,5],[4,6],[4,7],      // levels 1-3: 4 blocks
+    [5,7],[5,9],[5,11],     // levels 4-6: 5 blocks
+    [6,10],[6,13],          // levels 7-8: 6 blocks
+    [7,14],[7,16],          // levels 9-10: 7 blocks
+  ];
+  const TOTAL_LEVELS=10;
+
+  // ── State ────────────────────────────────────────
+  let levelIdx=0, piles, targetPiles, selected, moves, optimal, roundStart;
+  let overPars=[], times=[], optimals=[], userMoves=[];
+
+  // ── BFS ─────────────────────────────────────────
+  function stateKey(p){return p.map(pile=>pile.join(',')).join('|');}
+  function bfs(startP,tgtP){
+    const goal=stateKey(tgtP);
+    const start=startP.map(p=>[...p]);
+    const startKey=stateKey(start);
+    if(startKey===goal)return 0;
+    const visited=new Map([[startKey,null]]);
+    const queue=[start];
+    let head=0;
+    while(head<queue.length){
+      const cur=queue[head++];
+      const curKey=stateKey(cur);
+      for(let i=0;i<3;i++){
+        if(!cur[i].length)continue;
+        const top=cur[i][cur[i].length-1];
+        for(let j=0;j<3;j++){
+          if(i===j)continue;
+          const ns=cur.map(p=>[...p]);
+          ns[i].pop();ns[j].push(top);
+          const nk=stateKey(ns);
+          if(visited.has(nk))continue;
+          visited.set(nk,curKey);
+          if(nk===goal){
+            // count path length
+            let depth=0,k=nk;
+            while(visited.get(k)!==null){k=visited.get(k);depth++;}
+            return depth;
+          }
+          queue.push(ns);
+        }
+      }
+    }
+    return -1;
+  }
+
+  // ── Puzzle generation ────────────────────────────
+  function generateTarget(colors){
+    const n=colors.length;
+    const maxP=n<=3?1:n<=5?2:3;
+    const nP=rand(1,maxP);
+    const active=[...Array(3).keys()].sort(()=>Math.random()-.5).slice(0,nP);
+    const shuffled=[...colors].sort(()=>Math.random()-.5);
+    const tgt=[[],[],[]];
+    active.forEach((a,i)=>tgt[a].push(shuffled[i]));
+    shuffled.slice(nP).forEach(c=>tgt[active[Math.floor(Math.random()*nP)]].push(c));
+    return tgt;
+  }
+
+  function generateStart(colors,tgtP){
+    for(let attempt=0;attempt<200;attempt++){
+      const shuffled=[...colors].sort(()=>Math.random()-.5);
+      const nA=Math.random()<0.5?2:3;
+      const active=[...Array(3).keys()].sort(()=>Math.random()-.5).slice(0,nA);
+      const sp=[[],[],[]];
+      shuffled.forEach((c,ci)=>sp[active[ci%nA]].push(c));
+      if(active.some(a=>!sp[a].length))continue;
+      if(stateKey(sp)===stateKey(tgtP))continue;
+      return sp;
+    }
+    // fallback: all on pile 0
+    return [colors,[], []];
+  }
+
+  function newLevel(){
+    if(!alive())return;
+    const [nBlocks,minOpt]=LEVELS[levelIdx];
+    const colors=COLOR_KEYS.slice(0,nBlocks);
+
+    let tgt,sp,opt;
+    let attempts=0;
+    do{
+      attempts++;
+      tgt=generateTarget(colors);
+      sp=generateStart(colors,tgt);
+      opt=bfs(sp,tgt);
+    }while((opt<minOpt||opt<0)&&attempts<300);
+
+    if(opt<0)opt=minOpt; // fallback
+
+    piles=sp.map(p=>[...p]);
+    targetPiles=tgt;
+    optimal=opt;
+    selected=null;
+    moves=0;
+    roundStart=performance.now();
+    render();
+    setStats(`<div class="stat-pill">Level <b>${levelIdx+1}/${TOTAL_LEVELS}</b></div><div class="stat-pill">Moves <b id="sky-mv">0</b></div>`);
+  }
+
+  // ── SVG block rendering ──────────────────────────
+  function blockHTML(colorKey,mini=false,floating=false){
+    const c=COLORS[colorKey];
+    const cls='sky-block'+(mini?' mini':'')+(floating?' sky-floating':'');
+    return`<div class="${cls}" style="background:${c.bg};border-bottom:3px solid ${c.dark};box-shadow:0 3px 8px rgba(0,0,0,.35)"></div>`;
+  }
+
+  function emptySlotHTML(mini=false){
+    return`<div class="${mini?'sky-pile-slot mini':'sky-pile-slot'}"></div>`;
+  }
+
+  function renderPilesHTML(pilesArr,mini=false,selectedIdx=null){
+    const maxH=Math.max(...pilesArr.map(p=>p.length),1);
+    return pilesArr.map((pile,i)=>{
+      const isSel=selectedIdx===i;
+      const paddingSlots=maxH-pile.length;
+      let inner='';
+      for(let k=0;k<paddingSlots;k++)inner+=emptySlotHTML(mini);
+      // Render bottom to top: array index 0=bottom, so render in reverse for top-of-stack first (CSS flex-column)
+      for(let k=pile.length-1;k>=0;k--){
+        const isTop=k===pile.length-1;
+        const floating=isSel&&isTop&&!mini;
+        inner+=blockHTML(pile[k],mini,floating);
+      }
+      inner+=`<div class="sky-base"></div>`;
+      return`<div class="sky-pile-col${isSel?' sky-selected-pile':''}" data-pile="${i}" style="cursor:pointer">${inner}</div>`;
+    }).join('');
+  }
+
+  function render(){
+    if(!alive())return;
+    const panel=document.getElementById('game-panel');
+    if(!panel)return;
+
+    // Use max possible blocks across all levels (7) so height never changes mid-game
+    const MAX_BLOCKS=7;
+    const gameH=60+MAX_BLOCKS*58;   // 7 blocks × 58px (block 52 + margin 6) + padding
+    const tgtH=40+MAX_BLOCKS*42;    // mini blocks ~36+gap
+
+    panel.className='game-panel wide top';
+    panel.innerHTML=`<div class="sky-wrap">
+      <div class="sky-target-label">Target pattern — level ${levelIdx+1} of ${TOTAL_LEVELS}</div>
+      <div class="sky-target-area" style="min-height:${tgtH}px">
+        <div class="sky-piles-row" style="min-height:${tgtH-20}px;align-items:flex-end">
+          ${renderPilesHTML(targetPiles,true,null)}
+        </div>
+      </div>
+      <div class="sky-game-area" id="sky-game" style="min-height:${gameH}px">
+        <div class="sky-piles-row" style="height:${gameH-50}px;align-items:flex-end" id="sky-piles">
+          ${renderPilesHTML(piles,false,selected)}
+        </div>
+        <div class="sky-info-row">
+          <div class="sky-move-count">Moves: <span id="sky-mv2">${moves}</span></div>
+          <div class="sky-status" id="sky-status">${selected===null?'Click a pile to pick up':'Click destination pile'}</div>
+        </div>
+      </div>
+    </div>`;
+
+    // Use event delegation — click anywhere in sky-game delegates to nearest pile col
+    const gameDiv=document.getElementById('sky-game');
+    if(gameDiv){
+      gameDiv.addEventListener('click',(e)=>{
+        // Walk up to find a data-pile element
+        let el=e.target;
+        while(el&&el!==gameDiv){
+          if(el.dataset&&el.dataset.pile!==undefined){
+            onPileClick(parseInt(el.dataset.pile));
+            return;
+          }
+          el=el.parentElement;
+        }
+      });
+    }
+  }
+
+  function onPileClick(i){
+    if(!alive())return;
+    if(selected===null){
+      if(piles[i].length===0){showStatus('That pile is empty!');return;}
+      selected=i;
+      render();
+    } else {
+      if(i===selected){
+        selected=null;
+        render();
+      } else {
+        const block=piles[selected].pop();
+        piles[i].push(block);
+        moves++;
+        selected=null;
+        const mv=document.getElementById('sky-mv');
+        if(mv)mv.textContent=moves;
+        // Render the new state first, then check for win (overlay appended after)
+        render();
+        if(!alive())return;
+        checkWin();
+      }
+    }
+  }
+
+  function showStatus(msg){
+    const el=document.getElementById('sky-status');
+    if(el)el.textContent=msg;
+  }
+
+  function checkWin(){
+    if(stateKey(piles)!==stateKey(targetPiles))return false;
+    const elapsed=(performance.now()-roundStart)/1000;
+    const overPar=moves-optimal;
+    overPars.push(overPar);
+    times.push(elapsed);
+    optimals.push(optimal);
+    userMoves.push(moves);
+
+    if(levelIdx+1>=TOTAL_LEVELS){endGame();return true;}
+
+    // Show win overlay — render() was already called, so sky-game exists
+    const gameArea=document.getElementById('sky-game');
+    if(!gameArea)return true;
+    const ov=document.createElement('div');
+    ov.className='sky-win-overlay';
+    ov.innerHTML=`
+      <div class="sky-win-title">Level ${levelIdx+1} solved!</div>
+      <div class="sky-win-hint">Click anywhere to continue to level ${levelIdx+2}</div>`;
+    ov.addEventListener('click',()=>{
+      if(!alive())return;
+      levelIdx++;
+      newLevel();
+    });
+    gameArea.appendChild(ov);
+    return true;
+  }
+
+  function endGame(){
+    if(!alive())return;
+    const avgOver=(overPars.reduce((a,b)=>a+b,0)/overPars.length);
+    const avgTime=(times.reduce((a,b)=>a+b,0)/times.length);
+    const label=`${avgOver.toFixed(2)} over par @ ${avgTime.toFixed(1)}s`;
+    saveScore('skyscraper',avgOver,label);
+    setStats('');
+
+    // Build per-level table columns
+    const levelHeaders=Array.from({length:TOTAL_LEVELS},(_,i)=>`<th style="padding:6px 10px;text-align:center;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);min-width:52px">L${i+1}</th>`).join('');
+    const optRow=optimals.map(v=>`<td style="padding:6px 10px;text-align:center;font-family:'DM Mono',monospace;font-size:.82rem;color:var(--text2)">${v}</td>`).join('');
+    const movRow=userMoves.map(v=>`<td style="padding:6px 10px;text-align:center;font-family:'DM Mono',monospace;font-size:.82rem;color:var(--text)">${v}</td>`).join('');
+    const parRow=overPars.map(v=>{
+      const col=v===0?'var(--green)':v<=2?'var(--yellow)':'var(--red)';
+      return`<td style="padding:6px 10px;text-align:center;font-family:'DM Mono',monospace;font-size:.82rem;font-weight:700;color:${col}">${v===0?'+0':'+'+v}</td>`;
+    }).join('');
+
+    setPanel(`<div style="width:100%;display:flex;flex-direction:column;gap:20px;align-items:center">
+      <div class="result-card" style="width:100%">
+        <h3>Skyscraper complete</h3>
+        <div class="result-num">${avgOver.toFixed(2)}<span style="font-size:2rem;color:var(--muted)"> over par</span></div>
+        <div class="result-sub">Avg extra moves per level · Avg solve time: ${avgTime.toFixed(1)}s</div>
+      </div>
+      <div style="width:100%;overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;border:1px solid var(--border);border-radius:8px;overflow:hidden;font-size:.88rem">
+          <thead><tr style="background:var(--surface2)">
+            <th style="padding:6px 14px;text-align:left;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);white-space:nowrap">Level</th>
+            ${levelHeaders}
+          </tr></thead>
+          <tbody>
+            <tr style="border-top:1px solid var(--border)">
+              <td style="padding:6px 14px;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);white-space:nowrap">Optimal</td>
+              ${optRow}
+            </tr>
+            <tr style="border-top:1px solid var(--border)">
+              <td style="padding:6px 14px;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);white-space:nowrap">Your moves</td>
+              ${movRow}
+            </tr>
+            <tr style="border-top:1px solid var(--border);background:var(--surface2)">
+              <td style="padding:6px 14px;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);white-space:nowrap">Par</td>
+              ${parRow}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button class="again-btn" onclick="startSkyscraper()">Play again</button>
+    </div>`,true);
+  }
+
+  // ── Start screen ─────────────────────────────────
+  setStats('');
+  setPanel(`<div class="start-card">
+    <h3>Skyscraper</h3>
+    <p>Rearrange coloured blocks across three piles to match the target pattern shown above the game area. Click a pile to pick up its top block, then click another pile to place it. 10 levels, 4 to 7 blocks — score is average moves over the optimal solution.</p>
+    <button class="big-btn" onclick="skyGo()">Begin</button>
+  </div>`);
+  window.skyGo=()=>{if(!alive())return;levelIdx=0;overPars=[];times=[];optimals=[];userMoves=[];newLevel();};
 }
 
 // ── init ──
