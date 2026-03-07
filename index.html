@@ -115,8 +115,8 @@ body {
 .sky-target-label { font-size:.68rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--accent); margin-bottom:6px; text-align:center; }
 .sky-target-area { width:100%; background:linear-gradient(135deg,#1a1e3a 0%,#2a3060 100%); border-radius:12px 12px 0 0; border:1px solid #3a4070; border-bottom:2px solid #4a50a0; padding:14px 0 10px; }
 .sky-game-area { width:100%; background:linear-gradient(180deg,#1e2245 0%,#16193a 100%); border-radius:0 0 12px 12px; border:1px solid #3a4070; border-top:none; padding:16px 0 14px; cursor:pointer; position:relative; }
-.sky-piles-row { display:flex; justify-content:space-around; align-items:flex-end; padding:0 10px; }
-.sky-pile-col { display:flex; flex-direction:column; align-items:center; gap:0; flex:1; padding:0 8px; min-height:inherit; justify-content:flex-end; }
+.sky-piles-row { display:flex; justify-content:space-around; align-items:stretch; padding:0 10px; }
+.sky-pile-col { display:flex; flex-direction:column; align-items:center; gap:0; flex:1; padding:0 8px; height:100%; justify-content:flex-end; }
 .sky-base { width:96px; height:10px; background:#4a4a7a; border-radius:3px; margin-top:2px; border:1px solid #6a6aaa; }
 .sky-block { width:84px; height:52px; border-radius:7px; display:flex; align-items:center; justify-content:center; margin:3px 0; transition:transform .12s,box-shadow .12s; user-select:none; position:relative; }
 .sky-block::after { content:''; position:absolute; top:4px; left:8px; right:8px; height:6px; border-radius:3px; background:rgba(255,255,255,.22); pointer-events:none; }
@@ -2146,7 +2146,7 @@ function startBART(){
 }
 
 // ══════════════════════════════════════════════════════
-//  FULL TEST — runs all 9 games in random order
+//  FULL TEST — runs all 8 games in random order
 // ══════════════════════════════════════════════════════
 function startTest(){
   const TEST_IDS=['shapeshift','codecompare','pincode','numberbox','figureitout','theswitch','stockmaster','bart','skyscraper'];
@@ -2398,7 +2398,7 @@ function startSkyscraper(){
         </div>
       </div>
       <div class="sky-game-area" id="sky-game" style="min-height:${gameH}px">
-        <div class="sky-piles-row" style="height:${gameH-50}px;align-items:flex-end" id="sky-piles">
+        <div class="sky-piles-row" style="height:${gameH-50}px" id="sky-piles">
           ${renderPilesHTML(piles,false,selected)}
         </div>
         <div class="sky-info-row">
