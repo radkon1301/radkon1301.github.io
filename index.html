@@ -374,7 +374,8 @@ const GAMES = [
   { id:'figureitout', title:'FigureItOut', icon:'◈', tag:'Logic',       desc:'Deduce the hidden figure\'s shape, colour, and stripe pattern. Feedback shows how many properties match.', meta:['5 rounds','3 properties'],    start:startFigureItOut },
   { id:'theswitch',   title:'The Switch',  icon:'⇅', tag:'Switching',   desc:'Two questions flash on two boxes — math answer odd/even, or arrows matching. Answer the active box. 35 rounds.', meta:['35 rounds','~3 min'],      start:startTheSwitch   },
   { id:'stockmaster', title:'Stock Master',icon:'◉', tag:'Timing',      desc:'Click a gauge when its needle is in the green zone to buy a stock. Gauges appear and vanish quickly. 2 minutes.', meta:['2 min','Reflex'],         start:startStockMaster },
-  { id:'bart',        title:'BART',        icon:'✴︎', tag:'Risk',         desc:'Pump balloons to earn money — but pump too much and they pop. Balance risk and reward across two rounds of escalating stakes.', meta:['2 rounds','~8 min'], start:startBART }
+  { id:'bart',        title:'BART',        icon:'✴︎', tag:'Risk',         desc:'Pump balloons to earn money — but pump too much and they pop. Balance risk and reward across two rounds of escalating stakes.', meta:['2 rounds','~8 min'], start:startBART },
+  { id:'test',        title:'Full Test',   icon:'▶', tag:'Test',          desc:'Play all 7 exercises back-to-back in a random order. Your scores are saved and compared against your personal bests at the end.', meta:['All games','~30 min'], start:startTest }
 ];
 
 // ── scores ──
@@ -407,6 +408,8 @@ function saveScore(id, v, label) {
     scores[id]=entry;
     try{localStorage.setItem('me_scores',JSON.stringify(scores));}catch(e){}
   }
+  // Test mode: always capture this run's score regardless of whether it's a best
+  if(window._testSaveHook) window._testSaveHook(id, v, label||String(v));
 }
 
 function getScoreLabel(id){
@@ -440,6 +443,7 @@ function renderDashboard() {
 
 function showDashboard() {
   _gen++; // invalidate all running game callbacks
+  window._testAdvance=null;window._testSaveHook=null;window._testRemaining=null;
   clearKeys();
   document.getElementById('dashboard').style.display='';
   document.getElementById('game-screen').style.display='none';
@@ -448,6 +452,7 @@ function showDashboard() {
 
 function launchGame(id) {
   _gen++; // invalidate any previous game
+  window._testAdvance=null;window._testSaveHook=null;window._testRemaining=null;
   const g = GAMES.find(x=>x.id===id);
   document.getElementById('dashboard').style.display='none';
   document.getElementById('game-screen').style.display='flex';
@@ -460,7 +465,24 @@ function launchGame(id) {
 
 // ── helpers ──
 function setStats(html){document.getElementById('gs-stats').innerHTML=html;}
-function setPanel(html,top){const p=document.getElementById('game-panel');p.className='game-panel'+(top?' top':'');p.innerHTML=html;}
+function setPanel(html,top){
+  const p=document.getElementById('game-panel');
+  p.className='game-panel'+(top?' top':'');
+  p.innerHTML=html;
+  // Test mode: replace again-btn with Next game / See results button
+  if(window._testAdvance){
+    setTimeout(()=>{
+      const panel=document.getElementById('game-panel');if(!panel)return;
+      const btn=panel.querySelector('.again-btn');
+      if(!btn)return;
+      // Don't replace the test results page buttons
+      if(btn.textContent==='Run again'||btn.textContent==='Dashboard')return;
+      const remaining=window._testRemaining!=null?window._testRemaining:1;
+      btn.textContent=remaining>0?'Next game →':'See results →';
+      btn.onclick=window._testAdvance;
+    },50);
+  }
+}
 function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
 let _kfn=null;
 function setKey(fn){clearKeys();_kfn=fn;document.addEventListener('keydown',_kfn);}
@@ -1623,6 +1645,26 @@ function startBART(){
   // ── State ─────────────────────────────────────────
   let roundIdx,balloonsLeft,pumps,balloonEarned,roundEarned,totalEarned;
   let currentDef,bartState,bSetStats;
+  let roundQueue=[];  // pre-shuffled color sequence for current round
+
+  function buildRoundQueue(roundI){
+    // Build a balanced pool: R1=10+10+10, R2=6+6+7 (random color gets the extra)
+    const n=BALLOON_DEFS.length;
+    const cfg=ROUND_CFG[roundI];
+    const base=Math.floor(cfg.balloons/n);
+    const extra=cfg.balloons - base*n;
+    // Assign counts: base for all, then randomly distribute extras
+    const counts=BALLOON_DEFS.map(()=>base);
+    // Pick 'extra' distinct indices at random to get +1
+    const indices=[...Array(n).keys()].sort(()=>Math.random()-.5).slice(0,extra);
+    indices.forEach(i=>{counts[i]++;});
+    // Build pool and shuffle
+    const pool=[];
+    BALLOON_DEFS.forEach((d,i)=>{for(let j=0;j<counts[i];j++)pool.push(d);});
+    // Fisher-Yates shuffle
+    for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
+    return pool;
+  }
 
   function resetBART(){
     assignRisks();
@@ -1639,12 +1681,14 @@ function startBART(){
     if(!alive())return;
     const cfg=ROUND_CFG[roundIdx];
     balloonsLeft=cfg.balloons; roundEarned=0;
+    roundQueue=buildRoundQueue(roundIdx);
     bartDrawBg();bartNewBalloon();
     bartState='playing';bartUpdateInfo();bartUpdateStats();
   }
 
   function bartNewBalloon(){
-    currentDef=BALLOON_DEFS[Math.floor(Math.random()*BALLOON_DEFS.length)];
+    // Draw next color from the pre-built balanced queue
+    currentDef=roundQueue.length>0 ? roundQueue.shift() : BALLOON_DEFS[Math.floor(Math.random()*BALLOON_DEFS.length)];
     pumps=0;balloonEarned=0;
     bartSetSize(52,true);bartSetColor(currentDef);
     const pl=document.getElementById('bart-pop');
@@ -1829,9 +1873,9 @@ function startBART(){
 
   function bartSkipRound(){
     if(!alive()||bartState!=='playing')return;
-    // Record remaining balloons as cashed with 0 pumps for stats
+    // Record remaining balloons as cashed with 0 pumps, using queued colors
     while(balloonsLeft>0){
-      const def=BALLOON_DEFS[Math.floor(Math.random()*BALLOON_DEFS.length)];
+      const def=roundQueue.length>0 ? roundQueue.shift() : BALLOON_DEFS[Math.floor(Math.random()*BALLOON_DEFS.length)];
       bSetStats[def.name].cashed++;
       bSetStats[def.name].balloonsByRound[roundIdx].push({pumps:0,cashed:true});
       balloonsLeft--;
@@ -2073,6 +2117,89 @@ function startBART(){
     </div>`,true);
     resetBART();
   };
+}
+
+// ══════════════════════════════════════════════════════
+//  FULL TEST — runs all 8 games in random order
+// ══════════════════════════════════════════════════════
+function startTest(){
+  const TEST_IDS=['shapeshift','codecompare','pincode','numberbox','figureitout','theswitch','stockmaster','bart'];
+  const order=[...TEST_IDS].sort(()=>Math.random()-.5);
+  let idx=0;
+  const testScores={};
+
+  window._testAdvance=function(){
+    if(idx>=order.length){showTestResults();return;}
+    const id=order[idx++];
+    window._testRemaining=order.length-idx; // games remaining after this one
+    const g=GAMES.find(x=>x.id===id);
+    _gen++;
+    document.getElementById('gs-name').textContent=`Test · ${idx}/${order.length} · ${g.title}`;
+    document.getElementById('gs-stats').innerHTML='';
+    const p=document.getElementById('game-panel');
+    p.innerHTML='';p.className='game-panel';
+    g.start();
+  };
+
+  window._testSaveHook=function(id,v,label){
+    testScores[id]={v,label:label||String(v)};
+  };
+
+  function showTestResults(){
+    window._testAdvance=null;
+    window._testSaveHook=null;
+    window._testRemaining=null;
+    _gen++;
+    document.getElementById('gs-name').textContent='Full Test — Results';
+    setStats('');
+    const rows=TEST_IDS.map(id=>{
+      const g=GAMES.find(x=>x.id===id);
+      const ts=testScores[id];
+      const best=getScoreLabel(id);
+      const tsLabel=ts?ts.label:'—';
+      const isNewBest=ts&&best&&ts.label===best;
+      return`<tr>
+        <td style="padding:10px 14px;font-weight:600">${g.icon} ${g.title}</td>
+        <td style="padding:10px 14px;font-family:'DM Mono',monospace;font-size:.85rem">${tsLabel}</td>
+        <td style="padding:10px 14px;font-family:'DM Mono',monospace;font-size:.85rem;color:var(--muted)">${best||'—'}</td>
+        <td style="padding:10px 14px;font-size:.82rem">${isNewBest?'<span style="color:var(--green);font-weight:700">★ New best</span>':''}</td>
+      </tr>`;
+    }).join('');
+    setPanel(`<div style="width:100%;display:flex;flex-direction:column;gap:20px">
+      <div style="text-align:center">
+        <div style="font-family:'Instrument Serif',serif;font-size:2rem;margin-bottom:4px">Full Test Complete</div>
+        <div style="font-family:'DM Mono',monospace;font-size:.8rem;color:var(--muted)">Your scores this run vs personal bests</div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;border:1px solid var(--border);border-radius:8px;overflow:hidden;font-size:.9rem">
+        <thead><tr style="background:var(--surface2)">
+          <th style="padding:8px 14px;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Game</th>
+          <th style="padding:8px 14px;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">This run</th>
+          <th style="padding:8px 14px;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Personal best</th>
+          <th style="padding:8px 14px"></th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div style="text-align:center;display:flex;gap:12px;justify-content:center">
+        <button class="again-btn" onclick="startTest()">Run again</button>
+        <button class="again-btn" style="background:var(--surface2);color:var(--text)" onclick="showDashboard()">Dashboard</button>
+      </div>
+    </div>`,true);
+  }
+
+  // Show intro
+  _gen++;
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('game-screen').style.display='flex';
+  document.getElementById('gs-name').textContent='Full Test';
+  document.getElementById('gs-stats').innerHTML='';
+  const p=document.getElementById('game-panel');
+  p.innerHTML='';p.className='game-panel';
+  setPanel(`<div class="start-card">
+    <h3>Full Test</h3>
+    <p>All 8 exercises back-to-back in a randomised order. A <strong>Next game →</strong> button replaces the usual "Play again" after each one. Scores update your personal bests automatically.</p>
+    <p style="font-size:.85rem;color:var(--muted);margin-top:8px">Order: ${order.map(id=>GAMES.find(x=>x.id===id).title).join(' → ')}</p>
+    <button class="big-btn" onclick="window._testAdvance&&window._testAdvance()">Begin</button>
+  </div>`);
 }
 
 // ── init ──
