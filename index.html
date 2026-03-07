@@ -401,7 +401,7 @@ const GAMES = [
   { id:'stockmaster', title:'Stock Master',icon:'◉', tag:'Timing',      desc:'Click a gauge when its needle is in the green zone to buy a stock. Gauges appear and vanish quickly. 2 minutes.', meta:['2 min','Reflex'],         start:startStockMaster },
   { id:'bart',        title:'BART',        icon:'✴︎', tag:'Risk',         desc:'Pump balloons to earn money — but pump too much and they pop. Balance risk and reward across two rounds of escalating stakes.', meta:['2 rounds','~8 min'], start:startBART },
   { id:'skyscraper',  title:'Skyscraper',  icon:'⬚', tag:'Planning',     desc:'Rearrange coloured blocks across three piles to match the target pattern. 10 levels, from 4 to 7 blocks. Fewest moves wins.', meta:['10 levels','4–7 blocks'], start:startSkyscraper },
-  { id:'test',        title:'Full Test',   icon:'▶', tag:'Test',          desc:'Play all 8 exercises back-to-back in a random order. Your scores are saved and compared against your personal bests at the end.', meta:['All games','~35 min'], start:startTest }
+  { id:'test',        title:'Full Test',   icon:'▶', tag:'Test',          desc:'Play all 9 exercises back-to-back in a random order. Your scores are saved and compared against your personal bests at the end.', meta:['All games','~35 min'], start:startTest }
 ];
 
 // ── scores ──
@@ -2146,7 +2146,7 @@ function startBART(){
 }
 
 // ══════════════════════════════════════════════════════
-//  FULL TEST — runs all 8 games in random order
+//  FULL TEST — runs all 9 games in random order
 // ══════════════════════════════════════════════════════
 function startTest(){
   const TEST_IDS=['shapeshift','codecompare','pincode','numberbox','figureitout','theswitch','stockmaster','bart','skyscraper'];
@@ -2222,7 +2222,7 @@ function startTest(){
   p.innerHTML='';p.className='game-panel';
   setPanel(`<div class="start-card">
     <h3>Full Test</h3>
-    <p>All 8 exercises back-to-back in a randomised order. A <strong>Next game →</strong> button replaces the usual "Play again" after each one. Scores update your personal bests automatically.</p>
+    <p>All 9 exercises back-to-back in a randomised order. A <strong>Next game →</strong> button replaces the usual "Play again" after each one. Scores update your personal bests automatically.</p>
     <p style="font-size:.85rem;color:var(--muted);margin-top:8px">Order: ${order.map(id=>GAMES.find(x=>x.id===id).title).join(' → ')}</p>
     <button class="big-btn" onclick="window._testAdvance&&window._testAdvance()">Begin</button>
   </div>`);
