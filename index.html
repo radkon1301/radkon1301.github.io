@@ -312,11 +312,20 @@ const GAMES = [
 ];
 
 // ── scores ──
+// Each entry: {v: numeric value for comparison, label: display string}
+// lowerBetter ids use lower-is-better comparison
+const LOWER_BETTER=new Set(['shapeshift','numberbox','figureitout','theswitch']);
 let scores = {};
 try { scores = JSON.parse(localStorage.getItem('me_scores')||'{}'); } catch(e){}
-function saveScore(id,v) {
-  if (scores[id]==null||v>scores[id]) {
-    scores[id]=v;
+function saveScore(id, v, label) {
+  // v is the numeric comparison value; label is the display string
+  const entry = {v, label: label||String(v)};
+  const cur = scores[id];
+  const better = cur==null
+    ? true
+    : LOWER_BETTER.has(id) ? v < cur.v : v > cur.v;
+  if(better){
+    scores[id]=entry;
     try{localStorage.setItem('me_scores',JSON.stringify(scores));}catch(e){}
   }
 }
@@ -337,7 +346,7 @@ function renderDashboard() {
       <div class="card-desc">${g.desc}</div>
       <div class="card-meta">
         ${g.meta.map(m=>`<span class="chip">${m}</span>`).join('')}
-        ${scores[g.id]!=null?`<span class="chip hi">Best: ${scores[g.id]}</span>`:''}
+        ${scores[g.id]!=null?`<span class="chip hi">Best: ${scores[g.id].label}</span>`:''}
       </div>
       <button class="play-btn">Start exercise →</button>
     </div>`).join('');
@@ -377,7 +386,9 @@ function clearKeys(){if(_kfn){document.removeEventListener('keydown',_kfn);_kfn=
 function startShapeShift(){
   const TOTAL=60;
   let round=0,score=0;
-  const g=myGen(); // capture generation
+  let times=[]; // per-round response times (capped at 1000ms for wrong)
+  let shapeShownAt=null;
+  const g=myGen();
   window._ssH=null;
 
   function alive(){return myGen()===g;}
@@ -413,7 +424,7 @@ function startShapeShift(){
     nextRound();
   };
 
-  const SIZE=160; // large fixed shape size
+  const SIZE=160;
   function makeSVG(isCircle){
     return isCircle
       ?`<svg class="ss-shape-svg" width="${SIZE}" height="${SIZE}"><circle cx="${SIZE/2}" cy="${SIZE/2}" r="${SIZE/2-6}" fill="#d1d9e6" stroke="#7a8db5" stroke-width="7"/></svg>`
@@ -427,7 +438,6 @@ function startShapeShift(){
     const prog=document.getElementById('ss-prog');
     if(prog)prog.style.width=((round-1)/TOTAL*100)+'%';
     window._ssH=null;
-    // clear both slots
     const l=document.getElementById('ss-left'),r=document.getElementById('ss-right');
     if(l)l.innerHTML=''; if(r)r.innerHTML='';
     setTimeout(()=>{if(alive())showShape();},rand(400,1100));
@@ -441,55 +451,56 @@ function startShapeShift(){
     const slot=document.getElementById(onLeft?'ss-left':'ss-right');
     if(!slot)return;
     slot.innerHTML=makeSVG(isCircle);
-    // Show immediately — no transition, no rAF delay
     const svg=slot.querySelector('.ss-shape-svg');
     if(svg)svg.classList.add('show');
 
-    const vis=rand(300,750);
+    // Shape visible for just 120–200ms — a blink
+    const vis=rand(120,200);
+    shapeShownAt=performance.now();
     let answered=false;
+
     const autoMiss=setTimeout(()=>{
       if(!alive()||answered)return;
-      answered=true;showFb(false);
-    },vis+400);
+      answered=true;
+      times.push(1000); // timeout counts as 1s penalty
+      nextRound();
+    },vis+800); // still allow response window after shape disappears
 
     window._ssH=key=>{
       if(!alive()||answered)return;
       answered=true;clearTimeout(autoMiss);
+      const rt=Math.min(performance.now()-shapeShownAt,1000);
       const correct=(key==='ArrowRight')===isCircle;
-      if(correct)score++;
-      showFb(correct);
+      if(correct){score++;times.push(rt);}
+      else{times.push(1000);} // wrong answer → 1s
+      // No feedback — go straight to next round
+      const sv=slot.querySelector('.ss-shape-svg');
+      if(sv)sv.classList.remove('show');
+      stat();
+      setTimeout(()=>{if(alive())nextRound();},150);
     };
 
-    // hide shape after vis ms — instantly, no fade
     setTimeout(()=>{
       if(!answered){
-        const svg=slot.querySelector('.ss-shape-svg');
-        if(svg)svg.classList.remove('show');
+        const sv=slot.querySelector('.ss-shape-svg');
+        if(sv)sv.classList.remove('show');
       }
     },vis);
   }
 
-  function showFb(ok){
-    if(!alive())return;
-    const arena=document.getElementById('ss-arena');if(!arena)return;
-    // clear slots
-    const l=document.getElementById('ss-left'),r=document.getElementById('ss-right');
-    if(l)l.innerHTML=''; if(r)r.innerHTML='';
-    const fb=document.createElement('div');
-    fb.className='ss-flash';fb.textContent=ok?'✓':'✗';
-    fb.style.color=ok?'var(--green)':'var(--red)';
-    arena.appendChild(fb);
-    stat();
-    setTimeout(()=>{if(!alive())return;if(fb.parentNode)fb.remove();nextRound();},550);
-  }
-
   function endGame(){
     if(!alive())return;
-    clearKeys();saveScore('shapeshift',score);setStats('');
+    clearKeys();
+    const avg=times.length?times.reduce((a,b)=>a+b,0)/times.length:1000;
+    const avgS=(avg/1000).toFixed(3);
+    const acc=Math.round(score/TOTAL*100);
+    const label=`${avgS}s @ ${acc}%`;
+    saveScore('shapeshift', avg, label);
+    setStats('');
     setPanel(`<div class="result-card">
       <h3>ShapeShift complete</h3>
-      <div class="result-num">${score}<span style="font-size:2rem;color:var(--muted)">/${TOTAL}</span></div>
-      <div class="result-sub">Accuracy: ${Math.round(score/TOTAL*100)}%</div>
+      <div class="result-num">${avgS}<span style="font-size:2rem;color:var(--muted)">s</span></div>
+      <div class="result-sub">Avg response time · Accuracy: ${acc}%</div>
       <button class="again-btn" onclick="startShapeShift()">Play again</button>
     </div>`);
   }
@@ -727,8 +738,8 @@ function startPinCode(){
 function startNumberBox(){
   const TOTAL=5;
   let round=0,score=0,puzzle=null;
-  // State: pool of available blocks [{id,val,isInter}], pending selection, pending op
   let pool=[],selId=null,pendingOp=null,interCount=0;
+  let roundTimes=[],roundStartedAt=null; // timing
   const g=myGen();
   function alive(){return myGen()===g;}
 
@@ -786,6 +797,7 @@ function startNumberBox(){
     // pool starts as the 4 corner numbers
     pool=puzzle.nums.map((v,i)=>({id:'orig'+i,val:v,isInter:false}));
     selId=null;pendingOp=null;
+    roundStartedAt=performance.now();
     stat();
     renderRound();
   }
@@ -935,18 +947,27 @@ function startNumberBox(){
   window.nbSubmit=()=>{
     if(!alive())return;
     const go=document.getElementById('nb-go');
-    if(go){go.disabled=true;}  // prevent double-submit
+    if(go){go.disabled=true;}
     const canSubmit=pool.length===1&&allOrigUsed()&&Math.abs(pool[0].val-puzzle.target)<0.001;
-    if(canSubmit){score++;setTimeout(()=>{if(alive())startRound();},600);}
+    if(canSubmit){
+      score++;
+      const elapsed=performance.now()-(roundStartedAt||performance.now());
+      roundTimes.push(elapsed);
+      setTimeout(()=>{if(alive())startRound();},600);
+    }
   };
 
   function endGame(){
     if(!alive())return;
-    saveScore('numberbox',score);setStats('');
+    const avg=roundTimes.length?roundTimes.reduce((a,b)=>a+b,0)/roundTimes.length:0;
+    const avgS=(avg/1000).toFixed(2);
+    const label=`${avgS}s avg`;
+    saveScore('numberbox', avg, label);
+    setStats('');
     setPanel(`<div class="result-card">
       <h3>NumberBox complete</h3>
       <div class="result-num">${score}<span style="font-size:2rem;color:var(--muted)">/${TOTAL}</span></div>
-      <div class="result-sub">Puzzles solved correctly</div>
+      <div class="result-sub">Solved · Avg time: ${avgS}s</div>
       <button class="again-btn" onclick="startNumberBox()">Play again</button>
     </div>`);
   }
@@ -970,6 +991,7 @@ function startFigureItOut(){
   const PATTERNS=['horizontal','vertical','grid'];
   const ROUNDS=5;
   let round=0,totalMoves=0,secret=null,guesses=[],pick={shape:null,color:null,pattern:null};
+  let roundMoves=0,movesPerRound=[]; // per-round step tracking
   const g=myGen();
   function alive(){return myGen()===g;}
 
@@ -1001,7 +1023,7 @@ function startFigureItOut(){
 
   function newRound(){
     if(!alive())return;
-    round++;guesses=[];
+    round++;guesses=[];roundMoves=0;
     secret={shape:SHAPES[rand(0,2)],color:COLORS[rand(0,2)],pattern:PATTERNS[rand(0,2)]};
     pick={shape:null,color:null,pattern:null};
     render();
@@ -1066,12 +1088,13 @@ function startFigureItOut(){
 
   window.fiSubmit=()=>{
     if(!alive()||!pick.shape||!pick.color||!pick.pattern)return;
-    totalMoves++;
+    totalMoves++;roundMoves++;
     const fb={shape:pick.shape===secret.shape,color:pick.color===secret.color,pattern:pick.pattern===secret.pattern};
     guesses.push({guess:{...pick},fb});
     stat();
 
     if(fb.shape&&fb.color&&fb.pattern){
+      movesPerRound.push(roundMoves);
       // Correct! Show result in prev area and a Next Round / End button
       renderPrev();
       // Disable submit and selection
@@ -1097,11 +1120,15 @@ function startFigureItOut(){
 
   function endGame(){
     if(!alive())return;
-    saveScore('figureitout',Math.max(0,ROUNDS*10-totalMoves));setStats('');
+    const avg=movesPerRound.length?movesPerRound.reduce((a,b)=>a+b,0)/movesPerRound.length:totalMoves;
+    const avgR=Math.round(avg*100)/100;
+    const label=`${avgR.toFixed(2)} steps avg`;
+    saveScore('figureitout', avgR, label);
+    setStats('');
     setPanel(`<div class="result-card">
       <h3>FigureItOut complete</h3>
-      <div class="result-num">${totalMoves}</div>
-      <div class="result-sub">Total moves across ${ROUNDS} rounds — lower is better</div>
+      <div class="result-num">${avgR.toFixed(2)}</div>
+      <div class="result-sub">Avg steps per round — lower is better</div>
       <button class="again-btn" onclick="startFigureItOut()">Play again</button>
     </div>`);
   }
@@ -1121,6 +1148,7 @@ function startFigureItOut(){
 function startTheSwitch(){
   const TOTAL=35;
   let round=0,score=0,answered=false;
+  let times=[],roundShownAt=null;
   const g=myGen();
   function alive(){return myGen()===g;}
   function stat(){if(!alive())return;setStats(`<div class="stat-pill">Round <b>${round}</b>/${TOTAL}</div><div class="stat-pill">Score <b>${score}</b></div>`);}
@@ -1130,7 +1158,6 @@ function startTheSwitch(){
   function arrsEq(a,b){return a.join('')===b.join('');}
 
   function genRound(){
-    // Math: addition and subtraction only
     const op=Math.random()<.5?'+':'-';
     let a,b,ans;
     if(op==='+'){a=rand(1,19);b=rand(1,19);ans=a+b;}
@@ -1138,18 +1165,15 @@ function startTheSwitch(){
     const mathStr=`${a} ${op} ${b}`;
     const isEven=ans%2===0;
 
-    // Arrow question — always 4 arrows, 50% match
     const setA=makeArrows();
     const match=Math.random()<.5;
     let setB=match?[...setA]:makeArrows();
-    // If by chance random setB happens to equal setA when we wanted different, flip one arrow
     if(!match&&arrsEq(setA,setB)){
       const idx=rand(0,3);
       setB[idx]=setB[idx]==='←'?'→':'←';
     }
     const arrsMatch=arrsEq(setA,setB);
 
-    // Which box is active: 0=top (math/even), 1=bottom (arrows)
     const activeBox=rand(0,1);
     const correctYes=activeBox===0?isEven:arrsMatch;
 
@@ -1159,6 +1183,7 @@ function startTheSwitch(){
   function renderRound(rd){
     if(!alive())return;
     answered=false;
+    roundShownAt=performance.now();
     const{mathStr,setA,setB,activeBox}=rd;
 
     const topActive=activeBox===0;
@@ -1167,7 +1192,6 @@ function startTheSwitch(){
 
     const arrowHTML=arr=>arr.map(a=>`<span>${a}</span>`).join('');
 
-    // Both boxes show the same data; only the active box shows its question label
     const boxContent=`
       <div class="sw-content">
         <div class="sw-math">${mathStr}</div>
@@ -1197,11 +1221,11 @@ function startTheSwitch(){
   window.swAnswer=yes=>{
     if(!alive()||answered)return;
     answered=true;
+    const rt=Math.min(performance.now()-(roundShownAt||performance.now()),1000);
     const correct=yes===_swRound.correctYes;
-    if(correct)score++;
-    // Flash the pressed button
-    const btn=document.getElementById(yes?'sw-yes':'sw-no');
-    if(btn)btn.classList.add(yes?'yes':'no');
+    if(correct){score++;times.push(rt);}
+    else{times.push(1000);}
+    // No color change on buttons
     stat();
     setTimeout(()=>{
       if(!alive())return;
@@ -1210,7 +1234,7 @@ function startTheSwitch(){
       round++;
       renderRound(_swRound);
       stat();
-    },420);
+    },300);
   };
 
   setKey(e=>{
@@ -1221,11 +1245,17 @@ function startTheSwitch(){
 
   function endGame(){
     if(!alive())return;
-    clearKeys();saveScore('theswitch',score);setStats('');
+    clearKeys();
+    const avg=times.length?times.reduce((a,b)=>a+b,0)/times.length:1000;
+    const avgS=(avg/1000).toFixed(3);
+    const acc=Math.round(score/TOTAL*100);
+    const label=`${avgS}s @ ${acc}%`;
+    saveScore('theswitch', avg, label);
+    setStats('');
     setPanel(`<div class="result-card">
       <h3>The Switch complete</h3>
-      <div class="result-num">${score}<span style="font-size:2rem;color:var(--muted)">/${TOTAL}</span></div>
-      <div class="result-sub">Accuracy: ${Math.round(score/TOTAL*100)}%</div>
+      <div class="result-num">${avgS}<span style="font-size:2rem;color:var(--muted)">s</span></div>
+      <div class="result-sub">Avg response time · Accuracy: ${acc}%</div>
       <button class="again-btn" onclick="startTheSwitch()">Play again</button>
     </div>`);
   }
