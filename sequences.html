@@ -173,8 +173,16 @@
   animation: fadeSlideIn .3s ease .1s both;
 }
 .seq-next-btn:hover { background: #111; }
-.seq-type-badge {
-  display: inline-block;
+.seq-type-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.seq-type-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   font-size: .65rem;
   font-weight: 700;
   letter-spacing: .1em;
@@ -183,10 +191,49 @@
   background: var(--surface2);
   border: 1px solid var(--border);
   border-radius: 20px;
-  padding: 3px 10px;
-  margin-bottom: 16px;
-  text-align: center;
-  width: 100%;
+  padding: 4px 12px 4px 10px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: border-color .15s, color .15s, background .15s;
+  user-select: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.seq-type-toggle-btn:hover {
+  border-color: var(--border2);
+  color: var(--text2);
+}
+.seq-type-toggle-btn.revealed {
+  color: var(--accent);
+  border-color: #c3cff7;
+  background: var(--accent-light);
+}
+.seq-toggle-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border2);
+  transition: background .15s;
+  flex-shrink: 0;
+}
+.seq-type-toggle-btn.revealed .seq-toggle-dot {
+  background: var(--accent);
+}
+.seq-type-label {
+  font-size: .65rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0;
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: opacity .2s, max-width .3s ease;
+}
+.seq-type-label.visible {
+  opacity: 1;
+  max-width: 300px;
 }
 </style>
 </head>
@@ -1258,11 +1305,10 @@ function startSeqPractice() {
 
     stat();
 
-    // Build terms HTML
-    const termsHTML = q.terms.map((t, i) =>
-      `<span class="seq-term">${t}</span>${i < q.terms.length - 1 ? '<span class="seq-comma">,</span>' : '<span class="seq-comma">,</span>'}`
+    // Build terms HTML — no ellipsis; the blank box serves as the visual end
+    const termsHTML = q.terms.map((t) =>
+      `<span class="seq-term">${t}</span><span class="seq-comma">,</span>`
     ).join('') +
-    `<span class="seq-ellipsis"> … </span>` +
     `<span class="seq-blank" id="seq-blank">?</span>`;
 
     const choicesHTML = choices.map(c =>
@@ -1272,12 +1318,26 @@ function startSeqPractice() {
     ).join('');
 
     setPanel(`<div class="seq-wrap">
-      <div class="seq-type-badge">${q.typeName}</div>
+      <div class="seq-type-toggle">
+        <button class="seq-type-toggle-btn" id="type-toggle-btn" onclick="seqToggleType()">
+          <span class="seq-toggle-dot"></span>Show type
+        </button>
+        <span class="seq-type-label" id="type-label">${q.typeName}</span>
+      </div>
       <div class="seq-question-label">What comes next?</div>
       <div class="seq-terms">${termsHTML}</div>
       <div class="seq-choices" id="seq-choices">${choicesHTML}</div>
       <div id="seq-feedback"></div>
     </div>`, true);
+
+    window.seqToggleType = () => {
+      const btn = document.getElementById('type-toggle-btn');
+      const lbl = document.getElementById('type-label');
+      if (!btn || !lbl) return;
+      const on = btn.classList.toggle('revealed');
+      lbl.classList.toggle('visible', on);
+      btn.innerHTML = `<span class="seq-toggle-dot"></span>${on ? 'Hide type' : 'Show type'}`;
+    };
   }
 
   window.seqPick = (btn, chosen, answer, explanation) => {
