@@ -130,6 +130,12 @@
   background: var(--red-light) !important;
   color: var(--red);
 }
+.seq-choice.selected {
+  border-color: var(--border2) !important;
+  background: var(--surface2) !important;
+  color: var(--text) !important;
+  font-weight: 700;
+}
 .seq-choice.reveal-correct {
   border-color: var(--green) !important;
   background: var(--green-light) !important;
@@ -446,7 +452,7 @@ const SEQ_GAMES = [
   {
     id: 'seq-test',
     title: 'Test',
-    icon: '⊘',
+    icon: '▶',
     tag: 'Sequences',
     desc: '26 questions, 25 minutes. Navigate freely, skip and return to questions. Score = correct − incorrect (skips are free). Answers and explanations revealed after submission.',
     meta: ['26 Qs', '25 min', 'Scored'],
@@ -1823,8 +1829,8 @@ function startSeqTest() {
 
     const choicesHTML = choices.map(c => {
       let cls = 'seq-choice';
-      let disabled = answered !== null ? 'disabled' : '';
-      if (answered !== null && c === answered) cls += ' correct'; // just show selection, no color feedback yet
+      let disabled = ''; // always re-answerable during test
+      if (answered !== null && c === answered) cls += ' selected'; // neutral highlight, no color feedback
       return `<button class="${cls}" ${disabled} onclick="testPick('${c.replace(/'/g,"\'")}', ${idx})">${c}</button>`;
     }).join('');
 
@@ -1852,7 +1858,7 @@ function startSeqTest() {
       <div class="seq-question-label">What comes next?</div>
       <div class="seq-terms" id="test-terms">${termsHTML}</div>
       <div class="seq-choices" id="seq-choices">${choicesHTML}</div>
-      <button class="test-skip-btn" onclick="testSkip(${idx})" ${answered!==null?'disabled':''}>Skip →</button>
+      <button class="test-skip-btn" onclick="testSkip(${idx})">Skip →</button>
       <div class="test-q-grid">${dotHTML}</div>
       <div class="test-submit-row">
         <button class="test-submit-btn" onclick="testSubmitConfirm()">Submit test</button>
