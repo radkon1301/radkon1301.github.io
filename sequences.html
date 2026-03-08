@@ -1858,7 +1858,13 @@ function startSeqTest() {
       <div class="seq-question-label">What comes next?</div>
       <div class="seq-terms" id="test-terms">${termsHTML}</div>
       <div class="seq-choices" id="seq-choices">${choicesHTML}</div>
-      <button class="test-skip-btn" onclick="testSkip(${idx})">Skip →</button>
+      ${answered !== null
+        ? `<div style="display:flex;gap:8px;margin-top:10px">
+             <button class="test-skip-btn" style="flex:1;margin-top:0" onclick="testClear(${idx})">✕ Clear answer</button>
+             <button class="test-skip-btn" style="flex:1;margin-top:0" onclick="testSkip(${idx})">Skip →</button>
+           </div>`
+        : `<button class="test-skip-btn" onclick="testSkip(${idx})">Skip →</button>`
+      }
       <div class="test-q-grid">${dotHTML}</div>
       <div class="test-submit-row">
         <button class="test-submit-btn" onclick="testSubmitConfirm()">Submit test</button>
@@ -1890,6 +1896,12 @@ function startSeqTest() {
     // Move to next (skips stay null)
     const next = (idx + 1) % TOTAL;
     renderQuestion(next);
+  };
+
+  window.testClear = (idx) => {
+    if (!alive() || submitted) return;
+    answers[idx] = null;
+    renderQuestion(idx);
   };
 
   window.testGoto = (idx) => {
