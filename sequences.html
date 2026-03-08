@@ -279,8 +279,8 @@ const SEQ_GAMES = [
     title: 'Practice',
     icon: '∿',
     tag: 'Sequences',
-    desc: 'Complete the sequence by identifying the pattern. Covers 50 sequence types — arithmetic, geometric, prime-based, fractional, recursive, and more.',
-    meta: ['50 types', 'Unlimited'],
+    desc: 'Complete the sequence by identifying the pattern. Covers 50+ sequence types across 9 categories — arithmetic, geometric, prime-based, recursive, fractional, decimal, digit-based, interleaved, and more.',
+    meta: ['50+ types', 'Unlimited'],
     start: startSeqPractice
   }
 ];
@@ -356,8 +356,8 @@ function rand(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
 
 // ══════════════════════════════════════════════════════
 //  SEQUENCE GENERATORS
-//  Each returns: { terms[], answer (last term), explanation, typeName, formatFn? }
-//  terms = all terms SHOWN (not including blank), answer = the next value
+//  Each returns: { terms[], answer, explanation, typeName }
+//  terms = terms SHOWN (not the blank); answer = the next value
 // ══════════════════════════════════════════════════════
 
 // ── helpers ──
@@ -369,283 +369,133 @@ function isPrime(n) {
 function getPrimes(count, start = 2) {
   const primes = [];
   let n = start;
-  while (primes.length < count) {
-    if (isPrime(n)) primes.push(n);
-    n++;
-  }
+  while (primes.length < count) { if (isPrime(n)) primes.push(n); n++; }
   return primes;
 }
+function gcd(a, b) { return b === 0 ? Math.abs(a) : gcd(b, a % b); }
 function fmtFrac(n, d) {
-  // simplify
-  function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
   const g = gcd(Math.abs(n), Math.abs(d));
   return `${n/g}/${d/g}`;
 }
-function fracEq(n1,d1,n2,d2){ return n1*d2 === n2*d1; }
+function fmtDec(x, dp = 5) {
+  // Round to dp sig figs and strip trailing zeros
+  const s = parseFloat(x.toPrecision(dp));
+  return String(s);
+}
 
-// ── TYPE 1: Arithmetic ──
+// ════════════════════════════════════════════════════
+//  CATEGORY A — ARITHMETIC & POLYNOMIAL
+// ════════════════════════════════════════════════════
+
+// A1: Arithmetic (constant difference)
 function genArithmetic() {
-  const d = rand(2, 15);
-  const start = rand(1, 20);
+  const d = rand(-12, 12); if (d === 0) return genArithmetic();
+  const start = rand(-10, 30);
   const count = rand(5, 7);
   const terms = Array.from({length: count}, (_, i) => start + i * d);
+  const sign = d > 0 ? `+${d}` : `${d}`;
   return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
     typeName: 'Arithmetic',
-    explanation: `Each term increases by a constant difference of <strong>${d}</strong>.`
+    explanation: `Each term changes by a constant difference of <strong>${sign}</strong>.`
   };
 }
 
-// ── TYPE 2: Geometric ──
-function genGeometric() {
-  const r = rand(2, 4);
-  const start = rand(1, 6);
-  const count = rand(5, 6);
-  const terms = Array.from({length: count}, (_, i) => start * Math.pow(r, i));
-  return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Geometric',
-    explanation: `Each term is multiplied by <strong>${r}</strong>.`
-  };
-}
-
-// ── TYPE 3: Quadratic (2nd differences constant) ──
-function genQuadratic() {
-  const a = rand(1, 3), b = rand(0, 5), c = rand(0, 8);
+// A2: Quadratic / constant 2nd differences
+// (covers: quadratic formula, triangle numbers n(n+1)/2, oblong n(n+1),
+//  pentagonal n(3n-1)/2, hexagonal n(2n-1), squares+linear, etc.)
+function genConstantSecondDiff() {
+  // Pick a random figurate family or pure quadratic
+  const kind = rand(0, 6);
+  let terms, explanation, typeName;
+  const offset = rand(0, 3);
   const count = rand(5, 7);
-  const terms = Array.from({length: count}, (_, i) => a*i*i + b*i + c);
-  return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Quadratic',
-    explanation: `Terms follow a quadratic rule: <strong>aₙ = ${a}n² ${b>=0?'+':''}${b}n ${c>=0?'+':''}${c}</strong>. Second differences are constant (${2*a}).`
-  };
+  if (kind === 0) {
+    // Triangle: n(n+1)/2
+    terms = Array.from({length: count}, (_, i) => { const n = i+1+offset; return n*(n+1)/2; });
+    typeName = 'Triangle Numbers';
+    explanation = `Triangle numbers: <strong>T(n) = n(n+1)/2</strong>. Second differences are constant (1).`;
+  } else if (kind === 1) {
+    // Oblong / pronic: n(n+1)
+    terms = Array.from({length: count}, (_, i) => { const n = i+1+offset; return n*(n+1); });
+    typeName = 'Oblong Numbers';
+    explanation = `Oblong numbers: <strong>n(n+1)</strong>. Second differences are constant (2).`;
+  } else if (kind === 2) {
+    // Pentagonal: n(3n-1)/2
+    terms = Array.from({length: count}, (_, i) => { const n = i+1+offset; return n*(3*n-1)/2; });
+    typeName = 'Pentagonal Numbers';
+    explanation = `Pentagonal numbers: <strong>P(n) = n(3n−1)/2</strong>. Second differences are constant (3).`;
+  } else if (kind === 3) {
+    // Perfect squares (offset)
+    const startN = rand(1, 5);
+    terms = Array.from({length: count}, (_, i) => (startN+i)*(startN+i));
+    typeName = 'Perfect Squares';
+    explanation = `Consecutive perfect squares: <strong>${startN}², ${startN+1}², ${startN+2}²…</strong>`;
+  } else {
+    // General quadratic an²+bn+c (includes all the above as special cases)
+    const a = rand(1, 3), b = rand(-3, 5), c = rand(0, 10);
+    const n0 = rand(1, 4);
+    terms = Array.from({length: count}, (_, i) => a*(n0+i)*(n0+i) + b*(n0+i) + c);
+    typeName = 'Constant 2nd Differences';
+    const bStr = b === 0 ? '' : (b > 0 ? ` + ${b}n` : ` − ${Math.abs(b)}n`);
+    const cStr = c === 0 ? '' : ` + ${c}`;
+    explanation = `Quadratic rule: <strong>${a}n²${bStr}${cStr}</strong>. The second differences are constant (${2*a}).`;
+  }
+  return { terms: terms.slice(0,-1), answer: terms[terms.length-1], typeName, explanation };
 }
 
-// ── TYPE 4: Differences form arithmetic (accelerating) ──
+// A3: Linearly accelerating differences (+step each time to the diff)
 function genAcceleratingDiff() {
-  const d0 = rand(2, 8), step = rand(2, 6);
+  const d0 = rand(1, 8), step = rand(2, 6);
   const start = rand(2, 15);
   const count = rand(5, 7);
   const terms = [start];
   let diff = d0;
-  for (let i = 1; i < count; i++) {
-    terms.push(terms[terms.length-1] + diff);
-    diff += step;
-  }
+  for (let i = 1; i < count; i++) { terms.push(terms[terms.length-1] + diff); diff += step; }
   return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
     typeName: 'Accelerating Differences',
-    explanation: `Differences increase by <strong>${step}</strong> each step: +${d0}, +${d0+step}, +${d0+2*step}, …`
+    explanation: `Differences increase by <strong>${step}</strong> each step: +${d0}, +${d0+step}, +${d0+2*step}…`
   };
 }
 
-// ── TYPE 5: Differences form geometric (doubling/tripling) ──
+// A4: Differences themselves are geometric (×r)
 function genGeomDiff() {
   const r = rand(2, 3);
   const d0 = rand(1, 4);
-  const start = rand(3, 12);
+  const sign = Math.random() < 0.3 ? -1 : 1; // occasionally start with negative diff
+  const start = rand(3, 20);
   const count = rand(5, 7);
   const terms = [start];
-  let diff = d0;
+  let diff = sign * d0;
+  for (let i = 1; i < count; i++) { terms.push(terms[terms.length-1] + diff); diff *= r; }
+  return {
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
+    typeName: 'Geometric Differences',
+    explanation: `Differences multiply by <strong>${r}</strong> each step: ${sign*d0}, ${sign*d0*r}, ${sign*d0*r*r}…`
+  };
+}
+
+// A5: Differences alternate sign and double (screenshot example: -1,+2,-4,+8,-16,+32)
+function genAltSignGeomDiff() {
+  const d0 = rand(1, 3);
+  const r = rand(2, 2); // always ×2 for clarity
+  const start = rand(30, 80);
+  const count = rand(6, 8);
+  const terms = [start];
+  let diff = -d0;
   for (let i = 1; i < count; i++) {
     terms.push(terms[terms.length-1] + diff);
-    diff *= r;
+    diff = diff * -r;
   }
   return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Geometric Differences',
-    explanation: `Differences multiply by <strong>${r}</strong> each step: +${d0}, +${d0*r}, +${d0*r*r}, …`
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
+    typeName: 'Alternating-Sign Doubling Differences',
+    explanation: `Differences alternate sign and double each step: <strong>${-d0}, ${d0*r}, ${-d0*r*r}, ${d0*r*r*r}…</strong>`
   };
 }
 
-// ── TYPE 6: Add consecutive primes ──
-function genAddPrimes() {
-  const primes = getPrimes(8);
-  const start = rand(2, 15);
-  const count = rand(5, 7);
-  const terms = [start];
-  for (let i = 0; i < count - 1; i++) terms.push(terms[terms.length-1] + primes[i]);
-  return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Add Consecutive Primes',
-    explanation: `Add consecutive primes: <strong>+${primes.slice(0, count-2).join(', +')}…</strong>`
-  };
-}
-
-// ── TYPE 7: Every other prime ──
-function genEveryOtherPrime() {
-  const primes = getPrimes(20);
-  const startIdx = rand(0, 4);
-  const step = 2;
-  const count = rand(5, 7);
-  const terms = Array.from({length: count}, (_, i) => primes[startIdx + i * step]);
-  return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Every Other Prime',
-    explanation: `Every other prime number, starting from <strong>${primes[startIdx]}</strong>.`
-  };
-}
-
-// ── TYPE 8: Primes only ──
-function genPrimesSequence() {
-  const primes = getPrimes(15);
-  const startIdx = rand(0, 5);
-  const count = rand(5, 7);
-  const terms = primes.slice(startIdx, startIdx + count);
-  return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Prime Numbers',
-    explanation: `Consecutive prime numbers starting from <strong>${primes[startIdx]}</strong>.`
-  };
-}
-
-// ── TYPE 9: Linear recurrence aₙ = r·aₙ₋₁ + c ──
-function genLinearRecurrence() {
-  const r = rand(2, 4), c = rand(1, 10), a0 = rand(1, 8);
-  const count = rand(5, 7);
-  const terms = [a0];
-  for (let i = 1; i < count; i++) terms.push(r * terms[terms.length-1] + c);
-  return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Linear Recurrence',
-    explanation: `Each term = <strong>${r} × previous + ${c}</strong>.`
-  };
-}
-
-// ── TYPE 10: Fibonacci-type ──
-function genFibonacciType() {
-  const a = rand(1, 5), b = rand(1, 5);
-  const count = rand(6, 8);
-  const terms = [a, b];
-  for (let i = 2; i < count; i++) terms.push(terms[terms.length-1] + terms[terms.length-2]);
-  return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Fibonacci-type',
-    explanation: `Each term is the sum of the two preceding terms. Starts with <strong>${a}, ${b}</strong>.`
-  };
-}
-
-// ── TYPE 11: Tribonacci ──
-function genTribonacci() {
-  const a = rand(1,3), b = rand(1,3), c = rand(1,3);
-  const count = rand(6, 8);
-  const terms = [a, b, c];
-  for (let i = 3; i < count; i++) terms.push(terms[terms.length-1] + terms[terms.length-2] + terms[terms.length-3]);
-  return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Tribonacci',
-    explanation: `Each term is the sum of the three preceding terms. Starts with <strong>${a}, ${b}, ${c}</strong>.`
-  };
-}
-
-// ── TYPE 12: Alternating +/- ──
-function genAlternatingAddSub() {
-  const a = rand(3, 12), b = rand(2, 8);
-  const start = rand(5, 30);
-  const count = rand(6, 8);
-  const terms = [start];
-  for (let i = 1; i < count; i++) terms.push(terms[terms.length-1] + (i % 2 === 1 ? a : -b));
-  return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Alternating +/−',
-    explanation: `Alternates between adding <strong>${a}</strong> and subtracting <strong>${b}</strong>.`
-  };
-}
-
-// ── TYPE 13: Alternating ×a and +b ──
-function genAltMultAdd() {
-  const r = rand(2, 3), b = rand(3, 10), start = rand(2, 8);
-  const count = rand(5, 7);
-  const terms = [start];
-  for (let i = 1; i < count; i++) {
-    terms.push(i % 2 === 1 ? terms[terms.length-1] * r : terms[terms.length-1] + b);
-  }
-  return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Alternate ×a then +b',
-    explanation: `Alternates between multiplying by <strong>${r}</strong> and adding <strong>${b}</strong>.`
-  };
-}
-
-// ── TYPE 14: Powers ──
-function genPowers() {
-  const exp = rand(2, 4);
-  const startN = rand(1, 4);
-  const count = rand(5, 7);
-  const terms = Array.from({length: count}, (_, i) => Math.pow(startN + i, exp));
-  const label = exp === 2 ? 'squares' : exp === 3 ? 'cubes' : `4th powers`;
-  return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: `Perfect ${exp===2?'Squares':exp===3?'Cubes':'Powers'}`,
-    explanation: `Consecutive perfect ${label}: <strong>(${startN})${exp===2?'²':exp===3?'³':'⁴'}, (${startN+1})${exp===2?'²':exp===3?'³':'⁴'}, …</strong>`
-  };
-}
-
-// ── TYPE 15: Triangle numbers ──
-function genTriangles() {
-  const offset = rand(0, 3);
-  const count = rand(5, 7);
-  const terms = Array.from({length: count}, (_, i) => {
-    const n = i + 1 + offset;
-    return n * (n + 1) / 2;
-  });
-  return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Triangle Numbers',
-    explanation: `Triangle numbers: <strong>T(n) = n(n+1)/2</strong>.`
-  };
-}
-
-// ── TYPE 16: Two interleaved arithmetic ──
-function genInterleavedArithmetic() {
-  const d1 = rand(2, 8), d2 = rand(3, 10);
-  const s1 = rand(2, 15), s2 = rand(3, 20);
-  const count = rand(6, 8);
-  const terms = [];
-  for (let i = 0; i < count; i++) {
-    terms.push(i % 2 === 0 ? s1 + (i/2)*d1 : s2 + ((i-1)/2)*d2);
-  }
-  return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Two Interleaved Arithmetic',
-    explanation: `Two interleaved arithmetic sequences: odd positions +${d1} each time, even positions +${d2} each time.`
-  };
-}
-
-// ── TYPE 17: Two interleaved geometric ──
-function genInterleavedGeometric() {
-  const r1 = rand(2, 3), r2 = rand(2, 3);
-  const s1 = rand(1, 4), s2 = rand(1, 4);
-  const count = rand(6, 8);
-  const terms = [];
-  for (let i = 0; i < count; i++) {
-    terms.push(i % 2 === 0 ? s1 * Math.pow(r1, i/2) : s2 * Math.pow(r2, (i-1)/2));
-  }
-  return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Two Interleaved Geometric',
-    explanation: `Two interleaved geometric sequences: odd positions ×${r1}, even positions ×${r2}.`
-  };
-}
-
-// ── TYPE 18: Differences are Fibonacci ──
+// A6: Differences are Fibonacci numbers
 function genFibDiffs() {
   const fibs = [1,1,2,3,5,8,13,21];
   const start = rand(2, 20);
@@ -653,138 +503,430 @@ function genFibDiffs() {
   const terms = [start];
   for (let i = 0; i < count - 1; i++) terms.push(terms[terms.length-1] + fibs[i]);
   return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
     typeName: 'Fibonacci Differences',
     explanation: `The differences between terms are consecutive Fibonacci numbers: <strong>+1, +1, +2, +3, +5, +8…</strong>`
   };
 }
 
-// ── TYPE 19: Cyclic differences ──
+// A7: Cyclic differences (fixed repeating pattern)
 function genCyclicDiff() {
-  const cycle = [rand(2,5), rand(3,7), rand(4,10)].sort((a,b)=>a-b);
-  const start = rand(2, 20);
-  const count = rand(6, 8);
+  // 3-step or 4-step cycle, can include negatives (screenshot: -10,+1,+7,+1 repeating)
+  const useMixed = Math.random() < 0.5;
+  let cycle;
+  if (useMixed) {
+    const big = -rand(5,12);
+    const a = rand(1,4), b = rand(3,8), c = rand(1,4);
+    cycle = [big, a, b, c];
+  } else {
+    const vals = [rand(2,6), rand(4,10), rand(3,8)];
+    cycle = vals;
+  }
+  const start = rand(5, 40);
+  const count = rand(7, 10); // more terms to make cycle visible
   const terms = [start];
   for (let i = 1; i < count; i++) terms.push(terms[terms.length-1] + cycle[(i-1) % cycle.length]);
   return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
     typeName: 'Cyclic Differences',
-    explanation: `Differences cycle through: <strong>+${cycle.join(', +')}, +${cycle.join(', +')}…</strong>`
+    explanation: `Differences repeat in a cycle: <strong>${cycle.map(v=>v>=0?'+'+v:v).join(', ')}, ${cycle.map(v=>v>=0?'+'+v:v).join(', ')}…</strong>`
   };
 }
 
-// ── TYPE 20: Digit sum added ──
+// A8: Converging halving differences (alternating sign, ÷2 each step — screenshot example)
+function genConvergingDiff() {
+  const d0 = rand(8, 20) * (Math.random()<0.5?1:-1);
+  const start = rand(80, 120);
+  const count = rand(6, 7);
+  const terms = [start];
+  let diff = d0;
+  for (let i = 1; i < count; i++) {
+    terms.push(terms[terms.length-1] + diff);
+    diff = -(diff / 2);
+  }
+  // Only accept if all values are nice (halve cleanly)
+  const nice = terms.every(t => Number.isInteger(t) || (t*2 === Math.round(t*2)));
+  if (!nice) return genArithmetic();
+  return {
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
+    typeName: 'Converging Halving Differences',
+    explanation: `Differences halve and alternate sign each step: <strong>${d0}, ${-d0/2}, ${d0/4}…</strong> The sequence converges.`
+  };
+}
+
+// ════════════════════════════════════════════════════
+//  CATEGORY B — GEOMETRIC & MULTIPLICATIVE
+// ════════════════════════════════════════════════════
+
+// B1: Geometric (×r)
+function genGeometric() {
+  const r = rand(2, 5);
+  const start = rand(1, 8);
+  const count = rand(5, 6);
+  const terms = Array.from({length: count}, (_, i) => start * Math.pow(r, i));
+  return {
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
+    typeName: 'Geometric',
+    explanation: `Each term is multiplied by <strong>${r}</strong>.`
+  };
+}
+
+// B2: Geometric with additive constant (aₙ = r·aₙ₋₁ + c)
+function genLinearRecurrence() {
+  const r = rand(2, 3), c = rand(1, 10), a0 = rand(1, 8);
+  const count = rand(5, 6);
+  const terms = [a0];
+  for (let i = 1; i < count; i++) terms.push(r * terms[terms.length-1] + c);
+  return {
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
+    typeName: 'Linear Recurrence',
+    explanation: `Each term = <strong>${r} × previous + ${c}</strong>.`
+  };
+}
+
+// B3: Alternating ×r and +b (screenshot: ×10 and +9)
+function genAltMultAdd() {
+  const r = [2,3,4,5,10][rand(0,4)];
+  const b = rand(2, 12);
+  const start = rand(2, 10);
+  const count = rand(6, 7);
+  const terms = [start];
+  for (let i = 1; i < count; i++) {
+    terms.push(i % 2 === 1 ? terms[terms.length-1] * r : terms[terms.length-1] + b);
+  }
+  return {
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
+    typeName: 'Alternate ×r then +b',
+    explanation: `Alternates between multiplying by <strong>${r}</strong> and adding <strong>${b}</strong>.`
+  };
+}
+
+// B4: Alternating ×r and −c
+function genAltMultSub() {
+  const r = rand(2,3), c = rand(5,15), start = rand(3,12);
+  const count = rand(5,7);
+  const terms = [start];
+  for (let i = 1; i < count; i++) {
+    terms.push(i%2===1 ? terms[terms.length-1]*r : terms[terms.length-1]-c);
+  }
+  return {
+    terms: terms.slice(0,-1), answer: terms[terms.length-1],
+    typeName: 'Alternate ×r then −c',
+    explanation: `Alternates between multiplying by <strong>${r}</strong> and subtracting <strong>${c}</strong>.`
+  };
+}
+
+// B5: Alternating +a and −b (net change per pair)
+function genAlternatingAddSub() {
+  const a = rand(3, 12), b = rand(2, 8);
+  if (a === b) return genAlternatingAddSub();
+  const start = rand(5, 30);
+  const count = rand(7, 9);
+  const terms = [start];
+  for (let i = 1; i < count; i++) terms.push(terms[terms.length-1] + (i % 2 === 1 ? a : -b));
+  return {
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
+    typeName: 'Alternating +a / −b',
+    explanation: `Alternates between adding <strong>${a}</strong> and subtracting <strong>${b}</strong>.`
+  };
+}
+
+// B6: Perfect powers (n^k)
+function genPowers() {
+  const exp = rand(2, 4);
+  const startN = rand(1, 5);
+  const count = rand(5, 7);
+  const terms = Array.from({length: count}, (_, i) => Math.pow(startN + i, exp));
+  const sup = exp===2?'²':exp===3?'³':'⁴';
+  return {
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
+    typeName: `Perfect ${exp===2?'Squares':exp===3?'Cubes':'Powers'}`,
+    explanation: `Consecutive perfect ${exp===2?'squares':exp===3?'cubes':'4th powers'}: <strong>${startN}${sup}, ${startN+1}${sup}, ${startN+2}${sup}…</strong>`
+  };
+}
+
+// B7: Factorials
+function genFactorials() {
+  const offset = rand(1, 3);
+  const count = rand(5, 6);
+  let f = 1;
+  const terms = [];
+  for (let i = 1; i <= count + offset - 1; i++) {
+    f *= i;
+    if (i >= offset) terms.push(f);
+  }
+  return {
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
+    typeName: 'Factorials',
+    explanation: `Consecutive factorials: <strong>${offset}!, ${offset+1}!, ${offset+2}!…</strong>`
+  };
+}
+
+// ════════════════════════════════════════════════════
+//  CATEGORY C — PRIME-BASED
+// ════════════════════════════════════════════════════
+
+// C1: Consecutive primes (subsequence starting at random prime)
+function genPrimesSequence() {
+  const primes = getPrimes(20);
+  const startIdx = rand(0, 8);
+  const count = rand(5, 7);
+  const terms = primes.slice(startIdx, startIdx + count);
+  return {
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
+    typeName: 'Consecutive Primes',
+    explanation: `Consecutive prime numbers.`
+  };
+}
+
+// C2: Add consecutive primes as differences
+function genAddPrimes() {
+  const primes = getPrimes(8);
+  const start = rand(2, 20);
+  const count = rand(5, 7);
+  const terms = [start];
+  for (let i = 0; i < count - 1; i++) terms.push(terms[terms.length-1] + primes[i]);
+  return {
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
+    typeName: 'Add Consecutive Primes',
+    explanation: `Add consecutive primes as differences: <strong>+${primes.slice(0, count-1).join(', +')}…</strong>`
+  };
+}
+
+// C3: Every other prime
+function genEveryOtherPrime() {
+  const primes = getPrimes(25);
+  const startIdx = rand(0, 4);
+  const count = rand(5, 7);
+  const terms = Array.from({length: count}, (_, i) => primes[startIdx + i * 2]);
+  return {
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
+    typeName: 'Every Other Prime',
+    explanation: `Every other prime number (alternate primes from the sequence).`
+  };
+}
+
+// C4: Second differences are consecutive primes
+function genPrimesSecondDiff() {
+  const primes = getPrimes(7);
+  const d0 = rand(3, 10), start = rand(5, 20);
+  const count = rand(5, 7);
+  const diffs = [d0];
+  for (let i = 0; i < count - 2; i++) diffs.push(diffs[diffs.length-1] + primes[i]);
+  const terms = [start];
+  for (const d of diffs) terms.push(terms[terms.length-1] + d);
+  return {
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
+    typeName: 'Prime 2nd Differences',
+    explanation: `First differences increase by consecutive primes (${primes.slice(0,4).join(', ')}…). Second differences are prime.`
+  };
+}
+
+// ════════════════════════════════════════════════════
+//  CATEGORY D — RECURSIVE / MULTI-TERM
+// ════════════════════════════════════════════════════
+
+// D1: Fibonacci-type (each = sum of two preceding)
+function genFibonacciType() {
+  const a = rand(1, 8), b = rand(1, 8);
+  const count = rand(6, 8);
+  const terms = [a, b];
+  for (let i = 2; i < count; i++) terms.push(terms[terms.length-1] + terms[terms.length-2]);
+  return {
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
+    typeName: 'Fibonacci-type',
+    explanation: `Each term is the sum of the two preceding terms. Starts with <strong>${a}, ${b}</strong>.`
+  };
+}
+
+// D2: Difference-of-two-preceding (like Fibonacci but subtraction — screenshot seq10)
+function genDiffOfTwo() {
+  const a = rand(-5, 10), b = rand(-5, 15);
+  const count = rand(7, 10); // need many terms to show the cycle
+  const terms = [a, b];
+  for (let i = 2; i < count; i++) terms.push(terms[terms.length-2] - terms[terms.length-1]);
+  return {
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
+    typeName: 'Difference of Two Preceding',
+    explanation: `Each term = the <strong>difference</strong> of the two preceding terms (second-to-last minus last).`
+  };
+}
+
+// D3: Tribonacci (sum of three preceding)
+function genTribonacci() {
+  const a = rand(1,3), b = rand(1,3), c = rand(1,4);
+  const count = rand(7, 9);
+  const terms = [a, b, c];
+  for (let i = 3; i < count; i++) terms.push(terms[terms.length-1] + terms[terms.length-2] + terms[terms.length-3]);
+  return {
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
+    typeName: 'Tribonacci-type',
+    explanation: `Each term is the sum of the three preceding terms. Starts with <strong>${a}, ${b}, ${c}</strong>.`
+  };
+}
+
+// D4: Rolling average of 3 preceding terms (screenshot example)
+function genRollingAverage() {
+  // Pick 3 random starting integers; subsequent = average of last 3
+  const a = rand(1, 50) * (Math.random()<0.3 ? -1 : 1);
+  const b = rand(1, 50) * (Math.random()<0.3 ? -1 : 1);
+  const c = rand(1, 50) * (Math.random()<0.3 ? -1 : 1);
+  const count = rand(6, 8);
+  const terms = [a, b, c];
+  for (let i = 3; i < count; i++) {
+    const avg = (terms[terms.length-1] + terms[terms.length-2] + terms[terms.length-3]) / 3;
+    if (!Number.isInteger(avg)) return genRollingAverage(); // retry if non-integer
+    terms.push(avg);
+  }
+  if (terms.some(t => Math.abs(t) > 999)) return genRollingAverage();
+  return {
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
+    typeName: 'Rolling Average of 3',
+    explanation: `From the 4th term onward, each term = <strong>average of the three preceding terms</strong>.`
+  };
+}
+
+// D5: General two-term recurrence aₙ = p·aₙ₋₁ + q·aₙ₋₂
+function genTwoTermRecurrence() {
+  const p = rand(1,3), q = rand(1,2);
+  const t0 = rand(1,5), t1 = rand(1,6);
+  const count = rand(5,7);
+  const terms = [t0, t1];
+  for (let i = 2; i < count; i++) terms.push(p*terms[terms.length-1] + q*terms[terms.length-2]);
+  if (terms.some(t => t > 50000)) return genFibonacciType();
+  return {
+    terms: terms.slice(0,-1), answer: terms[terms.length-1],
+    typeName: 'Two-term Recurrence',
+    explanation: `aₙ = <strong>${p}·aₙ₋₁ + ${q}·aₙ₋₂</strong>.`
+  };
+}
+
+// ════════════════════════════════════════════════════
+//  CATEGORY E — INTERLEAVED / POSITIONAL
+// ════════════════════════════════════════════════════
+
+// E1: Two interleaved arithmetic sequences
+function genInterleavedArithmetic() {
+  const d1 = rand(2, 8), d2 = rand(3, 10);
+  const s1 = rand(2, 15), s2 = rand(3, 20);
+  if (Math.abs(s1-s2) < 2) return genInterleavedArithmetic();
+  const count = rand(7, 9);
+  const terms = [];
+  for (let i = 0; i < count; i++) {
+    terms.push(i % 2 === 0 ? s1 + (i/2)*d1 : s2 + ((i-1)/2)*d2);
+  }
+  return {
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
+    typeName: 'Two Interleaved Arithmetic',
+    explanation: `Two interleaved arithmetic sequences: positions 1,3,5… go +${d1}; positions 2,4,6… go +${d2}.`
+  };
+}
+
+// E2: Two interleaved geometric sequences
+function genInterleavedGeometric() {
+  const r1 = rand(2, 3), r2 = rand(2, 3);
+  const s1 = rand(1, 4), s2 = rand(1, 5);
+  if (s1 === s2 && r1 === r2) return genInterleavedGeometric();
+  const count = rand(6, 8);
+  const terms = [];
+  for (let i = 0; i < count; i++) {
+    terms.push(i % 2 === 0 ? s1 * Math.pow(r1, i/2) : s2 * Math.pow(r2, (i-1)/2));
+  }
+  if (terms.some(t => t > 10000)) return genInterleavedArithmetic();
+  return {
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
+    typeName: 'Two Interleaved Geometric',
+    explanation: `Two interleaved geometric sequences: odd positions ×${r1}, even positions ×${r2}.`
+  };
+}
+
+// E3: Interleaved arithmetic + geometric
+function genInterleavedArithGeom() {
+  const d = rand(3, 8), r = rand(2, 3);
+  const s1 = rand(2, 12), s2 = rand(1, 5);
+  const count = rand(6, 8);
+  const terms = [];
+  for (let i = 0; i < count; i++) {
+    terms.push(i % 2 === 0 ? s1 + (i/2)*d : s2 * Math.pow(r, (i-1)/2));
+  }
+  if (terms.some(t => t > 5000)) return genInterleavedArithmetic();
+  return {
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
+    typeName: 'Interleaved Arithmetic & Geometric',
+    explanation: `Two interleaved sequences: odd positions form arithmetic (+${d}), even positions form geometric (×${r}).`
+  };
+}
+
+// ════════════════════════════════════════════════════
+//  CATEGORY F — DIGIT-BASED
+// ════════════════════════════════════════════════════
+
+// F1: Add digit sum
 function genDigitSum() {
-  const start = rand(10, 50);
+  const start = rand(10, 60);
   const count = rand(5, 7);
   const terms = [start];
   for (let i = 1; i < count; i++) {
     const prev = terms[terms.length-1];
-    const ds = String(prev).split('').reduce((s,c)=>s+parseInt(c),0);
+    const ds = String(Math.abs(prev)).split('').reduce((s,c)=>s+parseInt(c),0);
     terms.push(prev + ds);
   }
   return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
     typeName: 'Add Digit Sum',
     explanation: `Each term = previous term + <strong>sum of its digits</strong>.`
   };
 }
 
-// ── TYPE 21: Pentagonal numbers ──
-function genPentagonal() {
-  const offset = rand(0, 3);
-  const count = rand(5, 7);
-  const terms = Array.from({length: count}, (_, i) => {
-    const n = i + 1 + offset;
-    return n * (3*n - 1) / 2;
-  });
-  return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Pentagonal Numbers',
-    explanation: `Pentagonal numbers: <strong>P(n) = n(3n−1)/2</strong>.`
-  };
-}
-
-// ── TYPE 22: Exponential + offset ──
-function genExpOffset() {
-  const base = rand(2, 3), k = rand(-5, 10), start = rand(0, 3);
-  const count = rand(5, 7);
-  const terms = Array.from({length: count}, (_, i) => Math.pow(base, i + start) + k);
-  return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Exponential + Offset',
-    explanation: `<strong>${base}ⁿ ${k>=0?'+':''}${k}</strong>, where n starts at ${start}.`
-  };
-}
-
-// ── TYPE 23: Add nth prime ──
-function genAddNthPrime() {
-  const primes = getPrimes(10);
-  const start = rand(1, 10);
+// F2: Add digit product
+function genDigitProduct() {
+  const start = rand(11, 39);
   const count = rand(5, 7);
   const terms = [start];
-  for (let i = 0; i < count - 1; i++) terms.push(terms[terms.length-1] + primes[i]);
+  for (let i = 1; i < count; i++) {
+    const prev = terms[terms.length-1];
+    const dp = String(prev).split('').reduce((p,c)=>p*parseInt(c),1);
+    if (dp === 0) { terms.push(prev + 9); continue; }
+    terms.push(prev + dp);
+  }
   return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Add nth Prime',
-    explanation: `Add the ${['1st','2nd','3rd','4th','5th','6th'][0]} prime (${primes[0]}), ${['1st','2nd','3rd','4th','5th','6th'][1]} prime (${primes[1]}), etc.`
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
+    typeName: 'Add Digit Product',
+    explanation: `Each term = previous term + <strong>product of its digits</strong>.`
   };
 }
 
-// ── TYPE 24: Cubic differences ──
-function genCubicDiff() {
-  const start = rand(1, 10);
+// F3: Digit rotation (cyclic permutation of digits — screenshot sequence 4)
+function genDigitRotation() {
+  // Pick a 5-6 digit number and rotate its digits each step
+  const digits = rand(4, 5); // 4 or 5 digit numbers
+  const dArr = [];
+  dArr.push(rand(1,9)); // no leading zero
+  for (let i = 1; i < digits; i++) dArr.push(rand(0,9));
   const count = rand(5, 7);
-  const terms = [start];
-  for (let i = 1; i < count; i++) terms.push(terms[terms.length-1] + i*i*i);
+  const terms = [];
+  for (let i = 0; i < count; i++) {
+    const rotated = [...dArr.slice(i % dArr.length), ...dArr.slice(0, i % dArr.length)];
+    const num = parseInt(rotated.join(''));
+    if (num === 0 || String(num).length !== digits) return genDigitRotation(); // skip leading-zero issues
+    terms.push(num);
+  }
+  // Check all distinct enough
+  if (new Set(terms).size < 3) return genDigitRotation();
   return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Cube Differences',
-    explanation: `Add 1³, 2³, 3³, 4³… The differences are <strong>1, 8, 27, 64…</strong>`
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
+    typeName: 'Digit Rotation',
+    explanation: `Each term is formed by <strong>rotating the digits</strong> of the previous term one position to the left.`
   };
 }
 
-// ── TYPE 25: Running sum ──
-function genRunningSum() {
-  const start = rand(1, 4);
-  const count = rand(5, 7);
-  let s = 0;
-  const terms = Array.from({length: count}, (_, i) => { s += (i + start); return s; });
-  return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Running Sum',
-    explanation: `Cumulative sums of <strong>${start}, ${start+1}, ${start+2}…</strong>`
-  };
-}
+// ════════════════════════════════════════════════════
+//  CATEGORY G — FRACTION SEQUENCES
+// ════════════════════════════════════════════════════
 
-// ── TYPE 26: Product minus constant ──
-function genProductMinus() {
-  const r = rand(2, 4), c = rand(1, 5), start = rand(2, 8);
-  const count = rand(5, 7);
-  const terms = [start];
-  for (let i = 1; i < count; i++) terms.push(terms[terms.length-1] * r - c);
-  return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Multiply & Subtract',
-    explanation: `Each term = <strong>${r} × previous − ${c}</strong>.`
-  };
-}
-
-// ── FRACTION TYPES ──
-
-// ── TYPE 27: Fraction, both +constant ──
+// G1: Both numerator and denominator arithmetic
 function genFracBothArith() {
-  let n = rand(1,8), d = rand(2,10), dn = rand(3,9), dd = rand(1,4);
-  if (d <= dn) d = dn + 2;
+  let n = rand(1,8), d = rand(3,12), dn = rand(3,9), dd = rand(1,4);
   const count = rand(5, 7);
   const terms = [];
   let cn = n, cd = d;
@@ -800,9 +942,11 @@ function genFracBothArith() {
   };
 }
 
-// ── TYPE 28: Fraction, alternating denom increment ──
+// G2: Numerator arithmetic, denominator alternates between two step sizes
 function genFracAltDenom() {
-  let n = rand(1,8), d = rand(3,12), dn = rand(4,10), dd1 = 1, dd2 = 2;
+  let n = rand(1,8), d = rand(3,12), dn = rand(4,10);
+  const dd1 = rand(1,2), dd2 = rand(2,4);
+  if (dd1 === dd2) return genFracAltDenom();
   const count = rand(5, 7);
   const terms = [];
   let cn = n, cd = d;
@@ -814,29 +958,28 @@ function genFracAltDenom() {
   return {
     terms: terms.slice(0, -1).map(([a,b]) => fmtFrac(a,b)),
     answer: fmtFrac(terms[terms.length-1][0], terms[terms.length-1][1]),
-    typeName: 'Fraction — Alternating Denom',
+    typeName: 'Fraction — Alternating Denominator Step',
     explanation: `Numerator +${dn}; denominator alternates +${dd1} and +${dd2}.`
   };
 }
 
-// ── TYPE 29: Fraction — denom becomes next numerator ──
+// G3: Denominator of each term = numerator of next (Fibonacci-like chain)
 function genFracChain() {
   const fibA = rand(1,4), fibB = rand(3,8);
   const count = rand(5, 7);
   const nums = [fibA, fibB];
   for (let i = 2; i < count + 1; i++) nums.push(nums[nums.length-1] + nums[nums.length-2]);
-  const denoms = nums.slice(1); // each denom = next numerator
   const terms = [];
-  for (let i = 0; i < count; i++) terms.push([nums[i], denoms[i]]);
+  for (let i = 0; i < count; i++) terms.push([nums[i], nums[i+1]]);
   return {
     terms: terms.slice(0, -1).map(([a,b]) => fmtFrac(a,b)),
     answer: fmtFrac(terms[terms.length-1][0], terms[terms.length-1][1]),
     typeName: 'Fraction — Denominator Chain',
-    explanation: `Denominator of each term becomes the numerator of the next. Numerators follow a Fibonacci-like sequence starting ${fibA}, ${fibB}.`
+    explanation: `Denominator of each term becomes the numerator of the next; numerators follow a Fibonacci-like pattern (${fibA}, ${fibB}…).`
   };
 }
 
-// ── TYPE 30: Fraction — numerator Fibonacci, denom arithmetic ──
+// G4: Numerator Fibonacci, denominator arithmetic
 function genFracFibNum() {
   const a = rand(1,3), b = rand(2,5);
   const fibs = [a, b];
@@ -848,60 +991,30 @@ function genFracFibNum() {
     terms: terms.slice(0, -1).map(([a,b]) => fmtFrac(a,b)),
     answer: fmtFrac(terms[terms.length-1][0], terms[terms.length-1][1]),
     typeName: 'Fraction — Fibonacci Numerators',
-    explanation: `Numerators follow Fibonacci: <strong>${fibs.slice(0,5).join(', ')}…</strong>. Denominator +${dStep} each step.`
+    explanation: `Numerators follow a Fibonacci pattern (${fibs.slice(0,5).join(', ')}…); denominator +${dStep} each step.`
   };
 }
 
-// ── TYPE 31: Fraction — numerator +const, denom ×const ──
+// G5: Numerator arithmetic, denominator geometric
 function genFracArithGeom() {
-  let n = rand(2,8), d = rand(2,5), dn = rand(3,9), dr = rand(2,3);
-  const count = rand(5, 6); // keep denom small
+  let n = rand(2,8), d = rand(2,4), dn = rand(3,9), dr = rand(2,3);
+  const count = rand(5, 6);
   const terms = [];
   let cn = n, cd = d;
   for (let i = 0; i < count; i++) {
     terms.push([cn, cd]);
     cn += dn; cd *= dr;
   }
+  if (terms.some(([a,b])=>b>500)) return genFracBothArith();
   return {
     terms: terms.slice(0, -1).map(([a,b]) => fmtFrac(a,b)),
     answer: fmtFrac(terms[terms.length-1][0], terms[terms.length-1][1]),
-    typeName: 'Fraction — Arith Num, Geom Den',
+    typeName: 'Fraction — Arithmetic Numerator, Geometric Denominator',
     explanation: `Numerator +${dn} each step; denominator ×${dr} each step.`
   };
 }
 
-// ── TYPE 32: Fractions equal to consecutive integers ──
-function genFracEqualInts() {
-  const mul = rand(2, 8);
-  const count = rand(5, 7);
-  const terms = Array.from({length: count}, (_, i) => [(i+1)*mul, mul]);
-  return {
-    terms: terms.slice(0, -1).map(([a,b]) => `${a}/${b}`),
-    answer: `${terms[terms.length-1][0]}/${mul}`,
-    typeName: 'Fractions Equal to Integers',
-    explanation: `Each fraction simplifies to <strong>1, 2, 3, 4…</strong> The denominator is always ${mul}.`
-  };
-}
-
-// ── TYPE 33: Interleaved integers and simplifying fractions ──
-function genInterleavedFracs() {
-  const mul = rand(3, 7);
-  const count = rand(5, 7); // odd count = ends on integer
-  const terms = [];
-  for (let i = 0; i < count; i++) {
-    const n = i + 1;
-    if (i % 2 === 0) terms.push([n, 1]);
-    else terms.push([n * mul, mul]);
-  }
-  return {
-    terms: terms.slice(0, -1).map(([a,b]) => b === 1 ? String(a) : `${a}/${b}`),
-    answer: terms[terms.length-1][1] === 1 ? String(terms[terms.length-1][0]) : `${terms[terms.length-1][0]}/${mul}`,
-    typeName: 'Interleaved Integers & Fractions',
-    explanation: `Integers alternate with equivalent fractions (denominator ${mul}): <strong>1, ${mul}/${mul}, 2, ${2*mul}/${mul}…</strong>`
-  };
-}
-
-// ── TYPE 34: Fraction — geom numerator and denom ──
+// G6: Both geometric (×rn numerator, ×rd denominator)
 function genFracBothGeom() {
   let rn = rand(2,3), rd = rand(2,3), n = rand(1,5), d = rand(3,10);
   const count = rand(5, 6);
@@ -911,6 +1024,7 @@ function genFracBothGeom() {
     terms.push([cn, cd]);
     cn *= rn; cd *= rd;
   }
+  if (terms.some(([a,b])=>b>1000||a>1000)) return genFracBothArith();
   return {
     terms: terms.slice(0, -1).map(([a,b]) => fmtFrac(a,b)),
     answer: fmtFrac(terms[terms.length-1][0], terms[terms.length-1][1]),
@@ -919,281 +1033,310 @@ function genFracBothGeom() {
   };
 }
 
-// ── TYPE 35: Alternating addition amounts grow ──
-function genGrowingAlt() {
-  const start = rand(5, 20);
-  const count = rand(5, 8);
-  const terms = [start];
-  for (let i = 1; i < count; i++) {
-    const prev = terms[terms.length-1];
-    const add = i % 2 === 1 ? i : -(i-1);
-    terms.push(prev + add);
-  }
-  return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Growing Alternating Steps',
-    explanation: `Adds odd index, subtracts even index: <strong>+1, −2, +3, −4…</strong>`
-  };
-}
+// ════════════════════════════════════════════════════
+//  CATEGORY H — DECIMAL SEQUENCES
+// ════════════════════════════════════════════════════
 
-// ── TYPE 36: Second differences = prime ──
-function genPrimesSecondDiff() {
-  const primes = getPrimes(7);
-  const d0 = rand(3, 10), start = rand(5, 20);
-  const count = rand(5, 7);
-  const diffs = [d0];
-  for (let i = 0; i < count - 2; i++) diffs.push(diffs[diffs.length-1] + primes[i]);
-  const terms = [start];
-  for (const d of diffs) terms.push(terms[terms.length-1] + d);
-  return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Second Differences = Primes',
-    explanation: `First differences grow by consecutive primes (${primes.slice(0,4).join(', ')}…). Second differences are prime.`
-  };
-}
-
-// ── TYPE 37: Digit product added ──
-function genDigitProduct() {
-  const start = rand(11, 39);
-  const count = rand(5, 7);
-  const terms = [start];
-  for (let i = 1; i < count; i++) {
-    const prev = terms[terms.length-1];
-    const dp = String(prev).split('').reduce((p,c)=>p*parseInt(c),1);
-    terms.push(prev + (dp === 0 ? 9 : dp));
-  }
-  return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Add Digit Product',
-    explanation: `Each term = previous + <strong>product of its digits</strong>.`
-  };
-}
-
-// ── TYPE 38: Hexagonal numbers ──
-function genHexagonal() {
-  const offset = rand(0, 3);
+// H1: Fractions shown as decimals — n/(n+k) type (screenshot: 1/3, 2/4, 3/5...)
+function genDecimalFracs() {
+  const k = rand(1, 5);
+  const start = rand(1, 4);
   const count = rand(5, 7);
   const terms = Array.from({length: count}, (_, i) => {
-    const n = i + 1 + offset;
-    return n * (2*n - 1);
+    const n = start + i;
+    return parseFloat((n / (n+k)).toPrecision(5));
   });
+  const lastN = start + count - 1;
+  const ans = parseFloat((lastN / (lastN+k)).toPrecision(5));
+  // format all as decimals
+  const fmt = v => fmtDec(v, 5);
   return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Hexagonal Numbers',
-    explanation: `Hexagonal numbers: <strong>H(n) = n(2n−1)</strong>.`
+    terms: terms.slice(0, -1).map(fmt),
+    answer: fmt(ans),
+    typeName: 'Decimal Fractions',
+    explanation: `Each term is <strong>n/(n+${k})</strong> for n = ${start}, ${start+1}, … Convert to fractions: ${start}/${start+k}, ${start+1}/${start+1+k}… The numerator and denominator each increase by 1.`
   };
 }
 
-// ── TYPE 39: Squares + linear ──
-function genSquaresPlusLinear() {
-  const c1 = rand(1,3), c2 = rand(0,5), c3 = rand(0,10);
+// H2: Arithmetic sequence shown as decimals
+function genDecimalArithmetic() {
+  const choices = [0.1, 0.2, 0.25, 0.5, 0.15, 0.3, 0.05];
+  const d = choices[rand(0, choices.length-1)] * (Math.random()<0.3?-1:1);
+  const start = parseFloat((rand(0,4) + rand(0,9)*0.1).toFixed(1));
   const count = rand(5, 7);
-  const terms = Array.from({length: count}, (_, i) => c1*(i+1)*(i+1) + c2*(i+1) + c3);
+  const terms = Array.from({length: count}, (_, i) => parseFloat((start + i*d).toFixed(4)));
   return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Squares + Linear',
-    explanation: `<strong>${c1}n² + ${c2}n + ${c3}</strong>.`
+    terms: terms.slice(0,-1).map(v=>fmtDec(v,5)),
+    answer: fmtDec(terms[terms.length-1], 5),
+    typeName: 'Decimal Arithmetic',
+    explanation: `Each term changes by a constant <strong>${d > 0 ? '+' : ''}${d}</strong>.`
   };
 }
 
-// ── TYPE 40: Doubled + shrinking step ──
-function genDoubleShrink() {
-  const start = rand(100, 300);
-  const r = rand(2,4);
-  const count = rand(5,7);
-  const terms = [start];
-  for (let i = 1; i < count; i++) terms.push(Math.floor(terms[terms.length-1] / r));
-  return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Integer Division',
-    explanation: `Each term = floor of previous ÷ <strong>${r}</strong>.`
-  };
-}
-
-// ── TYPE 41: n! (factorials) ──
-function genFactorials() {
-  const offset = rand(1, 3);
-  const count = rand(5, 6);
-  let f = 1;
+// H3: Geometric sequence with ratio between 0 and 1 (shown as decimals)
+function genGeomDecimal() {
+  // Use ratio 1/2, 1/3, 2/3, or 3/4 for clean decimals
+  const ratios = [[1,2],[1,3],[2,3],[3,4],[1,4]];
+  const [rn, rd] = ratios[rand(0, ratios.length-1)];
+  const start = rand(2, 8) * rd; // make sure first term divides cleanly
+  const count = rand(5, 7);
   const terms = [];
-  for (let i = 1; i <= count + offset - 1; i++) {
-    f *= i;
-    if (i >= offset) terms.push(f);
+  let cur = start;
+  for (let i = 0; i < count; i++) {
+    terms.push(parseFloat(cur.toPrecision(6)));
+    cur = cur * rn / rd;
+    if (cur < 0.001) break;
   }
+  if (terms.length < 5) return genDecimalArithmetic();
+  const fmt = v => fmtDec(v, 5);
   return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Factorials',
-    explanation: `Consecutive factorials: <strong>${offset}!, ${offset+1}!, ${offset+2}!…</strong>`
+    terms: terms.slice(0,-1).map(fmt), answer: fmt(terms[terms.length-1]),
+    typeName: 'Geometric (Decimal)',
+    explanation: `Each term is multiplied by <strong>${rn}/${rd}</strong> = ${(rn/rd).toFixed(4).replace(/0+$/,'')}.`
   };
 }
 
-// ── TYPE 42: Catalan-like ──
-function genCatalanLike() {
-  // Catalan: 1, 1, 2, 5, 14, 42…
-  const catalans = [1,1,2,5,14,42,132];
-  const mult = rand(1,4);
-  const offset = rand(0, 2);
-  const count = rand(5,6);
-  const terms = catalans.slice(offset, offset+count).map(c => c * mult);
-  return {
-    terms: terms.slice(0,-1),
-    answer: terms[terms.length-1],
-    typeName: 'Catalan-based',
-    explanation: `Based on Catalan numbers (1, 1, 2, 5, 14, 42…) multiplied by ${mult}.`
-  };
-}
+// ════════════════════════════════════════════════════
+//  CATEGORY I — MIXED / CREATIVE
+// ════════════════════════════════════════════════════
 
-// ── TYPE 43: Recurrence with two previous ──
-function genTwoTermRecurrence() {
-  const a = rand(1,5), b = rand(1,4), c = rand(1,5), d_coeff = rand(1,3);
-  const t0 = rand(1,5), t1 = rand(1,5);
-  const count = rand(5,7);
-  const terms = [t0, t1];
-  for (let i = 2; i < count; i++) {
-    terms.push(a*terms[terms.length-1] + b*terms[terms.length-2] + c);
-  }
-  return {
-    terms: terms.slice(0,-1),
-    answer: terms[terms.length-1],
-    typeName: 'Two-term Recurrence',
-    explanation: `aₙ = <strong>${a}·aₙ₋₁ + ${b}·aₙ₋₂ + ${c}</strong>.`
-  };
-}
-
-// ── TYPE 44: Alternating multiply and subtract ──
-function genAltMultSub() {
-  const r = rand(2,3), c = rand(5,15), start = rand(3,12);
-  const count = rand(5,7);
-  const terms = [start];
-  for (let i = 1; i < count; i++) {
-    terms.push(i%2===1 ? terms[terms.length-1]*r : terms[terms.length-1]-c);
-  }
-  return {
-    terms: terms.slice(0,-1),
-    answer: terms[terms.length-1],
-    typeName: 'Alternate ×r and −c',
-    explanation: `Alternates between multiplying by <strong>${r}</strong> and subtracting <strong>${c}</strong>.`
-  };
-}
-
-// ── TYPE 45: Oblong numbers ──
-function genOblong() {
-  const offset = rand(0, 3);
+// I1: Screenshot seq2 type — complex recurrence (next diff = 2×prev_diff − factor)
+function genCompoundRecurrence() {
+  // aₙ = aₙ₋₁ + diffₙ, where diffₙ = 2×diffₙ₋₁ − sub
+  const sub = rand(2, 8);
+  const d0 = rand(5, 20);
+  const start = rand(5, 30);
   const count = rand(5, 7);
-  const terms = Array.from({length: count}, (_, i) => {
-    const n = i + 1 + offset;
-    return n * (n + 1);
-  });
+  const terms = [start];
+  let diff = d0;
+  for (let i = 1; i < count; i++) {
+    terms.push(terms[terms.length-1] + diff);
+    diff = 2 * diff - sub;
+  }
+  if (terms.some(t => t > 9999 || t < -999)) return genAcceleratingDiff();
   return {
-    terms: terms.slice(0, -1),
-    answer: terms[terms.length - 1],
-    typeName: 'Oblong Numbers',
-    explanation: `Oblong (pronic) numbers: <strong>n(n+1)</strong> = 2, 6, 12, 20, 30…`
+    terms: terms.slice(0, -1), answer: terms[terms.length - 1],
+    typeName: 'Compound Recurrence',
+    explanation: `Each difference = <strong>2 × previous difference − ${sub}</strong>. Differences: ${d0}, ${2*d0-sub}, ${2*(2*d0-sub)-sub}…`
   };
 }
 
-// ── TYPE 46: Sum of squares sequence ──
-function genSumOfSquares() {
-  const start = rand(1,3);
+// I2: Geometric sequence with a polynomial offset (aₙ = rⁿ + linear term)
+function genGeomPlusPoly() {
+  const r = rand(2, 3);
+  const m = rand(1, 5), k = rand(0, 10);
+  const startN = rand(0, 2);
+  const count = rand(5, 6);
+  const terms = Array.from({length: count}, (_, i) => {
+    const n = startN + i;
+    return Math.pow(r, n) + m * n + k;
+  });
+  if (terms.some(t => t > 9999)) return genLinearRecurrence();
+  return {
+    terms: terms.slice(0,-1), answer: terms[terms.length-1],
+    typeName: 'Exponential + Linear',
+    explanation: `Each term = <strong>${r}ⁿ + ${m}n + ${k}</strong>. A geometric component plus a linearly growing component.`
+  };
+}
+
+// I3: Product of two arithmetic sequences
+function genProductArith() {
+  const a0 = rand(1,5), da = rand(1,3), b0 = rand(1,5), db = rand(1,3);
   const count = rand(5,7);
+  const terms = Array.from({length: count}, (_,i) => (a0+i*da) * (b0+i*db));
+  if (terms.some(t=>t>9999)) return genConstantSecondDiff();
+  return {
+    terms: terms.slice(0,-1), answer: terms[terms.length-1],
+    typeName: 'Product of Two Arithmetic Sequences',
+    explanation: `Each term = <strong>(${a0}+${da}n) × (${b0}+${db}n)</strong>. Equivalently, both factors step up by ${da} and ${db}.`
+  };
+}
+
+// I4: Steps grow then shrink (pyramid-shaped differences)
+function genPyramidDiff() {
+  const peak = rand(3,6);
+  const diffs = [];
+  for (let i = 1; i <= peak; i++) diffs.push(i);
+  for (let i = peak-1; i >= 1; i--) diffs.push(i);
+  const start = rand(5,20);
+  const count = Math.min(rand(6,9), diffs.length+1);
+  const terms = [start];
+  for (let i = 0; i < count-1; i++) terms.push(terms[terms.length-1] + diffs[i]);
+  return {
+    terms: terms.slice(0,-1), answer: terms[terms.length-1],
+    typeName: 'Pyramid Differences',
+    explanation: `Differences increase then decrease: <strong>${diffs.slice(0,peak).join(', ')}, ${diffs.slice(peak).join(', ')}…</strong>`
+  };
+}
+
+// I5: Alternating multiply and add to different registers (screenshot seq1 variation)
+function genMultiDiff() {
+  const r = rand(2, 3), start = rand(3, 15), c = rand(2, 8);
+  // aₙ = r·aₙ₋₂ + c  (every two steps, multiply by r, plus c)
+  const count = rand(6, 8);
+  const terms = [start, start + rand(2,6)];
+  for (let i = 2; i < count; i++) terms.push(r * terms[terms.length-2] + c);
+  if (terms.some(t=>t>9999)) return genLinearRecurrence();
+  return {
+    terms: terms.slice(0,-1), answer: terms[terms.length-1],
+    typeName: 'Skip-one Recurrence',
+    explanation: `Each term = <strong>${r} × the term two before it + ${c}</strong>.`
+  };
+}
+
+// I6: Running total — cumulative sums of primes
+function genCumSumPrimes() {
+  const primes = getPrimes(10);
+  const startIdx = rand(0, 3);
+  const count = rand(5, 7);
   let s = 0;
   const terms = [];
-  for (let i = start; i < start + count; i++) {
-    s += i*i;
+  for (let i = startIdx; i < startIdx + count; i++) {
+    s += primes[i];
     terms.push(s);
   }
   return {
-    terms: terms.slice(0,-1),
-    answer: terms[terms.length-1],
-    typeName: 'Cumulative Sum of Squares',
-    explanation: `Running total of squares: <strong>${start}², ${start+1}², ${start+2}²…</strong>`
+    terms: terms.slice(0,-1), answer: terms[terms.length-1],
+    typeName: 'Cumulative Sum of Primes',
+    explanation: `Running total of consecutive primes: <strong>+${primes[startIdx]}, +${primes[startIdx+1]}, +${primes[startIdx+2]}…</strong>`
   };
 }
 
-// ── TYPE 47: Differences are powers of 2 ──
-function genPow2Diffs() {
-  const start = rand(2,15);
-  const count = rand(5,7);
-  const terms = [start];
-  for (let i = 0; i < count-1; i++) terms.push(terms[terms.length-1] + Math.pow(2, i));
+// ── EXTRA NEW TYPES ──
+
+// J1: Sum of position index and previous term: aₙ = aₙ₋₁ + n
+function genAddIndex() {
+  const a0 = rand(1, 15);
+  const mult = rand(1, 3); // add mult*n each step
+  const count = rand(5, 7);
+  const terms = [a0];
+  for (let i = 1; i < count; i++) terms.push(terms[terms.length-1] + mult * i);
   return {
-    terms: terms.slice(0,-1),
-    answer: terms[terms.length-1],
-    typeName: 'Powers-of-2 Differences',
-    explanation: `Differences are powers of 2: <strong>+1, +2, +4, +8, +16…</strong>`
+    terms: terms.slice(0,-1), answer: terms[terms.length-1],
+    typeName: 'Add Position Index',
+    explanation: `Each term = previous + <strong>${mult === 1 ? 'step number' : mult+'×step number'}</strong>: +${mult}, +${2*mult}, +${3*mult}, +${4*mult}…`
   };
 }
 
-// ── TYPE 48: Fraction — geom num, alternating denom ──
-function genFracGeomNumAltDen() {
-  let rn = rand(2,3), d1 = rand(2,6), dd1 = rand(1,3), dd2 = rand(2,5);
-  let n = rand(1,4), d = d1;
-  const count = rand(5,7);
+// J2: Differences alternate between two fixed values (a, b, a, b…)
+// Distinct from cyclic because it's strictly 2-cycle and creates a clear zigzag
+function genAltTwoDiffs() {
+  const d1 = rand(3, 10), d2 = rand(2, 9);
+  if (d1 === d2) return genAltTwoDiffs();
+  const start = rand(5, 30);
+  const count = rand(7, 9);
+  const terms = [start];
+  for (let i = 1; i < count; i++) terms.push(terms[terms.length-1] + (i%2===1 ? d1 : d2));
+  return {
+    terms: terms.slice(0,-1), answer: terms[terms.length-1],
+    typeName: 'Alternating Two Differences',
+    explanation: `Differences alternate between <strong>+${d1}</strong> and <strong>+${d2}</strong>.`
+  };
+}
+
+// J3: Partial sums of a geometric sequence
+function genPartialSumGeom() {
+  const r = rand(2, 3), a = rand(1, 4);
+  const count = rand(5, 6);
+  let s = 0;
   const terms = [];
-  let cn = n, cd = d;
   for (let i = 0; i < count; i++) {
-    terms.push([cn, cd]);
-    cn *= rn;
-    cd += (i % 2 === 0 ? dd1 : dd2);
+    s += a * Math.pow(r, i);
+    terms.push(s);
   }
+  if (terms.some(t => t > 9999)) return genArithmetic();
   return {
-    terms: terms.slice(0,-1).map(([a,b])=>fmtFrac(a,b)),
-    answer: fmtFrac(terms[terms.length-1][0], terms[terms.length-1][1]),
-    typeName: 'Fraction — Geom Num, Alternating Den',
-    explanation: `Numerator ×${rn} each step; denominator alternates +${dd1} and +${dd2}.`
+    terms: terms.slice(0,-1), answer: terms[terms.length-1],
+    typeName: 'Partial Sums of Geometric',
+    explanation: `Running total of a geometric sequence (×${r}): add <strong>${a}, ${a*r}, ${a*r*r}, ${a*r*r*r}…</strong>`
   };
 }
 
-// ── TYPE 49: Square root steps ──
-function genSqrtSteps() {
-  const step = rand(3,8);
-  const count = rand(5,7);
-  // values are: step, 4*step, 9*step, 16*step … (n²*step)
-  const terms = Array.from({length: count}, (_,i) => (i+1)*(i+1)*step);
+// J4: Fraction sequence where each term = previous × (n+1)/n (telescoping product)
+function genFracTelescoping() {
+  // a_n = start × (k+1)/k × (k+2)/(k+1) × ... — but show the raw values
+  // Simpler: terms are start×(n/d) where n and d each step by different amounts
+  // Equivalent: aₙ = a₀ × product_of_ratios
+  const a = rand(1,4), b = rand(2,5), da = rand(1,3), db = rand(1,3);
+  if (da === db) return genFracTelescoping();
+  const count = rand(5, 7);
+  const terms = [];
+  let cn = a, cd = b;
+  for (let i = 0; i < count; i++) {
+    const g = gcd(Math.abs(cn), cd);
+    terms.push([cn/g, cd/g]);
+    cn += da; cd += db;
+  }
+  // Check none reduce to same value
+  const strs = terms.map(([n,d]) => fmtFrac(n,d));
+  if (new Set(strs).size < count) return genFracBothArith();
   return {
-    terms: terms.slice(0,-1),
-    answer: terms[terms.length-1],
-    typeName: 'Multiples of Perfect Squares',
-    explanation: `<strong>${step}·1², ${step}·2², ${step}·3²…</strong> = ${step}, ${4*step}, ${9*step}…`
+    terms: strs.slice(0,-1), answer: strs[strs.length-1],
+    typeName: 'Fraction — Stepped Numerator & Denominator',
+    explanation: `Numerator steps +${da}, denominator steps +${db} each term. Track each separately.`
   };
 }
 
-// ── TYPE 50: Modified prime gap (differences = primes, every other) ──
-function genEveryOtherPrimeDiff() {
-  const primes = getPrimes(20);
-  const start = rand(2, 15);
-  const count = rand(5,7);
+// J5: Geometric sequence where ratio itself grows by 1 each step
+function genGrowingRatio() {
+  const start = rand(1, 5);
+  const baseR = rand(2, 3);
+  const count = rand(5, 6);
   const terms = [start];
-  for (let i = 0; i < count-1; i++) terms.push(terms[terms.length-1] + primes[i*2]);
+  for (let i = 1; i < count; i++) terms.push(terms[terms.length-1] * (baseR + i - 1));
+  if (terms.some(t => t > 50000)) return genGeometric();
   return {
-    terms: terms.slice(0,-1),
-    answer: terms[terms.length-1],
-    typeName: 'Add Every Other Prime',
-    explanation: `Differences are every other prime: <strong>+${primes.filter((_,i)=>i%2===0).slice(0,4).join(', +')}…</strong>`
+    terms: terms.slice(0,-1), answer: terms[terms.length-1],
+    typeName: 'Growing Ratio',
+    explanation: `Each term is multiplied by an increasing factor: ×${baseR}, ×${baseR+1}, ×${baseR+2}… (ratio increases by 1 each step).`
+  };
+}
+
+// J6: Decimal sequence: each term = 1/n² shown as decimal
+function genReciprocalSquares() {
+  const startN = rand(1, 3);
+  const count = rand(5, 7);
+  const fmt = v => fmtDec(v, 5);
+  const terms = Array.from({length: count}, (_, i) => parseFloat((1/((startN+i)*(startN+i))).toPrecision(5)));
+  if (terms[terms.length-1] < 0.001) return genDecimalFracs();
+  return {
+    terms: terms.slice(0,-1).map(fmt), answer: fmt(terms[terms.length-1]),
+    typeName: 'Reciprocal Squares (Decimal)',
+    explanation: `Terms are <strong>1/n²</strong>: 1/${startN}² = ${fmt(terms[0])}, 1/${startN+1}² = ${fmt(terms[1])}… Note the pattern of which squares appear.`
   };
 }
 
 // ── MASTER LIST ──
 const SEQUENCE_GENERATORS = [
-  genArithmetic, genGeometric, genQuadratic, genAcceleratingDiff, genGeomDiff,
-  genAddPrimes, genEveryOtherPrime, genPrimesSequence, genLinearRecurrence,
-  genFibonacciType, genTribonacci, genAlternatingAddSub, genAltMultAdd,
-  genPowers, genTriangles, genInterleavedArithmetic, genInterleavedGeometric,
-  genFibDiffs, genCyclicDiff, genDigitSum, genPentagonal, genExpOffset,
-  genAddNthPrime, genCubicDiff, genRunningSum, genProductMinus,
-  genFracBothArith, genFracAltDenom, genFracChain, genFracFibNum,
-  genFracArithGeom, genFracEqualInts, genInterleavedFracs, genFracBothGeom,
-  genGrowingAlt, genPrimesSecondDiff, genDigitProduct, genHexagonal,
-  genSquaresPlusLinear, genDoubleShrink, genFactorials, genCatalanLike,
-  genTwoTermRecurrence, genAltMultSub, genOblong, genSumOfSquares,
-  genPow2Diffs, genFracGeomNumAltDen, genSqrtSteps, genEveryOtherPrimeDiff
+  // A: Arithmetic & Differences
+  genArithmetic, genArithmetic, // weighted — most fundamental type
+  genConstantSecondDiff,        // covers triangles, oblongs, pentagonals, squares, general quadratic
+  genAcceleratingDiff, genGeomDiff, genAltSignGeomDiff,
+  genFibDiffs, genCyclicDiff, genConvergingDiff,
+  genAddIndex, genAltTwoDiffs,
+  // B: Geometric & Multiplicative
+  genGeometric, genLinearRecurrence,
+  genAltMultAdd, genAltMultSub, genAlternatingAddSub,
+  genPowers, genFactorials, genGrowingRatio,
+  // C: Prime-based
+  genPrimesSequence, genAddPrimes, genEveryOtherPrime, genPrimesSecondDiff,
+  // D: Recursive / Multi-term
+  genFibonacciType, genDiffOfTwo, genTribonacci, genRollingAverage, genTwoTermRecurrence,
+  // E: Interleaved / Positional
+  genInterleavedArithmetic, genInterleavedGeometric, genInterleavedArithGeom,
+  // F: Digit-based
+  genDigitSum, genDigitProduct, genDigitRotation,
+  // G: Fraction sequences
+  genFracBothArith, genFracAltDenom, genFracChain,
+  genFracFibNum, genFracArithGeom, genFracBothGeom,
+  genFracTelescoping,
+  // H: Decimal sequences
+  genDecimalFracs, genDecimalArithmetic, genGeomDecimal,
+  genReciprocalSquares,
+  // I: Mixed / Creative
+  genCompoundRecurrence, genGeomPlusPoly, genProductArith,
+  genPyramidDiff, genMultiDiff, genCumSumPrimes,
+  genPartialSumGeom
 ];
 
 // ── safe generator with retry ──
@@ -1207,7 +1350,7 @@ function generateQuestion(maxTries = 30) {
       if (q.answer === undefined || q.answer === null) continue;
       const ansStr = String(q.answer);
       // Keep numbers reasonable
-      const numeric = parseFloat(ansStr.replace('/', '.'));
+      const numeric = parseFloat(ansStr.replace('/', '.').replace(/[^0-9.\-]/g,''));
       if (!isFinite(numeric) || Math.abs(numeric) > 99999) continue;
       // Make sure all terms are finite / valid-looking
       const valid = q.terms.every(t => {
@@ -1230,6 +1373,8 @@ function generateQuestion(maxTries = 30) {
 // ── distractor generation ──
 function makeDistractors(answerStr, terms) {
   const isFrac = answerStr.includes('/');
+  // Detect decimal: has a dot, is not a fraction, and is not a plain integer
+  const isDecimal = !isFrac && answerStr.includes('.');
   const distractors = new Set();
   distractors.add(answerStr);
 
@@ -1247,40 +1392,60 @@ function makeDistractors(answerStr, terms) {
       }
       if (distractors.size >= 5) break;
     }
-    // fill if needed
+    let extra = 1;
+    while (distractors.size < 5) { distractors.add(fmtFrac(n + extra*3, d + extra)); extra++; }
+
+  } else if (isDecimal) {
+    const ans = Number(answerStr);
+    // Work out decimal places to use
+    const dp = (answerStr.split('.')[1] || '').length;
+    const step = Math.pow(10, -dp);
+    const bigStep = step * 5;
+    const deltas = [step, -step, bigStep, -bigStep, step*2, -step*2, step*3, -step*3,
+                    step*10, -step*10, step*15, -step*15, step*20, -step*20];
+    // shuffle
+    for (let i = deltas.length-1; i>0; i--) {
+      const j = rand(0,i); [deltas[i],deltas[j]] = [deltas[j],deltas[i]];
+    }
+    for (const d of deltas) {
+      if (distractors.size >= 5) break;
+      const v = parseFloat((ans + d).toFixed(dp + 1));
+      if (!isFinite(v)) continue;
+      const s = fmtDec(v, 6);
+      if (s !== answerStr && !distractors.has(s)) distractors.add(s);
+    }
     let extra = 1;
     while (distractors.size < 5) {
-      distractors.add(fmtFrac(n + extra * 3, d + extra));
-      extra++;
+      const v = parseFloat((ans + extra * step * 7).toFixed(dp+1));
+      distractors.add(fmtDec(v, 6)); extra++;
     }
+
   } else {
     const ans = Number(answerStr);
-    const range = Math.max(Math.abs(ans) * 0.2, 15);
+    // Generate plausible nearby integers
+    // Scale deltas to the magnitude of the answer for large numbers
+    const scale = Math.max(1, Math.round(Math.abs(ans) * 0.05));
     const deltas = [];
-    for (let i = 1; deltas.length < 20; i++) {
-      deltas.push(i, -i, i*2, -i*2, i*3);
+    for (let i = 1; deltas.length < 30; i++) {
+      deltas.push(i, -i, i*scale, -i*scale, i*2, -i*2);
     }
-    // shuffle deltas
     for (let i = deltas.length-1; i>0; i--) {
-      const j = rand(0,i);
-      [deltas[i],deltas[j]] = [deltas[j],deltas[i]];
+      const j = rand(0,i); [deltas[i],deltas[j]] = [deltas[j],deltas[i]];
     }
     for (const d of deltas) {
       if (distractors.size >= 5) break;
       const v = ans + d;
-      if (Number.isInteger(ans) ? Number.isInteger(v) : true) {
-        const s = String(Number.isInteger(ans) ? v : parseFloat(v.toFixed(2)));
-        if (s !== answerStr && !distractors.has(s)) distractors.add(s);
-      }
+      if (!Number.isInteger(v)) continue;
+      const s = String(v);
+      if (s !== answerStr && !distractors.has(s)) distractors.add(s);
     }
-    while (distractors.size < 5) distractors.add(String(ans + distractors.size * 7));
+    let extra = 1;
+    while (distractors.size < 5) { distractors.add(String(ans + extra * (scale||7))); extra++; }
   }
 
   const arr = Array.from(distractors);
-  // Fisher-Yates shuffle
   for (let i = arr.length-1; i>0; i--) {
-    const j = rand(0,i);
-    [arr[i],arr[j]] = [arr[j],arr[i]];
+    const j = rand(0,i); [arr[i],arr[j]] = [arr[j],arr[i]];
   }
   return arr;
 }
