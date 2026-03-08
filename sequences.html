@@ -1938,7 +1938,7 @@ function startSeqTest() {
     renderQuestion(currentIdx);
   };
 
-  function submitTest() {
+  window.submitTest = function submitTest() {
     if (!alive()) return;
     submitted = true;
     window._testConfirmPending = false;
