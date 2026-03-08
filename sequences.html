@@ -1102,6 +1102,9 @@ function genDigitRotation() {
 // G1: Both numerator and denominator arithmetic
 function genFracBothArith() {
   let n = rand(1,8), d = rand(3,12), dn = rand(3,9), dd = rand(1,4);
+  // Guard: if dn/dd == n/d the sequence is constant — reject
+  if (dn * d === dd * n) return genFracBothArith();
+  // Also reject same step size when it would cause constant ratio
   const count = rand(5, 7);
   const terms = [];
   let cn = n, cd = d;
@@ -1109,9 +1112,12 @@ function genFracBothArith() {
     terms.push([cn, cd]);
     cn += dn; cd += dd;
   }
+  // All rendered fractions must be distinct
+  const strs = terms.map(([a,b]) => fmtFrac(a,b));
+  if (new Set(strs).size < count) return genFracTelescoping();
   return {
-    terms: terms.slice(0, -1).map(([a,b]) => fmtFrac(a,b)),
-    answer: fmtFrac(terms[terms.length-1][0], terms[terms.length-1][1]),
+    terms: strs.slice(0, -1),
+    answer: strs[strs.length-1],
     typeName: 'Fraction — Both Arithmetic',
     explanation: `Numerator +${dn} each step; denominator +${dd} each step.`
   };
@@ -1130,25 +1136,33 @@ function genFracAltDenom() {
     cn += dn;
     cd += (i % 2 === 0 ? dd1 : dd2);
   }
+  // All rendered fractions must be distinct
+  const strs = terms.map(([a,b]) => fmtFrac(a,b));
+  if (new Set(strs).size < count) return genFracAltDenom();
   return {
-    terms: terms.slice(0, -1).map(([a,b]) => fmtFrac(a,b)),
-    answer: fmtFrac(terms[terms.length-1][0], terms[terms.length-1][1]),
+    terms: strs.slice(0, -1),
+    answer: strs[strs.length-1],
     typeName: 'Fraction — Alternating Denominator Step',
     explanation: `Numerator +${dn}; denominator alternates +${dd1} and +${dd2}.`
   };
 }
 
 // G3: Denominator of each term = numerator of next (Fibonacci-like chain)
+// Consecutive Fibonacci numbers are always coprime, so simplification never collapses terms.
 function genFracChain() {
   const fibA = rand(1,4), fibB = rand(3,8);
+  // fibA and fibB must differ, otherwise first two terms are equal
+  if (fibA === fibB) return genFracChain();
   const count = rand(5, 7);
   const nums = [fibA, fibB];
   for (let i = 2; i < count + 1; i++) nums.push(nums[nums.length-1] + nums[nums.length-2]);
   const terms = [];
   for (let i = 0; i < count; i++) terms.push([nums[i], nums[i+1]]);
+  const strs = terms.map(([a,b]) => fmtFrac(a,b));
+  if (new Set(strs).size < count) return genFracChain();
   return {
-    terms: terms.slice(0, -1).map(([a,b]) => fmtFrac(a,b)),
-    answer: fmtFrac(terms[terms.length-1][0], terms[terms.length-1][1]),
+    terms: strs.slice(0, -1),
+    answer: strs[strs.length-1],
     typeName: 'Fraction — Denominator Chain',
     explanation: `Denominator of each term becomes the numerator of the next; numerators follow a Fibonacci-like pattern (${fibA}, ${fibB}…).`
   };
@@ -1162,9 +1176,12 @@ function genFracFibNum() {
   const dStart = rand(2, 8), dStep = rand(1, 3);
   const count = rand(5, 7);
   const terms = Array.from({length: count}, (_, i) => [fibs[i], dStart + i * dStep]);
+  // All rendered fractions must be distinct
+  const strs = terms.map(([a,b]) => fmtFrac(a,b));
+  if (new Set(strs).size < count) return genFracFibNum();
   return {
-    terms: terms.slice(0, -1).map(([a,b]) => fmtFrac(a,b)),
-    answer: fmtFrac(terms[terms.length-1][0], terms[terms.length-1][1]),
+    terms: strs.slice(0, -1),
+    answer: strs[strs.length-1],
     typeName: 'Fraction — Fibonacci Numerators',
     explanation: `Numerators follow a Fibonacci pattern (${fibs.slice(0,5).join(', ')}…); denominator +${dStep} each step.`
   };
@@ -1181,9 +1198,11 @@ function genFracArithGeom() {
     cn += dn; cd *= dr;
   }
   if (terms.some(([a,b])=>b>500)) return genFracBothArith();
+  const strs = terms.map(([a,b]) => fmtFrac(a,b));
+  if (new Set(strs).size < count) return genFracArithGeom();
   return {
-    terms: terms.slice(0, -1).map(([a,b]) => fmtFrac(a,b)),
-    answer: fmtFrac(terms[terms.length-1][0], terms[terms.length-1][1]),
+    terms: strs.slice(0, -1),
+    answer: strs[strs.length-1],
     typeName: 'Fraction — Arithmetic Numerator, Geometric Denominator',
     explanation: `Numerator +${dn} each step; denominator ×${dr} each step.`
   };
@@ -1192,6 +1211,8 @@ function genFracArithGeom() {
 // G6: Both geometric (×rn numerator, ×rd denominator)
 function genFracBothGeom() {
   let rn = rand(2,3), rd = rand(2,3), n = rand(1,5), d = rand(3,10);
+  // If rn == rd every fraction simplifies to the same n/d — always trivial
+  if (rn === rd) return genFracBothGeom();
   const count = rand(5, 6);
   const terms = [];
   let cn = n, cd = d;
@@ -1199,10 +1220,13 @@ function genFracBothGeom() {
     terms.push([cn, cd]);
     cn *= rn; cd *= rd;
   }
-  if (terms.some(([a,b])=>b>1000||a>1000)) return genFracBothArith();
+  if (terms.some(([a,b])=>b>1000||a>1000)) return genFracBothGeom();
+  const strs = terms.map(([a,b]) => fmtFrac(a,b));
+  // All must be distinct (catches cases where simplification makes terms repeat)
+  if (new Set(strs).size < count) return genFracBothGeom();
   return {
-    terms: terms.slice(0, -1).map(([a,b]) => fmtFrac(a,b)),
-    answer: fmtFrac(terms[terms.length-1][0], terms[terms.length-1][1]),
+    terms: strs.slice(0, -1),
+    answer: strs[strs.length-1],
     typeName: 'Fraction — Both Geometric',
     explanation: `Numerator ×${rn}, denominator ×${rd} each step.`
   };
@@ -1444,7 +1468,7 @@ function genFracTelescoping() {
   }
   // Check none reduce to same value
   const strs = terms.map(([n,d]) => fmtFrac(n,d));
-  if (new Set(strs).size < count) return genFracBothArith();
+  if (new Set(strs).size < count) return genFracTelescoping();
   return {
     terms: strs.slice(0,-1), answer: strs[strs.length-1],
     typeName: 'Fraction — Stepped Numerator & Denominator',
