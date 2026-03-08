@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sequences — Mental Edge</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+/* ── SEQUENCES DASHBOARD ── */
+.seq-dash-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 40px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.seq-dash-logo { font-family: 'Instrument Serif', serif; font-size: 1.4rem; color: var(--text); }
+.seq-dash-logo span { color: var(--accent); font-style: italic; }
+
+/* ── PRACTICE GAME STYLES ── */
+.seq-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.seq-question-label {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 12px;
+  text-align: center;
+}
+.seq-terms {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+  padding: 22px 20px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+.seq-term {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.55rem;
+  color: var(--text);
+  white-space: nowrap;
+}
+.seq-comma {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.55rem;
+  color: var(--muted);
+  margin-right: 2px;
+}
+.seq-blank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  height: 46px;
+  border-radius: 8px;
+  border: 2px dashed var(--border2);
+  background: var(--surface);
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.55rem;
+  color: var(--muted);
+  padding: 0 10px;
+  transition: border-color .2s, background .2s, color .2s;
+}
+.seq-blank.filled-correct {
+  border-style: solid;
+  border-color: var(--green);
+  background: var(--green-light);
+  color: var(--green);
+}
+.seq-blank.filled-wrong {
+  border-style: solid;
+  border-color: var(--red);
+  background: var(--red-light);
+  color: var(--red);
+}
+.seq-ellipsis {
+  font-family: 'DM Mono', monospace;
+  font-size: 1.1rem;
+  color: var(--muted);
+  letter-spacing: 2px;
+}
+.seq-choices {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 0;
+}
+@media (max-width: 600px) {
+  .seq-choices { grid-template-columns: repeat(3, 1fr); }
+}
+.seq-choice {
+  font-family: 'DM Mono', monospace;
+  font-size: .92rem;
+  text-align: center;
+  padding: 13px 8px;
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color .12s, background .12s, transform .1s;
+  color: var(--text);
+  white-space: nowrap;
+}
+.seq-choice:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  transform: translateY(-1px);
+}
+.seq-choice.correct {
+  border-color: var(--green) !important;
+  background: var(--green-light) !important;
+  color: var(--green);
+  font-weight: 700;
+}
+.seq-choice.wrong {
+  border-color: var(--red) !important;
+  background: var(--red-light) !important;
+  color: var(--red);
+}
+.seq-choice.reveal-correct {
+  border-color: var(--green) !important;
+  background: var(--green-light) !important;
+  color: var(--green);
+  font-weight: 700;
+}
+.seq-choice:disabled { cursor: default; }
+
+.seq-explanation {
+  margin-top: 18px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #f0f4ff 0%, #f8f6ff 100%);
+  border: 1px solid #d0d8f8;
+  border-radius: 10px;
+  font-size: .84rem;
+  color: var(--text2);
+  line-height: 1.6;
+  animation: fadeSlideIn .3s ease forwards;
+}
+.seq-explanation strong {
+  color: var(--accent);
+  font-weight: 600;
+}
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.seq-next-btn {
+  margin-top: 14px;
+  width: 100%;
+  padding: 13px;
+  background: var(--text);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: .88rem;
+  cursor: pointer;
+  transition: background .15s;
+  animation: fadeSlideIn .3s ease .1s both;
+}
+.seq-next-btn:hover { background: #111; }
+.seq-type-badge {
+  display: inline-block;
+  font-size: .65rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 10px;
+  margin-bottom: 16px;
+  text-align: center;
+  width: 100%;
+}
+</style>
+</head>
+<body>
+
+<!-- ── DASHBOARD ── -->
+<div id="dashboard">
+  <header class="seq-dash-header">
+    <div style="display:flex;align-items:center;gap:16px">
+      <a class="back-btn" href="index.html" style="border-color:transparent">&#8592; Home</a>
+      <div class="seq-dash-logo">Sequences</div>
+    </div>
+    <div class="dash-sub">Assessment Suite</div>
+  </header>
+  <div class="dash-body">
+    <div class="dash-intro">
+      <h2>Select an exercise</h2>
+      <p>Pattern recognition and sequence extrapolation. Each exercise tests your ability to identify mathematical rules — arithmetic, geometric, prime-based, fractional, and more.</p>
+    </div>
+    <div class="games-grid" id="seq-games-grid"></div>
+  </div>
+</div>
+
+<!-- ── GAME SCREEN ── -->
+<div id="game-screen" style="display:none">
+  <header class="game-header">
+    <button class="back-btn" onclick="showDashboard()">&#8592; Sequences</button>
+    <div class="game-name-bar" id="gs-name"></div>
+    <div class="stat-strip" id="gs-stats"></div>
+  </header>
+  <div class="game-wrap">
+    <div class="game-panel" id="game-panel"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  SEQUENCES — GAME REGISTRY
+// ══════════════════════════════════════════════════════
+const SEQ_GAMES = [
+  {
+    id: 'seq-practice',
+    title: 'Practice',
+    icon: '∿',
+    tag: 'Sequences',
+    desc: 'Complete the sequence by identifying the pattern. Covers 50 sequence types — arithmetic, geometric, prime-based, fractional, recursive, and more.',
+    meta: ['50 types', 'Unlimited'],
+    start: startSeqPractice
+  }
+];
+
+// ── score storage ──
+let seqScores = {};
+try {
+  const raw = JSON.parse(localStorage.getItem('me_seq_scores') || '{}');
+  Object.keys(raw).forEach(k => {
+    const v = raw[k];
+    if (v != null && typeof v === 'object' && typeof v.label === 'string') seqScores[k] = v;
+  });
+} catch(e) {}
+
+function saveSeqScore(id, v, label) {
+  const entry = {v, label: label || String(v)};
+  const cur = seqScores[id];
+  const curV = cur != null ? cur.v : null;
+  if (curV == null || v > curV) {
+    seqScores[id] = entry;
+    try { localStorage.setItem('me_seq_scores', JSON.stringify(seqScores)); } catch(e) {}
+  }
+}
+function getSeqScoreLabel(id) {
+  const s = seqScores[id];
+  return (s && s.label) ? s.label : null;
+}
+
+// ── gen guard ──
+let _gen = 0;
+function myGen() { return _gen; }
+
+// ── navigation ──
+function showDashboard() {
+  _gen++;
+  document.getElementById('dashboard').style.display = 'block';
+  document.getElementById('game-screen').style.display = 'none';
+  renderDashboard();
+}
+function launchGame(id) {
+  _gen++;
+  const g = SEQ_GAMES.find(x => x.id === id);
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('game-screen').style.display = 'flex';
+  document.getElementById('gs-name').textContent = g.title;
+  document.getElementById('gs-stats').innerHTML = '';
+  const p = document.getElementById('game-panel');
+  p.innerHTML = ''; p.className = 'game-panel';
+  g.start();
+}
+function renderDashboard() {
+  document.getElementById('seq-games-grid').innerHTML = SEQ_GAMES.map(g => `
+    <div class="game-card" onclick="launchGame('${g.id}')">
+      <div class="card-tag">${g.tag}</div>
+      <div class="card-icon-row">${g.icon}</div>
+      <div class="card-title">${g.title}</div>
+      <div class="card-desc">${g.desc}</div>
+      <div class="card-meta">
+        ${g.meta.map(m => `<span class="chip">${m}</span>`).join('')}
+        ${getSeqScoreLabel(g.id) != null ? `<span class="chip hi">Best: ${getSeqScoreLabel(g.id)}</span>` : ''}
+      </div>
+      <button class="play-btn">Start exercise →</button>
+    </div>`).join('');
+}
+
+function setStats(html) { document.getElementById('gs-stats').innerHTML = html; }
+function setPanel(html, top) {
+  const p = document.getElementById('game-panel');
+  p.className = 'game-panel' + (top ? ' top' : '');
+  p.innerHTML = html;
+}
+function rand(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+
+// ══════════════════════════════════════════════════════
+//  SEQUENCE GENERATORS
+//  Each returns: { terms[], answer (last term), explanation, typeName, formatFn? }
+//  terms = all terms SHOWN (not including blank), answer = the next value
+// ══════════════════════════════════════════════════════
+
+// ── helpers ──
+function isPrime(n) {
+  if (n < 2) return false;
+  for (let i = 2; i <= Math.sqrt(n); i++) if (n % i === 0) return false;
+  return true;
+}
+function getPrimes(count, start = 2) {
+  const primes = [];
+  let n = start;
+  while (primes.length < count) {
+    if (isPrime(n)) primes.push(n);
+    n++;
+  }
+  return primes;
+}
+function fmtFrac(n, d) {
+  // simplify
+  function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+  const g = gcd(Math.abs(n), Math.abs(d));
+  return `${n/g}/${d/g}`;
+}
+function fracEq(n1,d1,n2,d2){ return n1*d2 === n2*d1; }
+
+// ── TYPE 1: Arithmetic ──
+function genArithmetic() {
+  const d = rand(2, 15);
+  const start = rand(1, 20);
+  const count = rand(5, 7);
+  const terms = Array.from({length: count}, (_, i) => start + i * d);
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Arithmetic',
+    explanation: `Each term increases by a constant difference of <strong>${d}</strong>.`
+  };
+}
+
+// ── TYPE 2: Geometric ──
+function genGeometric() {
+  const r = rand(2, 4);
+  const start = rand(1, 6);
+  const count = rand(5, 6);
+  const terms = Array.from({length: count}, (_, i) => start * Math.pow(r, i));
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Geometric',
+    explanation: `Each term is multiplied by <strong>${r}</strong>.`
+  };
+}
+
+// ── TYPE 3: Quadratic (2nd differences constant) ──
+function genQuadratic() {
+  const a = rand(1, 3), b = rand(0, 5), c = rand(0, 8);
+  const count = rand(5, 7);
+  const terms = Array.from({length: count}, (_, i) => a*i*i + b*i + c);
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Quadratic',
+    explanation: `Terms follow a quadratic rule: <strong>aₙ = ${a}n² ${b>=0?'+':''}${b}n ${c>=0?'+':''}${c}</strong>. Second differences are constant (${2*a}).`
+  };
+}
+
+// ── TYPE 4: Differences form arithmetic (accelerating) ──
+function genAcceleratingDiff() {
+  const d0 = rand(2, 8), step = rand(2, 6);
+  const start = rand(2, 15);
+  const count = rand(5, 7);
+  const terms = [start];
+  let diff = d0;
+  for (let i = 1; i < count; i++) {
+    terms.push(terms[terms.length-1] + diff);
+    diff += step;
+  }
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Accelerating Differences',
+    explanation: `Differences increase by <strong>${step}</strong> each step: +${d0}, +${d0+step}, +${d0+2*step}, …`
+  };
+}
+
+// ── TYPE 5: Differences form geometric (doubling/tripling) ──
+function genGeomDiff() {
+  const r = rand(2, 3);
+  const d0 = rand(1, 4);
+  const start = rand(3, 12);
+  const count = rand(5, 7);
+  const terms = [start];
+  let diff = d0;
+  for (let i = 1; i < count; i++) {
+    terms.push(terms[terms.length-1] + diff);
+    diff *= r;
+  }
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Geometric Differences',
+    explanation: `Differences multiply by <strong>${r}</strong> each step: +${d0}, +${d0*r}, +${d0*r*r}, …`
+  };
+}
+
+// ── TYPE 6: Add consecutive primes ──
+function genAddPrimes() {
+  const primes = getPrimes(8);
+  const start = rand(2, 15);
+  const count = rand(5, 7);
+  const terms = [start];
+  for (let i = 0; i < count - 1; i++) terms.push(terms[terms.length-1] + primes[i]);
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Add Consecutive Primes',
+    explanation: `Add consecutive primes: <strong>+${primes.slice(0, count-2).join(', +')}…</strong>`
+  };
+}
+
+// ── TYPE 7: Every other prime ──
+function genEveryOtherPrime() {
+  const primes = getPrimes(20);
+  const startIdx = rand(0, 4);
+  const step = 2;
+  const count = rand(5, 7);
+  const terms = Array.from({length: count}, (_, i) => primes[startIdx + i * step]);
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Every Other Prime',
+    explanation: `Every other prime number, starting from <strong>${primes[startIdx]}</strong>.`
+  };
+}
+
+// ── TYPE 8: Primes only ──
+function genPrimesSequence() {
+  const primes = getPrimes(15);
+  const startIdx = rand(0, 5);
+  const count = rand(5, 7);
+  const terms = primes.slice(startIdx, startIdx + count);
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Prime Numbers',
+    explanation: `Consecutive prime numbers starting from <strong>${primes[startIdx]}</strong>.`
+  };
+}
+
+// ── TYPE 9: Linear recurrence aₙ = r·aₙ₋₁ + c ──
+function genLinearRecurrence() {
+  const r = rand(2, 4), c = rand(1, 10), a0 = rand(1, 8);
+  const count = rand(5, 7);
+  const terms = [a0];
+  for (let i = 1; i < count; i++) terms.push(r * terms[terms.length-1] + c);
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Linear Recurrence',
+    explanation: `Each term = <strong>${r} × previous + ${c}</strong>.`
+  };
+}
+
+// ── TYPE 10: Fibonacci-type ──
+function genFibonacciType() {
+  const a = rand(1, 5), b = rand(1, 5);
+  const count = rand(6, 8);
+  const terms = [a, b];
+  for (let i = 2; i < count; i++) terms.push(terms[terms.length-1] + terms[terms.length-2]);
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Fibonacci-type',
+    explanation: `Each term is the sum of the two preceding terms. Starts with <strong>${a}, ${b}</strong>.`
+  };
+}
+
+// ── TYPE 11: Tribonacci ──
+function genTribonacci() {
+  const a = rand(1,3), b = rand(1,3), c = rand(1,3);
+  const count = rand(6, 8);
+  const terms = [a, b, c];
+  for (let i = 3; i < count; i++) terms.push(terms[terms.length-1] + terms[terms.length-2] + terms[terms.length-3]);
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Tribonacci',
+    explanation: `Each term is the sum of the three preceding terms. Starts with <strong>${a}, ${b}, ${c}</strong>.`
+  };
+}
+
+// ── TYPE 12: Alternating +/- ──
+function genAlternatingAddSub() {
+  const a = rand(3, 12), b = rand(2, 8);
+  const start = rand(5, 30);
+  const count = rand(6, 8);
+  const terms = [start];
+  for (let i = 1; i < count; i++) terms.push(terms[terms.length-1] + (i % 2 === 1 ? a : -b));
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Alternating +/−',
+    explanation: `Alternates between adding <strong>${a}</strong> and subtracting <strong>${b}</strong>.`
+  };
+}
+
+// ── TYPE 13: Alternating ×a and +b ──
+function genAltMultAdd() {
+  const r = rand(2, 3), b = rand(3, 10), start = rand(2, 8);
+  const count = rand(5, 7);
+  const terms = [start];
+  for (let i = 1; i < count; i++) {
+    terms.push(i % 2 === 1 ? terms[terms.length-1] * r : terms[terms.length-1] + b);
+  }
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Alternate ×a then +b',
+    explanation: `Alternates between multiplying by <strong>${r}</strong> and adding <strong>${b}</strong>.`
+  };
+}
+
+// ── TYPE 14: Powers ──
+function genPowers() {
+  const exp = rand(2, 4);
+  const startN = rand(1, 4);
+  const count = rand(5, 7);
+  const terms = Array.from({length: count}, (_, i) => Math.pow(startN + i, exp));
+  const label = exp === 2 ? 'squares' : exp === 3 ? 'cubes' : `4th powers`;
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: `Perfect ${exp===2?'Squares':exp===3?'Cubes':'Powers'}`,
+    explanation: `Consecutive perfect ${label}: <strong>(${startN})${exp===2?'²':exp===3?'³':'⁴'}, (${startN+1})${exp===2?'²':exp===3?'³':'⁴'}, …</strong>`
+  };
+}
+
+// ── TYPE 15: Triangle numbers ──
+function genTriangles() {
+  const offset = rand(0, 3);
+  const count = rand(5, 7);
+  const terms = Array.from({length: count}, (_, i) => {
+    const n = i + 1 + offset;
+    return n * (n + 1) / 2;
+  });
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Triangle Numbers',
+    explanation: `Triangle numbers: <strong>T(n) = n(n+1)/2</strong>.`
+  };
+}
+
+// ── TYPE 16: Two interleaved arithmetic ──
+function genInterleavedArithmetic() {
+  const d1 = rand(2, 8), d2 = rand(3, 10);
+  const s1 = rand(2, 15), s2 = rand(3, 20);
+  const count = rand(6, 8);
+  const terms = [];
+  for (let i = 0; i < count; i++) {
+    terms.push(i % 2 === 0 ? s1 + (i/2)*d1 : s2 + ((i-1)/2)*d2);
+  }
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Two Interleaved Arithmetic',
+    explanation: `Two interleaved arithmetic sequences: odd positions +${d1} each time, even positions +${d2} each time.`
+  };
+}
+
+// ── TYPE 17: Two interleaved geometric ──
+function genInterleavedGeometric() {
+  const r1 = rand(2, 3), r2 = rand(2, 3);
+  const s1 = rand(1, 4), s2 = rand(1, 4);
+  const count = rand(6, 8);
+  const terms = [];
+  for (let i = 0; i < count; i++) {
+    terms.push(i % 2 === 0 ? s1 * Math.pow(r1, i/2) : s2 * Math.pow(r2, (i-1)/2));
+  }
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Two Interleaved Geometric',
+    explanation: `Two interleaved geometric sequences: odd positions ×${r1}, even positions ×${r2}.`
+  };
+}
+
+// ── TYPE 18: Differences are Fibonacci ──
+function genFibDiffs() {
+  const fibs = [1,1,2,3,5,8,13,21];
+  const start = rand(2, 20);
+  const count = rand(5, 7);
+  const terms = [start];
+  for (let i = 0; i < count - 1; i++) terms.push(terms[terms.length-1] + fibs[i]);
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Fibonacci Differences',
+    explanation: `The differences between terms are consecutive Fibonacci numbers: <strong>+1, +1, +2, +3, +5, +8…</strong>`
+  };
+}
+
+// ── TYPE 19: Cyclic differences ──
+function genCyclicDiff() {
+  const cycle = [rand(2,5), rand(3,7), rand(4,10)].sort((a,b)=>a-b);
+  const start = rand(2, 20);
+  const count = rand(6, 8);
+  const terms = [start];
+  for (let i = 1; i < count; i++) terms.push(terms[terms.length-1] + cycle[(i-1) % cycle.length]);
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Cyclic Differences',
+    explanation: `Differences cycle through: <strong>+${cycle.join(', +')}, +${cycle.join(', +')}…</strong>`
+  };
+}
+
+// ── TYPE 20: Digit sum added ──
+function genDigitSum() {
+  const start = rand(10, 50);
+  const count = rand(5, 7);
+  const terms = [start];
+  for (let i = 1; i < count; i++) {
+    const prev = terms[terms.length-1];
+    const ds = String(prev).split('').reduce((s,c)=>s+parseInt(c),0);
+    terms.push(prev + ds);
+  }
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Add Digit Sum',
+    explanation: `Each term = previous term + <strong>sum of its digits</strong>.`
+  };
+}
+
+// ── TYPE 21: Pentagonal numbers ──
+function genPentagonal() {
+  const offset = rand(0, 3);
+  const count = rand(5, 7);
+  const terms = Array.from({length: count}, (_, i) => {
+    const n = i + 1 + offset;
+    return n * (3*n - 1) / 2;
+  });
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Pentagonal Numbers',
+    explanation: `Pentagonal numbers: <strong>P(n) = n(3n−1)/2</strong>.`
+  };
+}
+
+// ── TYPE 22: Exponential + offset ──
+function genExpOffset() {
+  const base = rand(2, 3), k = rand(-5, 10), start = rand(0, 3);
+  const count = rand(5, 7);
+  const terms = Array.from({length: count}, (_, i) => Math.pow(base, i + start) + k);
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Exponential + Offset',
+    explanation: `<strong>${base}ⁿ ${k>=0?'+':''}${k}</strong>, where n starts at ${start}.`
+  };
+}
+
+// ── TYPE 23: Add nth prime ──
+function genAddNthPrime() {
+  const primes = getPrimes(10);
+  const start = rand(1, 10);
+  const count = rand(5, 7);
+  const terms = [start];
+  for (let i = 0; i < count - 1; i++) terms.push(terms[terms.length-1] + primes[i]);
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Add nth Prime',
+    explanation: `Add the ${['1st','2nd','3rd','4th','5th','6th'][0]} prime (${primes[0]}), ${['1st','2nd','3rd','4th','5th','6th'][1]} prime (${primes[1]}), etc.`
+  };
+}
+
+// ── TYPE 24: Cubic differences ──
+function genCubicDiff() {
+  const start = rand(1, 10);
+  const count = rand(5, 7);
+  const terms = [start];
+  for (let i = 1; i < count; i++) terms.push(terms[terms.length-1] + i*i*i);
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Cube Differences',
+    explanation: `Add 1³, 2³, 3³, 4³… The differences are <strong>1, 8, 27, 64…</strong>`
+  };
+}
+
+// ── TYPE 25: Running sum ──
+function genRunningSum() {
+  const start = rand(1, 4);
+  const count = rand(5, 7);
+  let s = 0;
+  const terms = Array.from({length: count}, (_, i) => { s += (i + start); return s; });
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Running Sum',
+    explanation: `Cumulative sums of <strong>${start}, ${start+1}, ${start+2}…</strong>`
+  };
+}
+
+// ── TYPE 26: Product minus constant ──
+function genProductMinus() {
+  const r = rand(2, 4), c = rand(1, 5), start = rand(2, 8);
+  const count = rand(5, 7);
+  const terms = [start];
+  for (let i = 1; i < count; i++) terms.push(terms[terms.length-1] * r - c);
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Multiply & Subtract',
+    explanation: `Each term = <strong>${r} × previous − ${c}</strong>.`
+  };
+}
+
+// ── FRACTION TYPES ──
+
+// ── TYPE 27: Fraction, both +constant ──
+function genFracBothArith() {
+  let n = rand(1,8), d = rand(2,10), dn = rand(3,9), dd = rand(1,4);
+  if (d <= dn) d = dn + 2;
+  const count = rand(5, 7);
+  const terms = [];
+  let cn = n, cd = d;
+  for (let i = 0; i < count; i++) {
+    terms.push([cn, cd]);
+    cn += dn; cd += dd;
+  }
+  return {
+    terms: terms.slice(0, -1).map(([a,b]) => fmtFrac(a,b)),
+    answer: fmtFrac(terms[terms.length-1][0], terms[terms.length-1][1]),
+    typeName: 'Fraction — Both Arithmetic',
+    explanation: `Numerator +${dn} each step; denominator +${dd} each step.`
+  };
+}
+
+// ── TYPE 28: Fraction, alternating denom increment ──
+function genFracAltDenom() {
+  let n = rand(1,8), d = rand(3,12), dn = rand(4,10), dd1 = 1, dd2 = 2;
+  const count = rand(5, 7);
+  const terms = [];
+  let cn = n, cd = d;
+  for (let i = 0; i < count; i++) {
+    terms.push([cn, cd]);
+    cn += dn;
+    cd += (i % 2 === 0 ? dd1 : dd2);
+  }
+  return {
+    terms: terms.slice(0, -1).map(([a,b]) => fmtFrac(a,b)),
+    answer: fmtFrac(terms[terms.length-1][0], terms[terms.length-1][1]),
+    typeName: 'Fraction — Alternating Denom',
+    explanation: `Numerator +${dn}; denominator alternates +${dd1} and +${dd2}.`
+  };
+}
+
+// ── TYPE 29: Fraction — denom becomes next numerator ──
+function genFracChain() {
+  const fibA = rand(1,4), fibB = rand(3,8);
+  const count = rand(5, 7);
+  const nums = [fibA, fibB];
+  for (let i = 2; i < count + 1; i++) nums.push(nums[nums.length-1] + nums[nums.length-2]);
+  const denoms = nums.slice(1); // each denom = next numerator
+  const terms = [];
+  for (let i = 0; i < count; i++) terms.push([nums[i], denoms[i]]);
+  return {
+    terms: terms.slice(0, -1).map(([a,b]) => fmtFrac(a,b)),
+    answer: fmtFrac(terms[terms.length-1][0], terms[terms.length-1][1]),
+    typeName: 'Fraction — Denominator Chain',
+    explanation: `Denominator of each term becomes the numerator of the next. Numerators follow a Fibonacci-like sequence starting ${fibA}, ${fibB}.`
+  };
+}
+
+// ── TYPE 30: Fraction — numerator Fibonacci, denom arithmetic ──
+function genFracFibNum() {
+  const a = rand(1,3), b = rand(2,5);
+  const fibs = [a, b];
+  for (let i = 2; i < 8; i++) fibs.push(fibs[fibs.length-1]+fibs[fibs.length-2]);
+  const dStart = rand(2, 8), dStep = rand(1, 3);
+  const count = rand(5, 7);
+  const terms = Array.from({length: count}, (_, i) => [fibs[i], dStart + i * dStep]);
+  return {
+    terms: terms.slice(0, -1).map(([a,b]) => fmtFrac(a,b)),
+    answer: fmtFrac(terms[terms.length-1][0], terms[terms.length-1][1]),
+    typeName: 'Fraction — Fibonacci Numerators',
+    explanation: `Numerators follow Fibonacci: <strong>${fibs.slice(0,5).join(', ')}…</strong>. Denominator +${dStep} each step.`
+  };
+}
+
+// ── TYPE 31: Fraction — numerator +const, denom ×const ──
+function genFracArithGeom() {
+  let n = rand(2,8), d = rand(2,5), dn = rand(3,9), dr = rand(2,3);
+  const count = rand(5, 6); // keep denom small
+  const terms = [];
+  let cn = n, cd = d;
+  for (let i = 0; i < count; i++) {
+    terms.push([cn, cd]);
+    cn += dn; cd *= dr;
+  }
+  return {
+    terms: terms.slice(0, -1).map(([a,b]) => fmtFrac(a,b)),
+    answer: fmtFrac(terms[terms.length-1][0], terms[terms.length-1][1]),
+    typeName: 'Fraction — Arith Num, Geom Den',
+    explanation: `Numerator +${dn} each step; denominator ×${dr} each step.`
+  };
+}
+
+// ── TYPE 32: Fractions equal to consecutive integers ──
+function genFracEqualInts() {
+  const mul = rand(2, 8);
+  const count = rand(5, 7);
+  const terms = Array.from({length: count}, (_, i) => [(i+1)*mul, mul]);
+  return {
+    terms: terms.slice(0, -1).map(([a,b]) => `${a}/${b}`),
+    answer: `${terms[terms.length-1][0]}/${mul}`,
+    typeName: 'Fractions Equal to Integers',
+    explanation: `Each fraction simplifies to <strong>1, 2, 3, 4…</strong> The denominator is always ${mul}.`
+  };
+}
+
+// ── TYPE 33: Interleaved integers and simplifying fractions ──
+function genInterleavedFracs() {
+  const mul = rand(3, 7);
+  const count = rand(5, 7); // odd count = ends on integer
+  const terms = [];
+  for (let i = 0; i < count; i++) {
+    const n = i + 1;
+    if (i % 2 === 0) terms.push([n, 1]);
+    else terms.push([n * mul, mul]);
+  }
+  return {
+    terms: terms.slice(0, -1).map(([a,b]) => b === 1 ? String(a) : `${a}/${b}`),
+    answer: terms[terms.length-1][1] === 1 ? String(terms[terms.length-1][0]) : `${terms[terms.length-1][0]}/${mul}`,
+    typeName: 'Interleaved Integers & Fractions',
+    explanation: `Integers alternate with equivalent fractions (denominator ${mul}): <strong>1, ${mul}/${mul}, 2, ${2*mul}/${mul}…</strong>`
+  };
+}
+
+// ── TYPE 34: Fraction — geom numerator and denom ──
+function genFracBothGeom() {
+  let rn = rand(2,3), rd = rand(2,3), n = rand(1,5), d = rand(3,10);
+  const count = rand(5, 6);
+  const terms = [];
+  let cn = n, cd = d;
+  for (let i = 0; i < count; i++) {
+    terms.push([cn, cd]);
+    cn *= rn; cd *= rd;
+  }
+  return {
+    terms: terms.slice(0, -1).map(([a,b]) => fmtFrac(a,b)),
+    answer: fmtFrac(terms[terms.length-1][0], terms[terms.length-1][1]),
+    typeName: 'Fraction — Both Geometric',
+    explanation: `Numerator ×${rn}, denominator ×${rd} each step.`
+  };
+}
+
+// ── TYPE 35: Alternating addition amounts grow ──
+function genGrowingAlt() {
+  const start = rand(5, 20);
+  const count = rand(5, 8);
+  const terms = [start];
+  for (let i = 1; i < count; i++) {
+    const prev = terms[terms.length-1];
+    const add = i % 2 === 1 ? i : -(i-1);
+    terms.push(prev + add);
+  }
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Growing Alternating Steps',
+    explanation: `Adds odd index, subtracts even index: <strong>+1, −2, +3, −4…</strong>`
+  };
+}
+
+// ── TYPE 36: Second differences = prime ──
+function genPrimesSecondDiff() {
+  const primes = getPrimes(7);
+  const d0 = rand(3, 10), start = rand(5, 20);
+  const count = rand(5, 7);
+  const diffs = [d0];
+  for (let i = 0; i < count - 2; i++) diffs.push(diffs[diffs.length-1] + primes[i]);
+  const terms = [start];
+  for (const d of diffs) terms.push(terms[terms.length-1] + d);
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Second Differences = Primes',
+    explanation: `First differences grow by consecutive primes (${primes.slice(0,4).join(', ')}…). Second differences are prime.`
+  };
+}
+
+// ── TYPE 37: Digit product added ──
+function genDigitProduct() {
+  const start = rand(11, 39);
+  const count = rand(5, 7);
+  const terms = [start];
+  for (let i = 1; i < count; i++) {
+    const prev = terms[terms.length-1];
+    const dp = String(prev).split('').reduce((p,c)=>p*parseInt(c),1);
+    terms.push(prev + (dp === 0 ? 9 : dp));
+  }
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Add Digit Product',
+    explanation: `Each term = previous + <strong>product of its digits</strong>.`
+  };
+}
+
+// ── TYPE 38: Hexagonal numbers ──
+function genHexagonal() {
+  const offset = rand(0, 3);
+  const count = rand(5, 7);
+  const terms = Array.from({length: count}, (_, i) => {
+    const n = i + 1 + offset;
+    return n * (2*n - 1);
+  });
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Hexagonal Numbers',
+    explanation: `Hexagonal numbers: <strong>H(n) = n(2n−1)</strong>.`
+  };
+}
+
+// ── TYPE 39: Squares + linear ──
+function genSquaresPlusLinear() {
+  const c1 = rand(1,3), c2 = rand(0,5), c3 = rand(0,10);
+  const count = rand(5, 7);
+  const terms = Array.from({length: count}, (_, i) => c1*(i+1)*(i+1) + c2*(i+1) + c3);
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Squares + Linear',
+    explanation: `<strong>${c1}n² + ${c2}n + ${c3}</strong>.`
+  };
+}
+
+// ── TYPE 40: Doubled + shrinking step ──
+function genDoubleShrink() {
+  const start = rand(100, 300);
+  const r = rand(2,4);
+  const count = rand(5,7);
+  const terms = [start];
+  for (let i = 1; i < count; i++) terms.push(Math.floor(terms[terms.length-1] / r));
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Integer Division',
+    explanation: `Each term = floor of previous ÷ <strong>${r}</strong>.`
+  };
+}
+
+// ── TYPE 41: n! (factorials) ──
+function genFactorials() {
+  const offset = rand(1, 3);
+  const count = rand(5, 6);
+  let f = 1;
+  const terms = [];
+  for (let i = 1; i <= count + offset - 1; i++) {
+    f *= i;
+    if (i >= offset) terms.push(f);
+  }
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Factorials',
+    explanation: `Consecutive factorials: <strong>${offset}!, ${offset+1}!, ${offset+2}!…</strong>`
+  };
+}
+
+// ── TYPE 42: Catalan-like ──
+function genCatalanLike() {
+  // Catalan: 1, 1, 2, 5, 14, 42…
+  const catalans = [1,1,2,5,14,42,132];
+  const mult = rand(1,4);
+  const offset = rand(0, 2);
+  const count = rand(5,6);
+  const terms = catalans.slice(offset, offset+count).map(c => c * mult);
+  return {
+    terms: terms.slice(0,-1),
+    answer: terms[terms.length-1],
+    typeName: 'Catalan-based',
+    explanation: `Based on Catalan numbers (1, 1, 2, 5, 14, 42…) multiplied by ${mult}.`
+  };
+}
+
+// ── TYPE 43: Recurrence with two previous ──
+function genTwoTermRecurrence() {
+  const a = rand(1,5), b = rand(1,4), c = rand(1,5), d_coeff = rand(1,3);
+  const t0 = rand(1,5), t1 = rand(1,5);
+  const count = rand(5,7);
+  const terms = [t0, t1];
+  for (let i = 2; i < count; i++) {
+    terms.push(a*terms[terms.length-1] + b*terms[terms.length-2] + c);
+  }
+  return {
+    terms: terms.slice(0,-1),
+    answer: terms[terms.length-1],
+    typeName: 'Two-term Recurrence',
+    explanation: `aₙ = <strong>${a}·aₙ₋₁ + ${b}·aₙ₋₂ + ${c}</strong>.`
+  };
+}
+
+// ── TYPE 44: Alternating multiply and subtract ──
+function genAltMultSub() {
+  const r = rand(2,3), c = rand(5,15), start = rand(3,12);
+  const count = rand(5,7);
+  const terms = [start];
+  for (let i = 1; i < count; i++) {
+    terms.push(i%2===1 ? terms[terms.length-1]*r : terms[terms.length-1]-c);
+  }
+  return {
+    terms: terms.slice(0,-1),
+    answer: terms[terms.length-1],
+    typeName: 'Alternate ×r and −c',
+    explanation: `Alternates between multiplying by <strong>${r}</strong> and subtracting <strong>${c}</strong>.`
+  };
+}
+
+// ── TYPE 45: Oblong numbers ──
+function genOblong() {
+  const offset = rand(0, 3);
+  const count = rand(5, 7);
+  const terms = Array.from({length: count}, (_, i) => {
+    const n = i + 1 + offset;
+    return n * (n + 1);
+  });
+  return {
+    terms: terms.slice(0, -1),
+    answer: terms[terms.length - 1],
+    typeName: 'Oblong Numbers',
+    explanation: `Oblong (pronic) numbers: <strong>n(n+1)</strong> = 2, 6, 12, 20, 30…`
+  };
+}
+
+// ── TYPE 46: Sum of squares sequence ──
+function genSumOfSquares() {
+  const start = rand(1,3);
+  const count = rand(5,7);
+  let s = 0;
+  const terms = [];
+  for (let i = start; i < start + count; i++) {
+    s += i*i;
+    terms.push(s);
+  }
+  return {
+    terms: terms.slice(0,-1),
+    answer: terms[terms.length-1],
+    typeName: 'Cumulative Sum of Squares',
+    explanation: `Running total of squares: <strong>${start}², ${start+1}², ${start+2}²…</strong>`
+  };
+}
+
+// ── TYPE 47: Differences are powers of 2 ──
+function genPow2Diffs() {
+  const start = rand(2,15);
+  const count = rand(5,7);
+  const terms = [start];
+  for (let i = 0; i < count-1; i++) terms.push(terms[terms.length-1] + Math.pow(2, i));
+  return {
+    terms: terms.slice(0,-1),
+    answer: terms[terms.length-1],
+    typeName: 'Powers-of-2 Differences',
+    explanation: `Differences are powers of 2: <strong>+1, +2, +4, +8, +16…</strong>`
+  };
+}
+
+// ── TYPE 48: Fraction — geom num, alternating denom ──
+function genFracGeomNumAltDen() {
+  let rn = rand(2,3), d1 = rand(2,6), dd1 = rand(1,3), dd2 = rand(2,5);
+  let n = rand(1,4), d = d1;
+  const count = rand(5,7);
+  const terms = [];
+  let cn = n, cd = d;
+  for (let i = 0; i < count; i++) {
+    terms.push([cn, cd]);
+    cn *= rn;
+    cd += (i % 2 === 0 ? dd1 : dd2);
+  }
+  return {
+    terms: terms.slice(0,-1).map(([a,b])=>fmtFrac(a,b)),
+    answer: fmtFrac(terms[terms.length-1][0], terms[terms.length-1][1]),
+    typeName: 'Fraction — Geom Num, Alternating Den',
+    explanation: `Numerator ×${rn} each step; denominator alternates +${dd1} and +${dd2}.`
+  };
+}
+
+// ── TYPE 49: Square root steps ──
+function genSqrtSteps() {
+  const step = rand(3,8);
+  const count = rand(5,7);
+  // values are: step, 4*step, 9*step, 16*step … (n²*step)
+  const terms = Array.from({length: count}, (_,i) => (i+1)*(i+1)*step);
+  return {
+    terms: terms.slice(0,-1),
+    answer: terms[terms.length-1],
+    typeName: 'Multiples of Perfect Squares',
+    explanation: `<strong>${step}·1², ${step}·2², ${step}·3²…</strong> = ${step}, ${4*step}, ${9*step}…`
+  };
+}
+
+// ── TYPE 50: Modified prime gap (differences = primes, every other) ──
+function genEveryOtherPrimeDiff() {
+  const primes = getPrimes(20);
+  const start = rand(2, 15);
+  const count = rand(5,7);
+  const terms = [start];
+  for (let i = 0; i < count-1; i++) terms.push(terms[terms.length-1] + primes[i*2]);
+  return {
+    terms: terms.slice(0,-1),
+    answer: terms[terms.length-1],
+    typeName: 'Add Every Other Prime',
+    explanation: `Differences are every other prime: <strong>+${primes.filter((_,i)=>i%2===0).slice(0,4).join(', +')}…</strong>`
+  };
+}
+
+// ── MASTER LIST ──
+const SEQUENCE_GENERATORS = [
+  genArithmetic, genGeometric, genQuadratic, genAcceleratingDiff, genGeomDiff,
+  genAddPrimes, genEveryOtherPrime, genPrimesSequence, genLinearRecurrence,
+  genFibonacciType, genTribonacci, genAlternatingAddSub, genAltMultAdd,
+  genPowers, genTriangles, genInterleavedArithmetic, genInterleavedGeometric,
+  genFibDiffs, genCyclicDiff, genDigitSum, genPentagonal, genExpOffset,
+  genAddNthPrime, genCubicDiff, genRunningSum, genProductMinus,
+  genFracBothArith, genFracAltDenom, genFracChain, genFracFibNum,
+  genFracArithGeom, genFracEqualInts, genInterleavedFracs, genFracBothGeom,
+  genGrowingAlt, genPrimesSecondDiff, genDigitProduct, genHexagonal,
+  genSquaresPlusLinear, genDoubleShrink, genFactorials, genCatalanLike,
+  genTwoTermRecurrence, genAltMultSub, genOblong, genSumOfSquares,
+  genPow2Diffs, genFracGeomNumAltDen, genSqrtSteps, genEveryOtherPrimeDiff
+];
+
+// ── safe generator with retry ──
+function generateQuestion(maxTries = 30) {
+  for (let attempt = 0; attempt < maxTries; attempt++) {
+    try {
+      const genFn = SEQUENCE_GENERATORS[rand(0, SEQUENCE_GENERATORS.length - 1)];
+      const q = genFn();
+      // Sanity checks
+      if (!q || !q.terms || q.terms.length < 4) continue;
+      if (q.answer === undefined || q.answer === null) continue;
+      const ansStr = String(q.answer);
+      // Keep numbers reasonable
+      const numeric = parseFloat(ansStr.replace('/', '.'));
+      if (!isFinite(numeric) || Math.abs(numeric) > 99999) continue;
+      // Make sure all terms are finite / valid-looking
+      const valid = q.terms.every(t => {
+        const s = String(t);
+        if (s.includes('/')) {
+          const [n,d] = s.split('/').map(Number);
+          return isFinite(n) && isFinite(d) && d !== 0 && Math.abs(n) < 9999 && Math.abs(d) < 9999;
+        }
+        const v = Number(s);
+        return isFinite(v) && Math.abs(v) < 99999;
+      });
+      if (!valid) continue;
+      return q;
+    } catch(e) { /* retry */ }
+  }
+  // fallback: plain arithmetic
+  return genArithmetic();
+}
+
+// ── distractor generation ──
+function makeDistractors(answerStr, terms) {
+  const isFrac = answerStr.includes('/');
+  const distractors = new Set();
+  distractors.add(answerStr);
+
+  if (isFrac) {
+    const [n, d] = answerStr.split('/').map(Number);
+    const deltas = [-3,-2,-1,1,2,3,4,5,-4,-5,6,7,-6,-7];
+    for (const dn of deltas) {
+      for (const dd of [-2,-1,0,1,2]) {
+        if (distractors.size >= 5) break;
+        const nn = n + dn, nd = d + dd;
+        if (nd > 0 && nn > 0) {
+          const s = fmtFrac(nn, nd);
+          if (s !== answerStr) distractors.add(s);
+        }
+      }
+      if (distractors.size >= 5) break;
+    }
+    // fill if needed
+    let extra = 1;
+    while (distractors.size < 5) {
+      distractors.add(fmtFrac(n + extra * 3, d + extra));
+      extra++;
+    }
+  } else {
+    const ans = Number(answerStr);
+    const range = Math.max(Math.abs(ans) * 0.2, 15);
+    const deltas = [];
+    for (let i = 1; deltas.length < 20; i++) {
+      deltas.push(i, -i, i*2, -i*2, i*3);
+    }
+    // shuffle deltas
+    for (let i = deltas.length-1; i>0; i--) {
+      const j = rand(0,i);
+      [deltas[i],deltas[j]] = [deltas[j],deltas[i]];
+    }
+    for (const d of deltas) {
+      if (distractors.size >= 5) break;
+      const v = ans + d;
+      if (Number.isInteger(ans) ? Number.isInteger(v) : true) {
+        const s = String(Number.isInteger(ans) ? v : parseFloat(v.toFixed(2)));
+        if (s !== answerStr && !distractors.has(s)) distractors.add(s);
+      }
+    }
+    while (distractors.size < 5) distractors.add(String(ans + distractors.size * 7));
+  }
+
+  const arr = Array.from(distractors);
+  // Fisher-Yates shuffle
+  for (let i = arr.length-1; i>0; i--) {
+    const j = rand(0,i);
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+  return arr;
+}
+
+// ══════════════════════════════════════════════════════
+//  PRACTICE GAME
+// ══════════════════════════════════════════════════════
+function startSeqPractice() {
+  const g = myGen();
+  function alive() { return myGen() === g; }
+  let correct = 0, total = 0;
+
+  function stat() {
+    if (!alive()) return;
+    setStats(`<div class="stat-pill">Correct <b>${correct}</b>/${total}</div>`);
+  }
+
+  function nextQuestion() {
+    if (!alive()) return;
+    const q = generateQuestion();
+    const choices = makeDistractors(String(q.answer), q.terms);
+
+    stat();
+
+    // Build terms HTML
+    const termsHTML = q.terms.map((t, i) =>
+      `<span class="seq-term">${t}</span>${i < q.terms.length - 1 ? '<span class="seq-comma">,</span>' : '<span class="seq-comma">,</span>'}`
+    ).join('') +
+    `<span class="seq-ellipsis"> … </span>` +
+    `<span class="seq-blank" id="seq-blank">?</span>`;
+
+    const choicesHTML = choices.map(c =>
+      `<button class="seq-choice" onclick="seqPick(this, '${c.replace(/'/g,"\\'")}', '${String(q.answer).replace(/'/g,"\\'")}', '${q.explanation.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
+        ${c}
+      </button>`
+    ).join('');
+
+    setPanel(`<div class="seq-wrap">
+      <div class="seq-type-badge">${q.typeName}</div>
+      <div class="seq-question-label">What comes next?</div>
+      <div class="seq-terms">${termsHTML}</div>
+      <div class="seq-choices" id="seq-choices">${choicesHTML}</div>
+      <div id="seq-feedback"></div>
+    </div>`, true);
+  }
+
+  window.seqPick = (btn, chosen, answer, explanation) => {
+    if (!alive()) return;
+    // Disable all choices
+    document.querySelectorAll('.seq-choice').forEach(b => { b.disabled = true; });
+
+    const isCorrect = chosen === answer;
+    if (isCorrect) {
+      correct++;
+      btn.classList.add('correct');
+    } else {
+      btn.classList.add('wrong');
+      // reveal correct
+      document.querySelectorAll('.seq-choice').forEach(b => {
+        if (b.textContent.trim() === answer) b.classList.add('reveal-correct');
+      });
+    }
+    total++;
+    stat();
+
+    // Update blank
+    const blank = document.getElementById('seq-blank');
+    if (blank) {
+      blank.textContent = answer;
+      blank.classList.add(isCorrect ? 'filled-correct' : 'filled-wrong');
+    }
+
+    // Show explanation + Next
+    const fb = document.getElementById('seq-feedback');
+    if (fb) {
+      fb.innerHTML = `
+        <div class="seq-explanation"><strong>Pattern:</strong> ${explanation}</div>
+        <button class="seq-next-btn" onclick="seqNext()">Next →</button>`;
+    }
+  };
+
+  window.seqNext = () => {
+    if (!alive()) return;
+    nextQuestion();
+  };
+
+  setPanel(`<div class="start-card">
+    <h3>Sequence Practice</h3>
+    <p>Identify the pattern in each sequence and choose the next number. Covers arithmetic, geometric, prime-based, Fibonacci-type, fractional sequences, and many more.</p>
+    <button class="big-btn" onclick="seqGo()">Begin</button>
+  </div>`);
+  stat();
+
+  window.seqGo = () => { if (!alive()) return; nextQuestion(); };
+}
+
+// ── init ──
+renderDashboard();
+</script>
+</body>
+</html>
