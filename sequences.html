@@ -1054,16 +1054,24 @@ function genDigitSum() {
 }
 
 // F2: Add digit product
+// Only use starting values whose digits are all non-zero (avoids product=0 degenerate case)
 function genDigitProduct() {
-  const start = rand(11, 39);
+  // Pick a 2-digit start with no zero digits
+  const d1 = rand(1,9), d2 = rand(1,9);
+  const start = d1 * 10 + d2;
   const count = rand(5, 7);
   const terms = [start];
   for (let i = 1; i < count; i++) {
     const prev = terms[terms.length-1];
-    const dp = String(prev).split('').reduce((p,c)=>p*parseInt(c),1);
-    if (dp === 0) { terms.push(prev + 9); continue; }
+    const digits = String(prev).split('').map(Number);
+    // If any digit becomes 0 (can happen as sequence progresses), stop and retry
+    if (digits.includes(0)) return genDigitProduct();
+    const dp = digits.reduce((p,c) => p * c, 1);
     terms.push(prev + dp);
   }
+  // Sanity: all terms must be distinct and reasonable
+  if (new Set(terms).size < count) return genDigitProduct();
+  if (terms[terms.length-1] > 9999) return genDigitProduct();
   return {
     terms: terms.slice(0, -1), answer: terms[terms.length - 1],
     typeName: 'Add Digit Product',
