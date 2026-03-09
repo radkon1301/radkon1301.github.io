@@ -487,9 +487,8 @@ function makeFrac(n, d) {
 function fracDisplayHTML(f) {
   if (!f) return '?';
   if (f.d === 1) return String(f.n);
-  return `${f.n}/${f.d}`;
+  return fracHTML(`${f.n}/${f.d}`);
 }
-function fracDisplayHTML(f) { return fracHTML(fracDisplayHTML(f)); }
 function fracAdd(a, b) { return makeFrac(a.n*b.d + b.n*a.d, a.d*b.d); }
 function fracSub(a, b) { return makeFrac(a.n*b.d - b.n*a.d, a.d*b.d); }
 function fracMul(a, b) { return makeFrac(a.n*b.n, a.d*b.d); }
@@ -695,26 +694,32 @@ function qFracDiv(tier) {
 }
 
 function qDecAdd(tier) {
+  // All tiers: 1dp values in the question (e.g. 3.4 + 7.8)
+  // tier 0: small values; tier 1: larger; tier 2: 3-term
   if (tier === 0) {
-    const a = rand(1,9) + rand(0,9)*0.1, b = rand(1,9) + rand(0,9)*0.1;
+    const a = rand(1,9) + rand(1,9)*0.1, b = rand(1,9) + rand(1,9)*0.1;
     const ans = makeFrac(Math.round((a+b)*10), 10);
     return { question: `${a.toFixed(1)} + ${b.toFixed(1)}`, answer: ans, type:'decadd',
       explanation: `= <strong>${fracDisplayHTML(ans)}</strong>` };
   } else if (tier === 1) {
-    const a = rand(1,20) + rand(0,99)*0.01, b = rand(1,20) + rand(0,99)*0.01;
-    const ans = makeFrac(Math.round((a+b)*100), 100);
-    return { question: `${a.toFixed(2)} + ${b.toFixed(2)}`, answer: ans, type:'decadd',
+    const a = rand(5,25) + rand(1,9)*0.1, b = rand(5,25) + rand(1,9)*0.1;
+    const ans = makeFrac(Math.round((a+b)*10), 10);
+    return { question: `${a.toFixed(1)} + ${b.toFixed(1)}`, answer: ans, type:'decadd',
       explanation: `= <strong>${fracDisplayHTML(ans)}</strong>` };
   } else {
-    const a = (rand(1,5) + rand(0,999)*0.001).toFixed(3);
-    const b = (rand(1,5) + rand(0,999)*0.001).toFixed(3);
-    const ans = makeFrac(Math.round((parseFloat(a)+parseFloat(b))*1000), 1000);
-    return { question: `${a} + ${b}`, answer: ans, type:'decadd',
+    // 3-term 1dp addition
+    const a = rand(3,15) + rand(1,9)*0.1;
+    const b = rand(3,15) + rand(1,9)*0.1;
+    const cc = rand(2,9) + rand(1,9)*0.1;
+    const ans = makeFrac(Math.round((a+b+cc)*10), 10);
+    return { question: `${a.toFixed(1)} + ${b.toFixed(1)} + ${cc.toFixed(1)}`, answer: ans, type:'decadd',
       explanation: `= <strong>${fracDisplayHTML(ans)}</strong>` };
   }
 }
 
 function qDecMul(tier) {
+  // All tiers: 1dp values in the question
+  // tier 0: decimal × integer; tier 1: decimal × decimal (1dp each); tier 2: larger values
   if (tier === 0) {
     const a = rand(1,9) + rand(1,9)*0.1, b = rand(2,9);
     const ans = makeFrac(Math.round(a*b*10), 10);
@@ -726,9 +731,10 @@ function qDecMul(tier) {
     return { question: `${a.toFixed(1)} × ${b.toFixed(1)}`, answer: ans, type:'decmul',
       explanation: `= <strong>${fracDisplayHTML(ans)}</strong>` };
   } else {
-    const a = rand(1,5) + rand(1,9)*0.01, b = rand(1,5) + rand(1,9)*0.01;
-    const ans = makeFrac(Math.round(a*b*10000), 10000);
-    return { question: `${a.toFixed(2)} × ${b.toFixed(2)}`, answer: ans, type:'decmul',
+    // Larger 1dp × 1dp
+    const a = rand(5,20) + rand(1,9)*0.1, b = rand(5,20) + rand(1,9)*0.1;
+    const ans = makeFrac(Math.round(a*b*100), 100);
+    return { question: `${a.toFixed(1)} × ${b.toFixed(1)}`, answer: ans, type:'decmul',
       explanation: `= <strong>${fracDisplayHTML(ans)}</strong>` };
   }
 }
