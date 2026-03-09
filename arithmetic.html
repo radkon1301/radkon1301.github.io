@@ -302,6 +302,31 @@
 .arith-q-dot.dot-wrong   { background: var(--red-light);   border-color: var(--red);   color: var(--red);   }
 .arith-q-dot.dot-skip    { border-style: dashed; color: var(--muted); }
 
+/* ── STACKED FRACTION RENDERING ── */
+.vfrac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: middle;
+  font-size: 0.7em;
+  line-height: 1.1;
+  margin: 0 2px;
+  position: relative;
+  top: -1px;
+}
+.vfrac sup, .vfrac sub {
+  font-size: 1em;
+  line-height: 1.1;
+  display: block;
+  text-align: center;
+  vertical-align: baseline;
+  position: static;
+}
+.vfrac sup { border-bottom: 1.5px solid currentColor; padding-bottom: 1px; }
+.vfrac sub { padding-top: 1px; }
+/* When inside a large question display, scale up the fraction nicely */
+.arith-question .vfrac { font-size: 0.75em; top: -2px; }
+
 /* Correct answer shown in review for FR */
 .arith-correct-reveal {
   margin-top: 8px;
@@ -459,14 +484,12 @@ function makeFrac(n, d) {
   const g = gcd(Math.abs(n), d);
   return { n: n/g, d: d/g };
 }
-function fracDisplay(f) {
+function fracDisplayHTML(f) {
+  if (!f) return '?';
   if (f.d === 1) return String(f.n);
-  // Show as decimal if it terminates and is short enough
-  const dec = f.n / f.d;
-  const decStr = String(parseFloat(dec.toPrecision(6)));
-  if (decStr.length <= 6 && !decStr.includes('e')) return decStr;
   return `${f.n}/${f.d}`;
 }
+function fracDisplayHTML(f) { return fracHTML(fracDisplayHTML(f)); }
 function fracAdd(a, b) { return makeFrac(a.n*b.d + b.n*a.d, a.d*b.d); }
 function fracSub(a, b) { return makeFrac(a.n*b.d - b.n*a.d, a.d*b.d); }
 function fracMul(a, b) { return makeFrac(a.n*b.n, a.d*b.d); }
@@ -571,7 +594,7 @@ function qFracAdd(tier) {
     const a = makeFrac(n1,d), b = makeFrac(n2,d);
     const ans = fracAdd(a,b);
     return { question: `${n1}/${d} + ${n2}/${d}`, answer: ans, type:'fracadd',
-      explanation: `${n1}/${d} + ${n2}/${d} = ${n1+n2}/${d} = <strong>${fracDisplay(ans)}</strong>` };
+      explanation: `${n1}/${d} + ${n2}/${d} = ${n1+n2}/${d} = <strong>${fracDisplayHTML(ans)}</strong>` };
   } else if (tier === 1) {
     const pairs = [[2,3],[2,5],[3,4],[4,5],[3,5],[2,7],[4,6],[3,8]];
     const [d1,d2] = randChoice(pairs);
@@ -579,7 +602,7 @@ function qFracAdd(tier) {
     const a = makeFrac(n1,d1), b = makeFrac(n2,d2);
     const ans = fracAdd(a,b);
     return { question: `${n1}/${d1} + ${n2}/${d2}`, answer: ans, type:'fracadd',
-      explanation: `Find common denominator: <strong>${fracDisplay(ans)}</strong>` };
+      explanation: `Find common denominator: <strong>${fracDisplayHTML(ans)}</strong>` };
   } else {
     // mixed + fraction
     const whole = rand(1,5);
@@ -588,7 +611,7 @@ function qFracAdd(tier) {
     const a = makeFrac(whole*d+n1,d), b = makeFrac(n2,d);
     const ans = fracAdd(a,b);
     return { question: `${whole} ${n1}/${d} + ${n2}/${d}`, answer: ans, type:'fracadd',
-      explanation: `${whole} ${n1}/${d} + ${n2}/${d} = <strong>${fracDisplay(ans)}</strong>` };
+      explanation: `${whole} ${n1}/${d} + ${n2}/${d} = <strong>${fracDisplayHTML(ans)}</strong>` };
   }
 }
 
@@ -599,7 +622,7 @@ function qFracSub(tier) {
     const a = makeFrac(n1,d), b = makeFrac(n2,d);
     const ans = fracSub(a,b);
     return { question: `${n1}/${d} − ${n2}/${d}`, answer: ans, type:'fracsub',
-      explanation: `${n1}/${d} − ${n2}/${d} = ${n1-n2}/${d} = <strong>${fracDisplay(ans)}</strong>` };
+      explanation: `${n1}/${d} − ${n2}/${d} = ${n1-n2}/${d} = <strong>${fracDisplayHTML(ans)}</strong>` };
   } else if (tier === 1) {
     const pairs = [[3,4],[2,3],[4,5],[3,5],[2,5],[5,6],[3,8],[4,7]];
     const [d1,d2] = randChoice(pairs);
@@ -608,7 +631,7 @@ function qFracSub(tier) {
     const ans = fracSub(a,b);
     if (ans.n <= 0) return qFracSub(tier);
     return { question: `${n1}/${d1} − ${n2}/${d2}`, answer: ans, type:'fracsub',
-      explanation: `Common denominator: <strong>${fracDisplay(ans)}</strong>` };
+      explanation: `Common denominator: <strong>${fracDisplayHTML(ans)}</strong>` };
   } else {
     const whole = rand(2,6), d = randChoice([3,4,5,6,8]);
     const n1 = rand(1,d-1), n2 = rand(n1+1,d);
@@ -616,7 +639,7 @@ function qFracSub(tier) {
     const a = makeFrac(whole*d+n1,d), b = makeFrac(n2,d);
     const ans = fracSub(a,b);
     return { question: `${whole} ${n1}/${d} − ${n2}/${d}`, answer: ans, type:'fracsub',
-      explanation: `Borrow from ${whole}: <strong>${fracDisplay(ans)}</strong>` };
+      explanation: `Borrow from ${whole}: <strong>${fracDisplayHTML(ans)}</strong>` };
   }
 }
 
@@ -627,14 +650,14 @@ function qFracMul(tier) {
     const a = makeFrac(n1,d1), b = makeFrac(n2,d2);
     const ans = fracMul(a,b);
     return { question: `${n1}/${d1} × ${n2}/${d2}`, answer: ans, type:'fracmul',
-      explanation: `${n1}×${n2} / ${d1}×${d2} = <strong>${fracDisplay(ans)}</strong>` };
+      explanation: `${n1}×${n2} / ${d1}×${d2} = <strong>${fracDisplayHTML(ans)}</strong>` };
   } else if (tier === 1) {
     const d = randChoice([3,4,5,6,8]);
     const n = rand(1,d-1), whole = rand(2,8);
     const a = makeFrac(n,d), b = intFrac(whole);
     const ans = fracMul(a,b);
     return { question: `${n}/${d} × ${whole}`, answer: ans, type:'fracmul',
-      explanation: `${n}/${d} × ${whole} = ${n*whole}/${d} = <strong>${fracDisplay(ans)}</strong>` };
+      explanation: `${n}/${d} × ${whole} = ${n*whole}/${d} = <strong>${fracDisplayHTML(ans)}</strong>` };
   } else {
     // mixed × fraction
     const whole = rand(1,4), d1 = randChoice([3,4,5]), d2 = randChoice([2,3,4]);
@@ -642,7 +665,7 @@ function qFracMul(tier) {
     const a = makeFrac(whole*d1+n1,d1), b = makeFrac(n2,d2);
     const ans = fracMul(a,b);
     return { question: `${whole} ${n1}/${d1} × ${n2}/${d2}`, answer: ans, type:'fracmul',
-      explanation: `Convert: ${whole*d1+n1}/${d1} × ${n2}/${d2} = <strong>${fracDisplay(ans)}</strong>` };
+      explanation: `Convert: ${whole*d1+n1}/${d1} × ${n2}/${d2} = <strong>${fracDisplayHTML(ans)}</strong>` };
   }
 }
 
@@ -653,21 +676,21 @@ function qFracDiv(tier) {
     const a = makeFrac(n1,d1), b = makeFrac(n2,d2);
     const ans = fracDiv(a,b);
     return { question: `${n1}/${d1} ÷ ${n2}/${d2}`, answer: ans, type:'fracdiv',
-      explanation: `Multiply by reciprocal: ${n1}/${d1} × ${d2}/${n2} = <strong>${fracDisplay(ans)}</strong>` };
+      explanation: `Multiply by reciprocal: ${n1}/${d1} × ${d2}/${n2} = <strong>${fracDisplayHTML(ans)}</strong>` };
   } else if (tier === 1) {
     const d = randChoice([3,4,5,6,8]);
     const n = rand(1,d-1), whole = rand(2,6);
     const a = makeFrac(n,d), b = intFrac(whole);
     const ans = fracDiv(a,b);
     return { question: `${n}/${d} ÷ ${whole}`, answer: ans, type:'fracdiv',
-      explanation: `${n}/${d} ÷ ${whole} = ${n}/${d*whole} = <strong>${fracDisplay(ans)}</strong>` };
+      explanation: `${n}/${d} ÷ ${whole} = ${n}/${d*whole} = <strong>${fracDisplayHTML(ans)}</strong>` };
   } else {
     const whole = rand(2,5), d1 = randChoice([3,4,5]), d2 = randChoice([2,3,4]);
     const n1 = rand(1,d1-1), n2 = rand(1,d2);
     const a = makeFrac(whole*d1+n1,d1), b = makeFrac(n2,d2);
     const ans = fracDiv(a,b);
     return { question: `${whole} ${n1}/${d1} ÷ ${n2}/${d2}`, answer: ans, type:'fracdiv',
-      explanation: `Convert & flip: ${whole*d1+n1}/${d1} × ${d2}/${n2} = <strong>${fracDisplay(ans)}</strong>` };
+      explanation: `Convert & flip: ${whole*d1+n1}/${d1} × ${d2}/${n2} = <strong>${fracDisplayHTML(ans)}</strong>` };
   }
 }
 
@@ -676,18 +699,18 @@ function qDecAdd(tier) {
     const a = rand(1,9) + rand(0,9)*0.1, b = rand(1,9) + rand(0,9)*0.1;
     const ans = makeFrac(Math.round((a+b)*10), 10);
     return { question: `${a.toFixed(1)} + ${b.toFixed(1)}`, answer: ans, type:'decadd',
-      explanation: `= <strong>${fracDisplay(ans)}</strong>` };
+      explanation: `= <strong>${fracDisplayHTML(ans)}</strong>` };
   } else if (tier === 1) {
     const a = rand(1,20) + rand(0,99)*0.01, b = rand(1,20) + rand(0,99)*0.01;
     const ans = makeFrac(Math.round((a+b)*100), 100);
     return { question: `${a.toFixed(2)} + ${b.toFixed(2)}`, answer: ans, type:'decadd',
-      explanation: `= <strong>${fracDisplay(ans)}</strong>` };
+      explanation: `= <strong>${fracDisplayHTML(ans)}</strong>` };
   } else {
     const a = (rand(1,5) + rand(0,999)*0.001).toFixed(3);
     const b = (rand(1,5) + rand(0,999)*0.001).toFixed(3);
     const ans = makeFrac(Math.round((parseFloat(a)+parseFloat(b))*1000), 1000);
     return { question: `${a} + ${b}`, answer: ans, type:'decadd',
-      explanation: `= <strong>${fracDisplay(ans)}</strong>` };
+      explanation: `= <strong>${fracDisplayHTML(ans)}</strong>` };
   }
 }
 
@@ -696,17 +719,17 @@ function qDecMul(tier) {
     const a = rand(1,9) + rand(1,9)*0.1, b = rand(2,9);
     const ans = makeFrac(Math.round(a*b*10), 10);
     return { question: `${a.toFixed(1)} × ${b}`, answer: ans, type:'decmul',
-      explanation: `= <strong>${fracDisplay(ans)}</strong>` };
+      explanation: `= <strong>${fracDisplayHTML(ans)}</strong>` };
   } else if (tier === 1) {
     const a = rand(1,9) + rand(1,9)*0.1, b = rand(1,9) + rand(1,9)*0.1;
     const ans = makeFrac(Math.round(a*b*100), 100);
     return { question: `${a.toFixed(1)} × ${b.toFixed(1)}`, answer: ans, type:'decmul',
-      explanation: `= <strong>${fracDisplay(ans)}</strong>` };
+      explanation: `= <strong>${fracDisplayHTML(ans)}</strong>` };
   } else {
     const a = rand(1,5) + rand(1,9)*0.01, b = rand(1,5) + rand(1,9)*0.01;
     const ans = makeFrac(Math.round(a*b*10000), 10000);
     return { question: `${a.toFixed(2)} × ${b.toFixed(2)}`, answer: ans, type:'decmul',
-      explanation: `= <strong>${fracDisplay(ans)}</strong>` };
+      explanation: `= <strong>${fracDisplayHTML(ans)}</strong>` };
   }
 }
 
@@ -719,7 +742,7 @@ function qPercentage(tier) {
   const ans = makeFrac(Math.round(val * 100), 100);
   return {
     question: `${p}% of ${y}`, answer: ans, type: 'percent',
-    explanation: `${p}/100 × ${y} = <strong>${fracDisplay(ans)}</strong>`
+    explanation: `${p}/100 × ${y} = <strong>${fracDisplayHTML(ans)}</strong>`
   };
 }
 
@@ -753,28 +776,31 @@ function qSquare(tier) {
 
 // Generate all 80 questions with tier distribution
 function generateAllQuestions() {
+  // Difficulty pools — no single-digit arithmetic; heavier on 2-digit×2-digit,
+  // 3-digit ops, fraction manipulation, and mixed-ops.
+  // Tier counts: 10 easy, 35 medium, 35 hard
   const pools = [
-    // [generator, weight] for each tier
     [
-      // Easy
-      [() => qAddInt(0), 3], [() => qSubInt(0), 3], [() => qMulInt(0), 3],
-      [() => qDivInt(0), 2], [() => qFracAdd(0), 2], [() => qFracSub(0), 2],
-      [() => qFracMul(0), 2], [() => qDecAdd(0), 1], [() => qSquare(0), 2]
+      // Easy — 2-digit ops, simple fractions, squares to 15
+      [() => qAddInt(1), 3], [() => qSubInt(1), 3], [() => qMulInt(1), 4],
+      [() => qDivInt(1), 3], [() => qFracAdd(0), 2], [() => qFracSub(0), 2],
+      [() => qSquare(0), 2], [() => qPercentage(0), 2]
     ],
     [
-      // Medium
-      [() => qAddInt(1), 2], [() => qSubInt(1), 2], [() => qMulInt(1), 3],
-      [() => qDivInt(1), 2], [() => qFracAdd(1), 3], [() => qFracSub(1), 3],
-      [() => qFracMul(1), 3], [() => qFracDiv(1), 2], [() => qDecAdd(1), 2],
-      [() => qDecMul(0), 2], [() => qPercentage(0), 2], [() => qMixedOps(1), 3],
+      // Medium — 3-digit add/sub, 2-digit×2-digit mul, fractions with different denoms,
+      //          decimals, percentages, mixed-ops
+      [() => qAddInt(2), 3], [() => qSubInt(2), 3], [() => qMulInt(2), 5],
+      [() => qDivInt(2), 3], [() => qFracAdd(1), 3], [() => qFracSub(1), 3],
+      [() => qFracMul(1), 3], [() => qFracDiv(1), 3], [() => qDecAdd(1), 2],
+      [() => qDecMul(0), 2], [() => qPercentage(1), 3], [() => qMixedOps(1), 3],
       [() => qSquare(1), 2]
     ],
     [
-      // Hard
-      [() => qAddInt(2), 2], [() => qMulInt(2), 3], [() => qFracAdd(2), 2],
-      [() => qFracSub(2), 2], [() => qFracMul(2), 3], [() => qFracDiv(2), 3],
-      [() => qDecMul(1), 2], [() => qDecMul(2), 2], [() => qPercentage(1), 2],
-      [() => qPercentage(2), 2], [() => qMixedOps(2), 3], [() => qSquare(2), 2]
+      // Hard — mixed numbers, hard fracs, 2-dp decimals, tough mixed-ops, big squares
+      [() => qAddInt(2), 2], [() => qMulInt(2), 4], [() => qFracAdd(2), 3],
+      [() => qFracSub(2), 3], [() => qFracMul(2), 4], [() => qFracDiv(2), 4],
+      [() => qDecAdd(2), 2], [() => qDecMul(1), 3], [() => qDecMul(2), 2],
+      [() => qPercentage(2), 3], [() => qMixedOps(2), 4], [() => qSquare(2), 3]
     ]
   ];
 
@@ -786,7 +812,7 @@ function generateAllQuestions() {
   }
 
   const questions = [];
-  const tierCounts = [20, 35, 25];
+  const tierCounts = [10, 35, 35];
   for (let tier = 0; tier < 3; tier++) {
     const weighted = buildWeighted(pools[tier]);
     for (let i = 0; i < tierCounts[tier]; i++) {
@@ -874,15 +900,35 @@ function makeArithDistractors(q) {
   return arr;
 }
 
+// answerDisplay: canonical key used for choice storage and comparison.
+// Always integers or "n/d" — never decimals — so string equality is unambiguous.
 function answerDisplay(f) {
   if (!f) return '?';
   if (f.d === 1) return String(f.n);
-  // Prefer simple decimal if it terminates cleanly within 4 dp
-  const dec = f.n / f.d;
-  const decStr = parseFloat(dec.toPrecision(5)).toString();
-  // Only show as decimal if short enough
-  if (!decStr.includes('e') && decStr.length <= 7) return decStr;
   return `${f.n}/${f.d}`;
+}
+
+// renderQText: convert fraction tokens "n/d" in a question string to stacked HTML.
+// Handles formats like "2/3 × 4", "3 1/4 + 1/2", "14 ÷ 7"
+function renderQText(s) {
+  // Replace tokens matching word-boundary n/d (where d>1) with fracHTML
+  return s.replace(/(\d+)\/(\d+)/g, (_, n, d) => fracHTML(`${n}/${d}`));
+}
+
+// fracHTML: render a fraction string as stacked visual HTML.
+// Improper fractions are shown as mixed numbers (e.g. 8/3 → 2⅔).
+function fracHTML(str) {
+  if (!str || str === '?') return str;
+  if (!str.toString().includes('/')) return String(str);
+  const [ns, ds] = str.toString().split('/');
+  const n = parseInt(ns), d = parseInt(ds);
+  if (isNaN(n) || isNaN(d) || d <= 1) return String(n);
+  if (n > d && n > 0 && d > 0) {
+    const whole = Math.floor(n / d), rem = n % d;
+    if (rem === 0) return String(whole);
+    return `${whole}<span class="vfrac"><sup>${rem}</sup><sub>${d}</sub></span>`;
+  }
+  return `<span class="vfrac"><sup>${n}</sup><sub>${d}</sub></span>`;
 }
 
 // ══════════════════════════════════════════════════════
@@ -974,7 +1020,7 @@ function runTest(gameId, isMultipleChoice) {
         <div class="arith-prog-track"><div class="arith-prog-fill" style="width:${pct}%"></div></div>
       </div>
       <div class="arith-question-label">What is</div>
-      <div class="arith-question">${q.question}</div>
+      <div class="arith-question">${renderQText(q.question)}</div>
       ${bodyHTML}
     </div>`, true);
 
@@ -1030,7 +1076,9 @@ function runTest(gameId, isMultipleChoice) {
     let correct = 0, incorrect = 0, skipped = 0;
     answers.forEach((a, i) => {
       if (a === null) { skipped++; }
-      else if (fracEqual(a.parsed, questions[i].answer)) { correct++; }
+      else if (isMultipleChoice
+        ? a.raw === answerDisplay(questions[i].answer)
+        : fracEqual(a.parsed, questions[i].answer)) { correct++; }
       else { incorrect++; }
     });
     const score = correct - incorrect - skipped;
@@ -1068,7 +1116,12 @@ function runTest(gameId, isMultipleChoice) {
     const userAns = answers[idx];
     const correctAns = q.answer;
     const correctDisplay = answerDisplay(correctAns);
-    const isCorrect = userAns !== null && fracEqual(userAns.parsed, correctAns);
+    // MC: string equality (choice key == correct key); FR: fracEqual (accepts 0.5 == 1/2)
+    const isCorrect = userAns !== null && (
+      isMultipleChoice
+        ? userAns.raw === answerDisplay(correctAns)
+        : fracEqual(userAns.parsed, correctAns)
+    );
     const isSkipped = userAns === null;
 
     let answerHtml = '';
@@ -1079,7 +1132,7 @@ function runTest(gameId, isMultipleChoice) {
           let cls = 'arith-choice';
           if (c === correctDisplay) cls += ' reveal-correct';
           else if (userAns && c === userAns.raw && !isCorrect) cls += ' wrong';
-          return `<button class="${cls}" disabled>${c}</button>`;
+          return `<button class="${cls}" disabled>${fracHTML(c)}</button>`;
         }).join('') + `</div>`;
     } else {
       // FR review
@@ -1102,7 +1155,9 @@ function runTest(gameId, isMultipleChoice) {
     // Dot grid (10 per row for 80 questions)
     const dotHTML = answers.map((a, i) => {
       const ca = questions[i].answer;
-      const isC = a !== null && fracEqual(a.parsed, ca);
+      const isC = a !== null && (
+        isMultipleChoice ? a.raw === answerDisplay(ca) : fracEqual(a.parsed, ca)
+      );
       let cls = 'arith-q-dot';
       if (i === idx) cls += ' active';
       else if (a === null) cls += ' dot-skip';
@@ -1121,7 +1176,7 @@ function runTest(gameId, isMultipleChoice) {
         <div class="arith-question-label" style="margin:0">What is</div>
         ${statusLabel}
       </div>
-      <div class="arith-question" style="font-size:1.6rem;margin-bottom:16px">${q.question}</div>
+      <div class="arith-question" style="font-size:1.6rem;margin-bottom:16px">${renderQText(q.question)}</div>
       ${answerHtml}
       <div class="arith-feedback"><strong>Solution:</strong> ${q.explanation}</div>
       <div class="arith-q-grid" style="margin-top:16px">${dotHTML}</div>
