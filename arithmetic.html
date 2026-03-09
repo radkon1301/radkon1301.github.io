@@ -699,21 +699,21 @@ function qDecAdd(tier) {
   if (tier === 0) {
     const a = rand(1,9) + rand(1,9)*0.1, b = rand(1,9) + rand(1,9)*0.1;
     const ans = makeFrac(Math.round((a+b)*10), 10);
-    return { question: `${a.toFixed(1)} + ${b.toFixed(1)}`, answer: ans, type:'decadd',
-      explanation: `= <strong>${fracDisplayHTML(ans)}</strong>` };
+    return { question: `${a.toFixed(1)} + ${b.toFixed(1)}`, answer: ans, type:'decadd', displayMode:'decimal',
+      explanation: `= <strong>${parseFloat((ans.n/ans.d).toFixed(2))}</strong>` };
   } else if (tier === 1) {
     const a = rand(5,25) + rand(1,9)*0.1, b = rand(5,25) + rand(1,9)*0.1;
     const ans = makeFrac(Math.round((a+b)*10), 10);
-    return { question: `${a.toFixed(1)} + ${b.toFixed(1)}`, answer: ans, type:'decadd',
-      explanation: `= <strong>${fracDisplayHTML(ans)}</strong>` };
+    return { question: `${a.toFixed(1)} + ${b.toFixed(1)}`, answer: ans, type:'decadd', displayMode:'decimal',
+      explanation: `= <strong>${parseFloat((ans.n/ans.d).toFixed(2))}</strong>` };
   } else {
     // 3-term 1dp addition
     const a = rand(3,15) + rand(1,9)*0.1;
     const b = rand(3,15) + rand(1,9)*0.1;
     const cc = rand(2,9) + rand(1,9)*0.1;
     const ans = makeFrac(Math.round((a+b+cc)*10), 10);
-    return { question: `${a.toFixed(1)} + ${b.toFixed(1)} + ${cc.toFixed(1)}`, answer: ans, type:'decadd',
-      explanation: `= <strong>${fracDisplayHTML(ans)}</strong>` };
+    return { question: `${a.toFixed(1)} + ${b.toFixed(1)} + ${cc.toFixed(1)}`, answer: ans, type:'decadd', displayMode:'decimal',
+      explanation: `= <strong>${parseFloat((ans.n/ans.d).toFixed(2))}</strong>` };
   }
 }
 
@@ -723,19 +723,19 @@ function qDecMul(tier) {
   if (tier === 0) {
     const a = rand(1,9) + rand(1,9)*0.1, b = rand(2,9);
     const ans = makeFrac(Math.round(a*b*10), 10);
-    return { question: `${a.toFixed(1)} × ${b}`, answer: ans, type:'decmul',
-      explanation: `= <strong>${fracDisplayHTML(ans)}</strong>` };
+    return { question: `${a.toFixed(1)} × ${b}`, answer: ans, type:'decmul', displayMode:'decimal',
+      explanation: `= <strong>${parseFloat((ans.n/ans.d).toFixed(2))}</strong>` };
   } else if (tier === 1) {
     const a = rand(1,9) + rand(1,9)*0.1, b = rand(1,9) + rand(1,9)*0.1;
     const ans = makeFrac(Math.round(a*b*100), 100);
-    return { question: `${a.toFixed(1)} × ${b.toFixed(1)}`, answer: ans, type:'decmul',
-      explanation: `= <strong>${fracDisplayHTML(ans)}</strong>` };
+    return { question: `${a.toFixed(1)} × ${b.toFixed(1)}`, answer: ans, type:'decmul', displayMode:'decimal',
+      explanation: `= <strong>${parseFloat((ans.n/ans.d).toFixed(2))}</strong>` };
   } else {
     // Larger 1dp × 1dp
     const a = rand(5,20) + rand(1,9)*0.1, b = rand(5,20) + rand(1,9)*0.1;
     const ans = makeFrac(Math.round(a*b*100), 100);
-    return { question: `${a.toFixed(1)} × ${b.toFixed(1)}`, answer: ans, type:'decmul',
-      explanation: `= <strong>${fracDisplayHTML(ans)}</strong>` };
+    return { question: `${a.toFixed(1)} × ${b.toFixed(1)}`, answer: ans, type:'decmul', displayMode:'decimal',
+      explanation: `= <strong>${parseFloat((ans.n/ans.d).toFixed(2))}</strong>` };
   }
 }
 
@@ -839,42 +839,52 @@ function generateAllQuestions() {
 // Generate 4 wrong answers that are plausible but wrong
 function makeArithDistractors(q) {
   const correct = q.answer;
-  const correctStr = answerDisplay(correct);
+  const mode = q.displayMode || 'frac';
+  const fmt = f => answerDisplay(f, mode);
+  const correctStr = fmt(correct);
   const wrong = new Set([correctStr]);
   const candidates = [];
 
   const { n, d } = correct;
   const val = n / d;
   const isInt = d === 1;
-  const isFrac = d > 1 && Math.abs(n) < 100 && d < 100;
+  const isDecMode = mode === 'decimal';
 
-  if (isInt) {
-    // For multiplication: common errors are off-by-one factor, transposition, etc.
+  if (isDecMode) {
+    // Generate nearby decimal values at same precision as correct answer
+    const decStr = correctStr;
+    const dp = (decStr.split('.')[1] || '').length;
+    const step = Math.pow(10, -dp);
+    const deltas = shuffle([step,-step,2*step,-2*step,3*step,-3*step,
+      5*step,-5*step,10*step,-10*step,0.1,-0.1,0.2,-0.2,0.5,-0.5,1,-1]);
+    for (const delta of deltas) {
+      const v = parseFloat((val + delta).toFixed(dp));
+      if (v !== val && v >= 0) candidates.push(makeFrac(Math.round(v * Math.pow(10,dp)), Math.pow(10,dp)));
+      if (candidates.length >= 12) break;
+    }
+  } else if (isInt) {
     const deltas = shuffle([1,-1,2,-2,3,-3,5,-5,10,-10,
       Math.round(val*0.1), -Math.round(val*0.1),
       Math.round(val*0.05), Math.round(val*0.2)]);
-    for (const d of deltas) {
-      const v = n + d;
+    for (const delta of deltas) {
+      const v = n + delta;
       if (v !== n && v >= 0) candidates.push(makeFrac(v,1));
       if (candidates.length >= 12) break;
     }
-    // Also add numbers with same last digit (common confusion)
     const lastDigit = Math.abs(n) % 10;
     for (let offset = -30; offset <= 30; offset += 10) {
       const v = n + offset;
       if (v !== n && v >= 0 && Math.abs(v - n) <= 50) candidates.push(makeFrac(v,1));
     }
-  } else if (isFrac) {
-    // Nearby fractions: adjust n or d by ±1
+  } else {
+    // Fraction mode: nearby fractions
     for (const dn of [-2,-1,1,2,3,-3]) {
       for (const dd of [-2,-1,0,1,2]) {
         const nn = n+dn, nd = d+dd;
         if (nd > 0 && nn > 0 && !(nn===n && nd===d)) candidates.push(makeFrac(nn,nd));
       }
     }
-    // Also try: wrong operation result (e.g. user added denoms instead of finding LCD)
     if (q.type === 'fracadd' || q.type === 'fracsub') {
-      // Common mistake: add/sub numerators and denominators separately
       const parts = q.question.match(/(\d+)\/(\d+)/g);
       if (parts && parts.length >= 2) {
         const [n1,d1] = parts[0].split('/').map(Number);
@@ -885,19 +895,25 @@ function makeArithDistractors(q) {
     }
   }
 
-  // Shuffle and pick 4 distinct wrong answers
+  // Shuffle and pick 3 distinct wrong answers
   shuffle(candidates);
   for (const c of candidates) {
     if (wrong.size >= 4) break;
-    const s = answerDisplay(c);
+    const s = fmt(c);
     if (!wrong.has(s) && c.n >= 0) { wrong.add(s); }
   }
 
   // Fallback
   let extra = 1;
   while (wrong.size < 4) {
-    const f = makeFrac(n + extra*(isInt?3:1), d);
-    wrong.add(answerDisplay(f));
+    const step = isDecMode ? 0.1 : (isInt ? 3 : 1);
+    const fallbackVal = isDecMode
+      ? parseFloat((val + extra * step).toFixed(2))
+      : val + extra * step;
+    const f = isDecMode
+      ? makeFrac(Math.round(fallbackVal * 100), 100)
+      : makeFrac(n + extra * (isInt ? 3 : 1), d);
+    wrong.add(fmt(f));
     extra++;
   }
 
@@ -907,10 +923,16 @@ function makeArithDistractors(q) {
 }
 
 // answerDisplay: canonical key used for choice storage and comparison.
-// Always integers or "n/d" — never decimals — so string equality is unambiguous.
-function answerDisplay(f) {
+// mode='decimal': format as decimal (for decadd/decmul/percent questions)
+// mode='frac' (default): integer or "n/d"
+function answerDisplay(f, mode) {
   if (!f) return '?';
   if (f.d === 1) return String(f.n);
+  if (mode === 'decimal') {
+    // Round to at most 2dp, strip trailing zeros
+    const v = f.n / f.d;
+    return parseFloat(v.toFixed(2)).toString();
+  }
   return `${f.n}/${f.d}`;
 }
 
@@ -1083,7 +1105,7 @@ function runTest(gameId, isMultipleChoice) {
     answers.forEach((a, i) => {
       if (a === null) { skipped++; }
       else if (isMultipleChoice
-        ? a.raw === answerDisplay(questions[i].answer)
+        ? a.raw === answerDisplay(questions[i].answer, questions[i].displayMode)
         : fracEqual(a.parsed, questions[i].answer)) { correct++; }
       else { incorrect++; }
     });
@@ -1125,7 +1147,7 @@ function runTest(gameId, isMultipleChoice) {
     // MC: string equality (choice key == correct key); FR: fracEqual (accepts 0.5 == 1/2)
     const isCorrect = userAns !== null && (
       isMultipleChoice
-        ? userAns.raw === answerDisplay(correctAns)
+        ? userAns.raw === answerDisplay(correctAns, q.displayMode)
         : fracEqual(userAns.parsed, correctAns)
     );
     const isSkipped = userAns === null;
@@ -1162,7 +1184,7 @@ function runTest(gameId, isMultipleChoice) {
     const dotHTML = answers.map((a, i) => {
       const ca = questions[i].answer;
       const isC = a !== null && (
-        isMultipleChoice ? a.raw === answerDisplay(ca) : fracEqual(a.parsed, ca)
+        isMultipleChoice ? a.raw === answerDisplay(ca, questions[i].displayMode) : fracEqual(a.parsed, ca)
       );
       let cls = 'arith-q-dot';
       if (i === idx) cls += ' active';
