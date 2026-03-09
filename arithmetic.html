@@ -1143,7 +1143,7 @@ function runTest(gameId, isMultipleChoice) {
     const q = questions[idx];
     const userAns = answers[idx];
     const correctAns = q.answer;
-    const correctDisplay = answerDisplay(correctAns);
+    const correctDisplay = answerDisplay(correctAns, q.displayMode);
     // MC: string equality (choice key == correct key); FR: fracEqual (accepts 0.5 == 1/2)
     const isCorrect = userAns !== null && (
       isMultipleChoice
