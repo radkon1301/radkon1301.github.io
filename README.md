@@ -2,46 +2,62 @@
 
 Collection of exercises often tested in quant assessments. Go to https://radkon1301.github.io/ to practice.
 
-Static site on GitHub Pages: plain HTML/CSS/vanilla JS, **no build step, no dependencies, no tests**. Pushing to `main` deploys. The only external resource is Google Fonts (`@import` in `shared.css`).
+Static site on GitHub Pages: plain HTML/CSS/vanilla JS, **no build step, no dependencies**. Pushing to `main` deploys. The only external resource is Google Fonts (`@import` in `shared.css`).
 
-> **Agents / contributors: do not read whole HTML files.** `zapn.html` is ~120 KB, `sequences.html` ~78 KB, `arithmetic.html` ~45 KB. Read this file, then the matching `docs/*.md`, then read only the line range you need (`sed -n 'A,Bp' file`). Line numbers in docs are approximate and drift; re-locate with the `grep` anchors given.
+> **Agents / contributors:** read this file, then only the `docs/*.md` for the area you touch, then open only the one small file you need (every game / generator group is its own file, 20–500 lines). Don't read whole directories. Line numbers are deliberately avoided in docs; use the `grep` anchors given.
 
-## Files
+## Layout
 
-| File | Lines | What it is | Doc |
-|---|---|---|---|
-| `index.html` | 105 | Landing page: one card per suite (links to the 3 pages below). Small enough to read in full. | `docs/shared.md` |
-| `shared.css` | 143 | Design tokens (`:root` vars), header, buttons, chips, game cards, game panel, progress bar. Loaded by every page. | `docs/shared.md` |
-| `zapn.html` | 2431 | **Zap-N**: 9 cognitive mini-games + "Full Test" that chains them. | `docs/zapn.md` |
-| `sequences.html` | 2101 | **Sequences**: 51 sequence generators; Practice mode + 26-question timed Test. | `docs/sequences.md` |
-| `arithmetic.html` | 1261 | **Arithmetic**: 80 questions / 8 min, multiple-choice or free-response. | `docs/arithmetic.md` |
-| `docs/ISSUES.md` | | Known dead code, inconsistencies, and refactor opportunities (with locations). | |
+```
+index.html            landing page (3 cards)                                   → docs/shared.md
+shared.css            design tokens + components used by every page            → docs/shared.md
+js/common.js          helpers shared by the 3 suite pages (111 lines)          → docs/shared.md
+zapn.html             Zap-N: 9 cognitive mini-games + Full Test                → docs/zapn.md
+  css/zapn.css          page CSS (one banner per game)
+  js/zapn/              core, one file per game, test (Full Test), skyscraper-gen, registry
+sequences.html        Sequences: 51 generators, Practice + 26-question Test   → docs/sequences.md
+  css/sequences.css
+  js/sequences/         core, generators-*.js (4), questions, practice, test, registry
+arithmetic.html       Arithmetic: 80 questions / 8 min, multiple choice or free response → docs/arithmetic.md
+  css/arithmetic.css
+  js/arithmetic/        core, questions, answers, run-test, registry
+tests/                skyscraper-gen.test.js (node, no deps)
+docs/ISSUES.md        remaining cleanup ideas + log of what was changed and why
+```
 
-## Architecture (identical in all three suite pages)
+Each suite `*.html` is a ~50-line skeleton: head + header + `#dashboard` + `#game-screen` + `<script src>` tags.
 
-Each suite page is one self-contained file: `<style>` (page-specific CSS) → HTML skeleton → one big `<script>`.
+## Architecture (same on all three suite pages)
 
-- Skeleton: `#dashboard` (grid of game cards) and `#game-screen` (`#gs-name`, `#gs-stats`, `#game-panel`). Only one is visible at a time.
-- A registry array (`GAMES` / `SEQ_GAMES` / `ARITH_GAMES`) of `{id, title, icon, tag, desc, meta, start}` drives the dashboard cards. `launchGame(id)` hides the dashboard and calls `start()`.
-- Each game is a function `startX()` whose state lives in its closure and which renders by `setPanel(html)` / `setStats(html)` (innerHTML replacement). Handlers are exposed on `window.*` because the markup uses inline `onclick=`.
-- **Generation guard**: global `_gen` counter + `const g = myGen(); const alive = () => myGen() === g;`. `showDashboard()` / `launchGame()` bump `_gen`; every timer/callback in a game must check `alive()` so abandoned games go silent. Always keep this pattern.
-- **Scores** live in `localStorage` as `{ id: { v: number, label: string } }`, best-only:
+- **Script order matters** (classic scripts sharing globals): `js/common.js` → `core.js` → feature files (games / generators / engine) → **`registry.js` last**. The registry builds the game list with `start: startX` references and calls `renderDashboard()`, so everything it references must already be loaded. A new file must be added to the page's `<script>` list before `registry.js`.
+- **Registry** (`GAMES` / `SEQ_GAMES` / `ARITH_GAMES`): `{id, title, icon, tag, desc, meta[], start}` per game; drives dashboard cards. `launchGame(id)` → `openGame()` hides the dashboard and calls `start()`.
+- **A game** is a function `startX()` with its state in a closure. It renders via `setPanel(html, top?)` / `setStats(html)` (innerHTML replacement). Inline `onclick=` handlers are exposed as `window.*`.
+- **Generation guard (always keep it):** `const g = myGen(); const alive = () => myGen() === g;` and check `alive()` at the top of every timer/callback. `openGame()`/`closeGame()` bump `_gen`, silencing abandoned games.
+- **Scores:** `createScoreStore(key, {lowerBetter?, onSave?})` in `common.js`; best-only; entries `{v:number, label:string}` in localStorage:
 
-  | Page | localStorage key | Better = |
+  | Page | localStorage key | Better |
   |---|---|---|
-  | zapn | `me_scores` | per-game; `LOWER_BETTER` set in `zapn.html` |
+  | zapn | `me_scores` | higher, except ids in `LOWER_BETTER` (`js/zapn/core.js`) |
   | sequences | `me_seq_scores` | higher |
   | arithmetic | `me_arith_scores` | higher |
 
-- Helpers (`rand`, `setStats`, `setPanel`, `_gen`, score storage, dashboard rendering, `gcd`) are **copy-pasted per page**, not shared. A fix in one usually needs applying to the others (see `docs/ISSUES.md`).
+- **Shared random helpers** in `common.js`: `rand(a,b)`, `randChoice(arr)`, `shuffle(arr)` (Fisher–Yates). Never shuffle with `sort(() => Math.random() - .5)` (biased).
 
 ## Common tasks
 
-- **Add a suite page**: copy the skeleton of the smallest page, add `<a class="category-btn">` in `index.html` (a commented template is at the bottom of `.category-list`), pick a new `me_*_scores` key.
-- **Add a game/question type**: see "Adding …" in the page's doc; each has a checklist of the 2–4 places that must be touched.
-- **Change colours/fonts/spacing**: `:root` variables in `shared.css`; page CSS uses them via `var(--…)`.
-- **Verify**: open the page in a browser (or `python3 -m http.server`) and play the changed game; there are no automated tests. Check the console for errors.
+| Task | Where |
+|---|---|
+| Add/change a Zap-N game | `docs/zapn.md` → "Adding a game" |
+| Add a sequence type | `docs/sequences.md` → "Adding a sequence type" |
+| Add an arithmetic question type | `docs/arithmetic.md` → "Adding a question type" |
+| Add a suite page | copy a suite skeleton (e.g. `arithmetic.html`), add a card in `index.html` (template comment at the bottom of `.category-list`), new `me_*_scores` key |
+| Colours, fonts, spacing | `:root` variables in `shared.css`; page CSS uses `var(--…)` |
+
+## Verify
+
+- `node tests/skyscraper-gen.test.js` checks the Skyscraper generator against an independent BFS (~10 s).
+- Everything else is manual: `python3 -m http.server`, open the page, play the changed game, check the console. (A jsdom smoke/differential harness was used for the refactor; it is not committed. See `docs/ISSUES.md`.)
 
 ## Keeping docs current
 
-When you add/remove a game, generator, or section, update the matching `docs/*.md` table and the counts in `index.html` card text. If you move code a lot, refresh line numbers with the `grep` anchors listed in each doc.
+When you add or remove a game, generator, question type or file: update the matching `docs/*.md`, the layout above if files move, and the static count text in `index.html` cards (the Sequences count on the dashboard card is computed; the one on `index.html` is hard-coded).
