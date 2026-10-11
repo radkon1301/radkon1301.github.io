@@ -1,43 +1,37 @@
-# sequences.html — Sequences (2101 lines)
+# sequences.html — Sequences
 
-Two modes: **Practice** (endless, unscored, live "Correct x/y") and **Test** (26 questions, 25 min, free navigation, scored). Shared page architecture is in `README.md`. Line numbers are approximate.
+Two modes: **Practice** (endless, unscored, live "Correct x/y") and **Test** (26 questions, 25 min, free navigation, scored). Shared architecture: `README.md`. Skeleton: `sequences.html` (53 lines). CSS: `css/sequences.css` (382 lines: practice styles first, then test styles; `grep -n '^/\* ──' css/sequences.css`).
 
-## Section map
+## Files (`js/sequences/`, load order as in `sequences.html`)
 
-| Lines | Section | Anchor |
+| File | Lines | Contents |
 |---|---|---|
-| 8–404 | `<style>`: dashboard 9, practice 22, test 245 | `grep -n '^/\* ──' sequences.html` |
-| 406–436 | Body: `#dashboard` (`#seq-games-grid`), `#game-screen` | |
-| 442–461 | `SEQ_GAMES` registry (`seq-practice`, `seq-test`) | |
-| 463–485 | Score storage: key `me_seq_scores`, `saveSeqScore`, `getSeqScoreLabel` (higher is better) | |
-| 488–530 | `_gen`/`myGen`, `showDashboard`, `launchGame`, `renderDashboard`, `setStats`, `setPanel`, `rand` | |
-| 532–559 | Generator contract + helpers: `isPrime`, `getPrimes`, `gcd`, `fmtFrac`, `fmtDec` | |
-| 561–1514 | **51 generators `genXxx()`**, grouped by category banners | `grep -n 'CATEGORY' sequences.html` |
-| 1517–1547 | `SEQUENCE_GENERATORS` master list (practice pool) | |
-| 1550–1578 | `generateQuestion()`: retry + sanity filter | |
-| 1581–1658 | `makeDistractors(answerStr, terms)` | |
-| 1663–1765 | `startSeqPractice` | |
-| 1769–2095 | `startSeqTest` (tier lists at ≈1778, `pickDiverse`, timer, navigation, submit ≈1975, results/review) | |
-| 2097 | `renderDashboard();` init | |
+| `core.js` | 14 | score store wrappers (`saveSeqScore`, `getSeqScoreLabel`, `seqScores`), `showDashboard`, `launchGame`, `renderDashboard` |
+| `generators-basic.js` | 370 | helpers (`isPrime`, `getPrimes`, `gcd`, `fmtFrac`, `fmtDec`) + categories **A** arithmetic & polynomial, **B** geometric & multiplicative, **C** prime-based |
+| `generators-recursive.js` | 208 | **D** recursive / multi-term, **E** interleaved / positional, **F** digit-based |
+| `generators-fraction-decimal.js` | 202 | **G** fractions, **H** decimals |
+| `generators-mixed.js` | 212 | **I** mixed / creative, then "EXTRA NEW TYPES" (extra generators for A, B, G, H, I) |
+| `questions.js` | 146 | `SEQUENCE_GENERATORS` master list, `generateQuestion()` (retry + sanity filter), `makeDistractors()` |
+| `practice.js` | 107 | `startSeqPractice` |
+| `test.js` | 333 | `startSeqTest`: tier lists (`easyGens`/`mediumGens`/`hardGens`), `pickDiverse`, timer, navigation, `window.submitTest`, results/review |
+| `registry.js` | 32 | `SEQ_TYPE_COUNT` (derived), `SEQ_GAMES`, starters, `renderDashboard()` init. **Loaded last.** |
 
-## Generator categories (line of banner)
-
-A Arithmetic & polynomial (561) · B Geometric & multiplicative (732) · C Prime-based (840) · D Recursive / multi-term (900) · E Interleaved / positional (979) · F Digit-based (1035) · G Fractions (1106) · H Decimals (1243) · I Mixed / creative (1306) + "EXTRA NEW TYPES" (1412–1514, appended to categories A, B, G, H, I in the master list).
+Find a generator: `grep -n 'function genFoo' js/sequences/*.js`. List categories: `grep -n 'CATEGORY' js/sequences/*.js`.
 
 ## Contracts
 
-- A generator returns `{ terms: [...shown...], answer, explanation: HTML string, typeName }`. `terms` excludes the blank; `answer` is the next value. Fractions are strings `"n/d"`; numbers are numbers.
-- **Answers are compared as strings** (`String(q.answer)`), so format must be canonical (e.g. reduced fractions via `fmtFrac`, decimals via `fmtDec`).
-- `generateQuestion` rejects: fewer than 4 terms, missing answer, |answer| > 99999, any fraction term with |n| or |d| ≥ 9999, non-finite values. Falls back to `genArithmetic`.
-- Scoring (test only): `correct − incorrect`, skips free; saved under id `seq-test`. Practice saves nothing.
+- Generator: `genXxx() → { terms: [...shown...], answer, explanation: HTML string, typeName }`. `terms` excludes the blank; `answer` is the next value. Fractions are `"n/d"` strings; numbers are numbers.
+- **Answers are compared as strings** (`String(q.answer)`), so format must be canonical (reduced fractions via `fmtFrac`, decimals via `fmtDec`).
+- `generateQuestion` rejects: fewer than 4 terms, missing answer, |answer| > 99999, any fraction term with |n| or |d| ≥ 9999, non-finite values; retries; falls back to `genArithmetic`.
+- Scoring (Test only): `correct − incorrect`, skips are free; saved under `seq-test` (`seqScores['seq-test']` is read before saving to show "new best"). Practice saves nothing.
 
 ## Test composition
 
-`startSeqTest` builds 26 questions: 8 from `easyGens`, 10 from `mediumGens`, 8 from `hardGens` (`pickDiverse` shuffles each pool and takes distinct generators), then shuffles all. Tier lists contain each of the 51 generators exactly once.
+`startSeqTest` builds 26 questions: 8 from `easyGens`, 10 from `mediumGens`, 8 from `hardGens` (`pickDiverse` shuffles a pool and takes distinct generators), then shuffles all (Fisher–Yates). Each of the 51 generators appears in exactly one tier list. `TOTAL = 26`, `TIME_LIMIT = 25*60` at the top of `startSeqTest`.
 
 ## Adding a sequence type (checklist)
 
-1. Write `function genFoo(){ … return {terms, answer, typeName, explanation}; }` in the right category.
-2. Add it to `SEQUENCE_GENERATORS` (≈1517). Repeat an entry to weight it (`genArithmetic` appears twice).
-3. **Also add it to exactly one of `easyGens` / `mediumGens` / `hardGens` in `startSeqTest` (≈1778)** or it will never appear in the Test.
-4. Update counts: `index.html` card ("50 sequence types"), `SEQ_GAMES` practice `desc`/`meta`, and this doc.
+1. Write `function genFoo(){ … return {terms, answer, typeName, explanation}; }` in the right `generators-*.js` file (all four load before `questions.js`).
+2. Add it to `SEQUENCE_GENERATORS` (`questions.js`). Repeat an entry to weight it (`genArithmetic` appears twice; `SEQ_TYPE_COUNT` counts distinct functions).
+3. **Also add it to exactly one of `easyGens` / `mediumGens` / `hardGens` in `test.js`**, or it never appears in the Test.
+4. Update the hard-coded "51 sequence types" in `index.html` and this doc (the dashboard card count is computed).
