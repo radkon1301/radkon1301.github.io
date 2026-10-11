@@ -92,19 +92,24 @@ function startSkyscraper(){
     // 7 stacked blocks so the layout never changes height between levels.
     panel.className='game-panel wide top sky-panel';
     panel.innerHTML=`<div class="sky-wrap">
-      <div class="sky-target-label">Target pattern — level ${levelIdx+1} of ${TOTAL_LEVELS}</div>
-      <div class="sky-target-area">
-        <div class="sky-piles-row target">
-          ${renderPilesHTML(targetPiles,true,null)}
+      <div class="sky-target-col">
+        <div class="sky-target-label">Target — level ${levelIdx+1} of ${TOTAL_LEVELS}</div>
+        <div class="sky-target-area">
+          <div class="sky-piles-row target">
+            ${renderPilesHTML(targetPiles,true,null)}
+          </div>
         </div>
       </div>
-      <div class="sky-game-area" id="sky-game">
-        <div class="sky-piles-row play" id="sky-piles">
-          ${renderPilesHTML(piles,false,selected)}
-        </div>
-        <div class="sky-info-row">
-          <div class="sky-move-count">Moves: <span id="sky-mv2">${moves}</span></div>
-          <div class="sky-status" id="sky-status">${selected===null?'Click a pile to pick up':'Click destination pile'}</div>
+      <div class="sky-play-col">
+        <div class="sky-target-label">Your board</div>
+        <div class="sky-game-area" id="sky-game">
+          <div class="sky-piles-row play" id="sky-piles">
+            ${renderPilesHTML(piles,false,selected)}
+          </div>
+          <div class="sky-info-row">
+            <div class="sky-move-count">Moves: <span id="sky-mv2">${moves}</span></div>
+            <div class="sky-status" id="sky-status">${selected===null?'Click a pile to pick up':'Click destination pile'}</div>
+          </div>
         </div>
       </div>
     </div>`;
@@ -237,7 +242,7 @@ function startSkyscraper(){
   setStats('');
   setPanel(`<div class="start-card">
     <h3>Skyscraper</h3>
-    <p>Rearrange coloured blocks across three piles to match the target pattern shown above the game area. Click a pile to pick up its top block, then click another pile to place it. 10 levels, 4 to 7 blocks — score is average moves over the optimal solution.</p>
+    <p>Rearrange coloured blocks across three piles to match the target pattern shown beside the game area. Click a pile to pick up its top block, then click another pile to place it. 10 levels, 4 to 7 blocks — score is average moves over the optimal solution.</p>
     <button class="big-btn" onclick="skyGo()">Begin</button>
   </div>`);
   window.skyGo=()=>{if(!alive())return;levelIdx=0;overPars=[];times=[];optimals=[];userMoves=[];newLevel();};

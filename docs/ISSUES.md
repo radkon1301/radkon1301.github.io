@@ -12,6 +12,8 @@
 
 ## Change log (what was done and why)
 
+Skyscraper layout pass 2 (`fix/skyscraper-side-by-side`): the first fit (smaller padding, viewport-scaled blocks) still stacked target above play area (~14 blocks of height) and needed ~850px of viewport, so real windows (browser bar + taskbar + display scaling) still scrolled. Now target and play area are side by side on wide screens (~7 blocks of height, ~400px at max size); stacked only on narrow screens.
+
 Skyscraper pass (`fix/skyscraper-fit-and-instant-levels`):
 
 - ◆ **Fits a 1920×1080 screen without scrolling.** Sizes moved from inline JS pixels (7 blocks × 58px + 7 × 42px + 64px of padding ≈ 1050px of game) to CSS driven by `--sk-h`, which scales with viewport height (max 50px). Tighter padding/margins on the Skyscraper panel only.
