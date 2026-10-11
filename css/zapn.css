@@ -1,22 +1,30 @@
 /* ── SKYSCRAPER ── */
-.sky-wrap { width:100%; display:flex; flex-direction:column; gap:0; }
-.sky-target-label { font-size:.68rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--accent); margin-bottom:6px; text-align:center; }
-.sky-target-area { width:100%; background:linear-gradient(135deg,#1a1e3a 0%,#2a3060 100%); border-radius:12px 12px 0 0; border:1px solid #3a4070; border-bottom:2px solid #4a50a0; padding:14px 0 10px; }
-.sky-game-area { width:100%; background:linear-gradient(180deg,#1e2245 0%,#16193a 100%); border-radius:0 0 12px 12px; border:1px solid #3a4070; border-top:none; padding:16px 0 14px; cursor:pointer; position:relative; }
-.sky-piles-row { display:flex; justify-content:space-around; align-items:stretch; padding:0 10px; }
+/* Everything is sized from --sk-h (block height), which scales with viewport height so the whole game
+   (target + play area, up to 7 stacked blocks each) fits without scrolling: ~50px at 1080p, shrinking on short windows.
+   Budget: ≈ 304px chrome + 12·--sk-h  ≤ 100vh  →  --sk-h = (100vh − 320px) / 12, clamped to 22–50px. */
+.game-wrap:has(.sky-panel) { padding:12px 20px; }
+.game-panel.sky-panel { padding:12px 20px; min-height:0; }
+.sky-wrap { --sk-h:50px; --sk-h:clamp(22px, calc((100vh - 320px) / 12), 50px); --sk-h:clamp(22px, calc((100dvh - 320px) / 12), 50px);
+  --sk-mh:calc(var(--sk-h) * .66); width:100%; display:flex; flex-direction:column; gap:0; }
+.sky-target-label { font-size:.68rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--accent); margin-bottom:4px; text-align:center; }
+.sky-target-area { width:100%; background:linear-gradient(135deg,#1a1e3a 0%,#2a3060 100%); border-radius:12px 12px 0 0; border:1px solid #3a4070; border-bottom:2px solid #4a50a0; padding:8px 0 6px; }
+.sky-game-area { width:100%; background:linear-gradient(180deg,#1e2245 0%,#16193a 100%); border-radius:0 0 12px 12px; border:1px solid #3a4070; border-top:none; padding:12px 0 8px; cursor:pointer; position:relative; }
+.sky-piles-row { display:flex; justify-content:space-around; align-items:flex-end; padding:0 10px; }
+.sky-piles-row.target { min-height:calc(7 * (var(--sk-mh) + 4px) + 12px); }
+.sky-piles-row.play   { min-height:calc(7 * (var(--sk-h) + 4px) + 12px); align-items:stretch; }
 .sky-pile-col { display:flex; flex-direction:column; align-items:center; gap:0; flex:1; padding:0 8px; height:100%; justify-content:flex-end; }
-.sky-base { width:96px; height:10px; background:#4a4a7a; border-radius:3px; margin-top:2px; border:1px solid #6a6aaa; }
-.sky-block { width:84px; height:52px; border-radius:7px; display:flex; align-items:center; justify-content:center; margin:3px 0; transition:transform .12s,box-shadow .12s; user-select:none; position:relative; }
-.sky-block::after { content:''; position:absolute; top:4px; left:8px; right:8px; height:6px; border-radius:3px; background:rgba(255,255,255,.22); pointer-events:none; }
-.sky-block.mini { width:62px; height:36px; border-radius:5px; margin:2px 0; }
-.sky-block.mini::after { top:3px; left:6px; right:6px; height:4px; }
-.sky-pile-slot { width:84px; min-height:52px; }
-.sky-pile-slot.mini { width:62px; min-height:36px; }
+.sky-base { width:calc(var(--sk-h) * 1.85); height:8px; background:#4a4a7a; border-radius:3px; margin-top:2px; border:1px solid #6a6aaa; box-sizing:border-box; }
+.sky-block { width:calc(var(--sk-h) * 1.62); height:var(--sk-h); border-radius:7px; display:flex; align-items:center; justify-content:center; margin:2px 0; box-sizing:border-box; transition:transform .12s,box-shadow .12s; user-select:none; position:relative; }
+.sky-block::after { content:''; position:absolute; top:4px; left:8px; right:8px; height:5px; border-radius:3px; background:rgba(255,255,255,.22); pointer-events:none; }
+.sky-block.mini { width:calc(var(--sk-mh) * 1.7); height:var(--sk-mh); border-radius:5px; margin:2px 0; }
+.sky-block.mini::after { top:3px; left:6px; right:6px; height:3px; }
+.sky-pile-slot { width:calc(var(--sk-h) * 1.62); height:var(--sk-h); margin:2px 0; }
+.sky-pile-slot.mini { width:calc(var(--sk-mh) * 1.7); height:var(--sk-mh); }
 .sky-selected-pile { outline:2px dashed #e94560; outline-offset:4px; border-radius:8px; }
 .sky-floating { animation:skyFloat .5s ease-in-out infinite alternate; }
 @keyframes skyFloat { from{transform:translateY(0)} to{transform:translateY(-5px)} }
-.sky-status { font-family:'DM Mono',monospace; font-size:.72rem; color:rgba(255,255,255,.5); text-align:center; padding:8px 0 4px; min-height:22px; }
-.sky-info-row { display:flex; justify-content:space-between; align-items:center; padding:10px 24px 0; }
+.sky-status { font-family:'DM Mono',monospace; font-size:.72rem; color:rgba(255,255,255,.5); text-align:center; padding:2px 0; min-height:20px; }
+.sky-info-row { display:flex; justify-content:space-between; align-items:center; padding:6px 24px 0; }
 .sky-move-count { font-family:'DM Mono',monospace; font-size:.75rem; color:rgba(255,255,255,.6); }
 .sky-win-overlay { position:absolute; inset:0; background:rgba(20,24,60,.92); border-radius:0 0 12px 12px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; cursor:pointer; z-index:10; }
 .sky-win-title { font-family:'Instrument Serif',serif; font-size:1.8rem; color:#e8bc30; }

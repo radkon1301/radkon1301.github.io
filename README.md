@@ -14,7 +14,7 @@ shared.css            design tokens + components used by every page            �
 js/common.js          helpers shared by the 3 suite pages (111 lines)          → docs/shared.md
 zapn.html             Zap-N: 9 cognitive mini-games + Full Test                → docs/zapn.md
   css/zapn.css          page CSS (one banner per game)
-  js/zapn/              core, one file per game, test (Full Test), skyscraper-gen, registry
+  js/zapn/              core, one file per game, test (Full Test), skyscraper-bank (generated), skyscraper-gen, registry
 sequences.html        Sequences: 51 generators, Practice + 26-question Test   → docs/sequences.md
   css/sequences.css
   js/sequences/         core, generators-*.js (4), questions, practice, test, registry
@@ -22,6 +22,7 @@ arithmetic.html       Arithmetic: 80 questions / 8 min, multiple choice or free 
   css/arithmetic.css
   js/arithmetic/        core, questions, answers, run-test, registry
 tests/                skyscraper-gen.test.js (node, no deps)
+tools/                gen-skyscraper-bank.js (offline builder for the puzzle bank)
 docs/ISSUES.md        remaining cleanup ideas + log of what was changed and why
 ```
 
@@ -55,7 +56,7 @@ Each suite `*.html` is a ~50-line skeleton: head + header + `#dashboard` + `#gam
 
 ## Verify
 
-- `node tests/skyscraper-gen.test.js` checks the Skyscraper generator against an independent BFS (~10 s).
+- `node tests/skyscraper-gen.test.js` checks the Skyscraper generator and every stored puzzle against independent BFS solvers (~30 s).
 - Everything else is manual: `python3 -m http.server`, open the page, play the changed game, check the console. (A jsdom smoke/differential harness was used for the refactor; it is not committed. See `docs/ISSUES.md`.)
 
 ## Keeping docs current

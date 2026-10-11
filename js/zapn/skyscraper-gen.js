@@ -154,3 +154,16 @@ function skyGeneratePuzzle(n, minOpt, rng) {
   }
   return fallback;                                    // optimal < minOpt, but still a valid, correctly measured puzzle
 }
+
+// ── Runtime path (no search): turn one stored puzzle into a fresh-looking one ──────────────────────────
+// `entry` is [startStr, targetStr, optimal] from SKY_BANK (see skyscraper-bank.js). Relabelling the blocks and
+// permuting the piles (the same way for start and target) never changes the minimum number of moves, so
+// `optimal` stays exact. Cost: microseconds. Does NOT swap start/target (that could break the target-shape rule).
+function skyPuzzleFromBank(entry, n, rng) {
+  rng = rng || Math.random;
+  const dec = s => s.split('|').map(x => [...x].map(Number));
+  const label = skyShuffle([...Array(n).keys()], rng);     // block id -> new block id
+  const order = skyShuffle([0, 1, 2], rng);                // new pile i = old pile order[i]
+  const map = p => order.map(i => p[i].map(b => label[b]));
+  return { start: map(dec(entry[0])), target: map(dec(entry[1])), optimal: entry[2] };
+}
