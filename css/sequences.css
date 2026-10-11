@@ -1,16 +1,3 @@
-/* ── SEQUENCES DASHBOARD ── */
-.seq-dash-header {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 0 40px;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.seq-dash-logo { font-family: 'Instrument Serif', serif; font-size: 1.4rem; color: var(--text); }
-.seq-dash-logo span { color: var(--accent); font-style: italic; }
-
 /* ── PRACTICE GAME STYLES ── */
 .seq-wrap {
   width: 100%;

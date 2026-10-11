@@ -1,12 +1,12 @@
 // js/zapn/test.js — Full Test runner: all games back-to-back.
-// Moved verbatim from zapn.html. Docs: docs/zapn.md
+// Docs: docs/zapn.md
 
 // ══════════════════════════════════════════════════════
-//  FULL TEST — runs all 8 games in random order
+//  FULL TEST — runs all 9 games in random order
 // ══════════════════════════════════════════════════════
 function startTest(){
   const TEST_IDS=['shapeshift','codecompare','pincode','numberbox','figureitout','theswitch','stockmaster','bart','skyscraper'];
-  const order=[...TEST_IDS].sort(()=>Math.random()-.5);
+  const order=shuffle([...TEST_IDS]);
   let idx=0;
   const testScores={};
 
@@ -23,8 +23,8 @@ function startTest(){
     g.start();
   };
 
-  window._testSaveHook=function(id,v,label){
-    testScores[id]={v,label:label||String(v)};
+  window._testSaveHook=function(id,v,label,isNewBest){
+    testScores[id]={v,label:label||String(v),isNewBest:!!isNewBest};
   };
 
   function showTestResults(){
@@ -39,7 +39,7 @@ function startTest(){
       const ts=testScores[id];
       const best=getScoreLabel(id);
       const tsLabel=ts?ts.label:'—';
-      const isNewBest=ts&&best&&ts.label===best;
+      const isNewBest=!!(ts&&ts.isNewBest);
       return`<tr>
         <td style="padding:10px 14px;font-weight:600">${g.icon} ${g.title}</td>
         <td style="padding:10px 14px;font-family:'DM Mono',monospace;font-size:.85rem">${tsLabel}</td>

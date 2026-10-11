@@ -1,5 +1,5 @@
 // js/zapn/registry.js — Game registry (GAMES) and page init. Loaded LAST.
-// Moved verbatim from zapn.html. Docs: docs/zapn.md
+// Docs: docs/zapn.md
 
 // ══════════════════════════════════════════════════════
 //  GAME REGISTRY — add entries here to add new games

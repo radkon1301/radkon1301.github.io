@@ -1,5 +1,5 @@
 // js/sequences/core.js — Sequences page core: score store and navigation.
-// Shared helpers (_gen/myGen, rand, setStats, setPanel, createScoreStore, renderGameCards,
+// Docs: docs/sequences.md
 // openGame/closeGame) are in js/common.js. Docs: docs/sequences.md
 
 // ── score storage (key me_seq_scores; higher is better) ──

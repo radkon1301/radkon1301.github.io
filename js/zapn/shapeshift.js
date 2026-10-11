@@ -1,5 +1,5 @@
 // js/zapn/shapeshift.js — Game 1: ShapeShift (reaction).
-// Moved verbatim from zapn.html. Docs: docs/zapn.md
+// Docs: docs/zapn.md
 
 // ══════════════════════════════════════════════════════
 //  GAME 1 · SHAPESHIFT

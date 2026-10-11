@@ -1,5 +1,5 @@
 // js/sequences/generators-recursive.js — Categories D (recursive), E (interleaved), F (digit-based).
-// Moved verbatim from sequences.html. Docs: docs/sequences.md
+// Docs: docs/sequences.md
 
 // ════════════════════════════════════════════════════
 //  CATEGORY D — RECURSIVE / MULTI-TERM

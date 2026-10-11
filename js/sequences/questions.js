@@ -1,5 +1,5 @@
 // js/sequences/questions.js — SEQUENCE_GENERATORS master list, generateQuestion(), makeDistractors().
-// Moved verbatim from sequences.html. Docs: docs/sequences.md
+// Docs: docs/sequences.md
 
 // ── MASTER LIST ──
 const SEQUENCE_GENERATORS = [

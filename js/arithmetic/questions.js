@@ -1,5 +1,5 @@
 // js/arithmetic/questions.js — Fraction helpers, question generators (q*), generateAllQuestions().
-// Moved verbatim from arithmetic.html. Docs: docs/arithmetic.md
+// Docs: docs/arithmetic.md
 
 // ══════════════════════════════════════════════════════
 //  QUESTION GENERATOR
@@ -8,7 +8,7 @@
 // All questions return:
 // { question: string, answer: Fraction, explanation: string, type: string }
 // Fraction = { n: number, d: number } — always in lowest terms, d >= 1
-// displayAnswer() for showing, equals(userInput) for checking
+// answerDisplay(f, mode) (answers.js) for showing, fracEqual(a, b) for checking
 
 function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while(b) { [a,b]=[b,a%b]; } return a||1; }
 function makeFrac(n, d) {
@@ -52,9 +52,7 @@ function fracEqual(a, b) {
   return a.n * b.d === b.n * a.d;
 }
 
-// Difficulty tiers: 0=easy, 1=medium, 2=hard
-// 80 questions: 20 easy, 35 medium, 25 hard
-const TIER_COUNTS = [20, 35, 25];
+// Difficulty tiers: 0=easy, 1=medium, 2=hard. The real split (10/35/35 = 80) is `tierCounts` in generateAllQuestions().
 
 // ── Question type generators ──
 

@@ -1,5 +1,5 @@
 // js/sequences/generators-mixed.js — Category I (mixed/creative) + extra types.
-// Moved verbatim from sequences.html. Docs: docs/sequences.md
+// Docs: docs/sequences.md
 
 // ════════════════════════════════════════════════════
 //  CATEGORY I — MIXED / CREATIVE

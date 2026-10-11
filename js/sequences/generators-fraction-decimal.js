@@ -1,5 +1,5 @@
 // js/sequences/generators-fraction-decimal.js — Categories G (fractions), H (decimals).
-// Moved verbatim from sequences.html. Docs: docs/sequences.md
+// Docs: docs/sequences.md
 
 // ════════════════════════════════════════════════════
 //  CATEGORY G — FRACTION SEQUENCES

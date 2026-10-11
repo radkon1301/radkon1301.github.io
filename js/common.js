@@ -35,7 +35,8 @@ function setPanel(html, top) {
 // ── personal-best score store ──
 // Persists { gameId: { v: number, label: string } } in localStorage under storageKey.
 // Higher v is better unless the id is in opts.lowerBetter (a Set). opts.onSave(id, v, label)
-// runs on EVERY save, even when it is not a new best (zapn Full Test uses it).
+// runs on EVERY save, even when it is not a new best (zapn Full Test uses it); its 4th arg is
+// true only when the value strictly beat the previous best (or there was none). save() returns the same flag.
 // Malformed stored entries are dropped; if nothing valid remains the key is removed.
 function createScoreStore(storageKey, opts) {
   const lowerBetter = (opts && opts.lowerBetter) || new Set();
@@ -65,7 +66,8 @@ function createScoreStore(storageKey, opts) {
         scores[id] = { v, label: lbl };
         try { localStorage.setItem(storageKey, JSON.stringify(scores)); } catch (e) {}
       }
-      if (onSave) onSave(id, v, lbl);
+      if (onSave) onSave(id, v, lbl, better);
+      return better;
     },
     label(id) {
       const s = scores[id];

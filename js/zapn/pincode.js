@@ -1,5 +1,5 @@
 // js/zapn/pincode.js — Game 3: PinCode (memory).
-// Moved verbatim from zapn.html. Docs: docs/zapn.md
+// Docs: docs/zapn.md
 
 // ══════════════════════════════════════════════════════
 //  GAME 3 · PINCODE

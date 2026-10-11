@@ -1,5 +1,5 @@
 // js/zapn/skyscraper.js — Game 9: Skyscraper (planning).
-// Moved verbatim from zapn.html. Docs: docs/zapn.md
+// Docs: docs/zapn.md
 
 // ══════════════════════════════════════════════════════
 //  GAME 9 · SKYSCRAPER — block rearrangement puzzle

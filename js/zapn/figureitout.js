@@ -1,5 +1,5 @@
 // js/zapn/figureitout.js — Game 5: FigureItOut (logic).
-// Moved verbatim from zapn.html. Docs: docs/zapn.md
+// Docs: docs/zapn.md
 
 // ══════════════════════════════════════════════════════
 //  GAME 5 · FIGUREITOUT

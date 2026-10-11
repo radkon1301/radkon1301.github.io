@@ -1,5 +1,5 @@
 // js/zapn/codecompare.js — Game 2: CodeCompare (attention).
-// Moved verbatim from zapn.html. Docs: docs/zapn.md
+// Docs: docs/zapn.md
 
 // ══════════════════════════════════════════════════════
 //  GAME 2 · CODECOMPARE

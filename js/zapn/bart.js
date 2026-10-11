@@ -1,5 +1,5 @@
 // js/zapn/bart.js — Game 8: BART (risk).
-// Moved verbatim from zapn.html. Docs: docs/zapn.md
+// Docs: docs/zapn.md
 
 // ══════════════════════════════════════════════════════
 //  GAME 8 · BART — Balloon Analogue Risk Task
@@ -27,7 +27,7 @@ function startBART(){
   let BALLOON_DEFS=[];
   function jitter(v,a=0.01){return Math.max(0.005,v+(Math.random()*2-1)*a);}
   function assignRisks(){
-    const tiers=[...RISK_TIERS].sort(()=>Math.random()-.5);
+    const tiers=shuffle([...RISK_TIERS]);
     BALLOON_DEFS=BALLOON_COLORS.map((c,i)=>({...c,popBase:jitter(tiers[i].popBase,.01),popGrowth:jitter(tiers[i].popGrowth,.01)}));
   }
 
@@ -45,14 +45,12 @@ function startBART(){
     // Assign counts: base for all, then randomly distribute extras
     const counts=BALLOON_DEFS.map(()=>base);
     // Pick 'extra' distinct indices at random to get +1
-    const indices=[...Array(n).keys()].sort(()=>Math.random()-.5).slice(0,extra);
+    const indices=shuffle([...Array(n).keys()]).slice(0,extra);
     indices.forEach(i=>{counts[i]++;});
     // Build pool and shuffle
     const pool=[];
     BALLOON_DEFS.forEach((d,i)=>{for(let j=0;j<counts[i];j++)pool.push(d);});
-    // Fisher-Yates shuffle
-    for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
-    return pool;
+    return shuffle(pool);
   }
 
   function resetBART(){

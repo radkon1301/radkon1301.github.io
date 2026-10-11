@@ -1,5 +1,5 @@
 // js/arithmetic/answers.js — Multiple-choice distractors and answer/question display helpers.
-// Moved verbatim from arithmetic.html. Docs: docs/arithmetic.md
+// Docs: docs/arithmetic.md
 
 // ── DISTRACTOR GENERATION ──
 // Generate 4 wrong answers that are plausible but wrong

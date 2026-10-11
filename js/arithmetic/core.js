@@ -1,5 +1,5 @@
 // js/arithmetic/core.js — Arithmetic page core: score store and navigation.
-// Shared helpers (_gen/myGen, rand, randChoice, shuffle, setStats, setPanel, createScoreStore,
+// Docs: docs/arithmetic.md
 // renderGameCards, openGame/closeGame) are in js/common.js. Docs: docs/arithmetic.md
 
 // ── score storage (key me_arith_scores; higher is better) ──

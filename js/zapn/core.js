@@ -1,5 +1,5 @@
 // js/zapn/core.js — Zap-N page core: score store, navigation, key handling, Full Test hook.
-// Shared helpers (_gen/myGen, rand, setStats, setPanel, createScoreStore, renderGameCards,
+// Docs: docs/zapn.md
 // openGame/closeGame) are in js/common.js. Docs: docs/zapn.md
 
 // ── scores (key me_scores) ──
@@ -9,10 +9,10 @@ const LOWER_BETTER=new Set(['shapeshift','numberbox','figureitout','theswitch','
 const scoreStore=createScoreStore('me_scores',{
   lowerBetter:LOWER_BETTER,
   // Test mode: always capture this run's score regardless of whether it's a best
-  onSave:(id,v,label)=>{if(window._testSaveHook)window._testSaveHook(id,v,label);}
+  onSave:(id,v,label,isNewBest)=>{if(window._testSaveHook)window._testSaveHook(id,v,label,isNewBest);}
 });
 const scores=scoreStore.scores;
-function saveScore(id,v,label){scoreStore.save(id,v,label);}
+function saveScore(id,v,label){return scoreStore.save(id,v,label);}
 function getScoreLabel(id){return scoreStore.label(id);}
 
 // ── Full Test state (set by startTest in test.js; must be cleared whenever a game is left) ──

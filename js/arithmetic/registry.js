@@ -1,5 +1,5 @@
 // js/arithmetic/registry.js — Game registry (ARITH_GAMES), starters and page init. Loaded LAST.
-// Moved verbatim from arithmetic.html. Docs: docs/arithmetic.md
+// Docs: docs/arithmetic.md
 
 // ══════════════════════════════════════════════════════
 //  ARITHMETIC — GAME REGISTRY

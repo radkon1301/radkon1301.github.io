@@ -1,5 +1,5 @@
 // js/sequences/generators-basic.js — Generator helpers + categories A (arithmetic/polynomial), B (geometric), C (prime-based).
-// Moved verbatim from sequences.html. Docs: docs/sequences.md
+// Docs: docs/sequences.md
 
 // ══════════════════════════════════════════════════════
 //  SEQUENCE GENERATORS

@@ -1,5 +1,5 @@
 // js/zapn/stockmaster.js — Game 7: Stock Master (timing).
-// Moved verbatim from zapn.html. Docs: docs/zapn.md
+// Docs: docs/zapn.md
 
 // ══════════════════════════════════════════════════════
 //  GAME 7 · STOCK MASTER

@@ -1,5 +1,5 @@
 // js/arithmetic/run-test.js — runTest(): shared engine for MC and free-response modes.
-// Moved verbatim from arithmetic.html. Docs: docs/arithmetic.md
+// Docs: docs/arithmetic.md
 
 // ══════════════════════════════════════════════════════
 //  SHARED TEST ENGINE

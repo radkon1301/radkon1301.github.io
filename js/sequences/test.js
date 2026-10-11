@@ -1,5 +1,5 @@
 // js/sequences/test.js — Timed Test mode.
-// Moved verbatim from sequences.html. Docs: docs/sequences.md
+// Docs: docs/sequences.md
 
 // ══════════════════════════════════════════════════════
 //  TEST GAME  (26 questions, 25 minutes)
@@ -30,7 +30,7 @@ function startSeqTest() {
                        genCumSumPrimes, genGeomPlusPoly, genDigitRotation];
 
   function pickDiverse(pool, needed) {
-    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    const shuffled = shuffle([...pool]);
     const result = [];
     for (const fn of shuffled) {
       if (result.length >= needed) break;
@@ -51,7 +51,7 @@ function startSeqTest() {
     ...pickDiverse(hardGens,   8),
   ];
   // Shuffle the order
-  questions = questions.sort(() => Math.random() - 0.5);
+  shuffle(questions);
   // Pre-generate choices for every question
   const allChoices = questions.map(q => makeDistractors(String(q.answer), q.terms));
 

@@ -1,17 +1,20 @@
 // js/sequences/registry.js — Game registry (SEQ_GAMES) and page init. Loaded LAST.
-// Moved verbatim from sequences.html. Docs: docs/sequences.md
+// Docs: docs/sequences.md
 
 // ══════════════════════════════════════════════════════
 //  SEQUENCES — GAME REGISTRY
 // ══════════════════════════════════════════════════════
+// Distinct generator functions (genArithmetic is listed twice in SEQUENCE_GENERATORS to weight it).
+const SEQ_TYPE_COUNT = new Set(SEQUENCE_GENERATORS).size;
+
 const SEQ_GAMES = [
   {
     id: 'seq-practice',
     title: 'Practice',
     icon: '∿',
     tag: 'Sequences',
-    desc: 'Complete the sequence by identifying the pattern. Covers 50+ sequence types across 9 categories — arithmetic, geometric, prime-based, recursive, fractional, decimal, digit-based, interleaved, and more.',
-    meta: ['50+ types', 'Unlimited'],
+    desc: `Complete the sequence by identifying the pattern. Covers ${SEQ_TYPE_COUNT} sequence types across 9 categories — arithmetic, geometric, prime-based, recursive, fractional, decimal, digit-based, interleaved, and more.`,
+    meta: [`${SEQ_TYPE_COUNT} types`, 'Unlimited'],
     start: startSeqPractice
   },
   {

@@ -1,5 +1,5 @@
 // js/zapn/numberbox.js — Game 4: NumberBox (arithmetic).
-// Moved verbatim from zapn.html. Docs: docs/zapn.md
+// Docs: docs/zapn.md
 
 // ══════════════════════════════════════════════════════
 //  GAME 4 · NUMBERBOX

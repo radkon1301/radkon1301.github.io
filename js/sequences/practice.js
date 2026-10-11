@@ -1,5 +1,5 @@
 // js/sequences/practice.js — Practice mode.
-// Moved verbatim from sequences.html. Docs: docs/sequences.md
+// Docs: docs/sequences.md
 
 // ══════════════════════════════════════════════════════
 //  PRACTICE GAME

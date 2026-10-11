@@ -1,5 +1,5 @@
 // js/zapn/theswitch.js — Game 6: The Switch (task switching).
-// Moved verbatim from zapn.html. Docs: docs/zapn.md
+// Docs: docs/zapn.md
 
 // ══════════════════════════════════════════════════════
 //  GAME 6 · THE SWITCH
