@@ -8,9 +8,14 @@
 4. **Test coverage:** only the Skyscraper generator has an automated test (`tests/skyscraper-gen.test.js`). During the refactor a jsdom differential harness was used (seeded `Math.random`, fake clock for `setTimeout`/`setInterval`/`requestAnimationFrame`/`performance.now`, a seeded "monkey" that clicks buttons and presses keys, snapshots compared before vs after). It is not committed because it needs `npm install jsdom`; it is easy to re-create and worth adding if refactors continue. Games that need real play to finish (NumberBox, FigureItOut, BART end screens) are not reached by random clicking; Skyscraper is covered by a solver-driven playthrough.
 5. **Caching after deploys:** GitHub Pages serves JS/CSS with a ~10-minute cache, and pages now load many small files. A visitor with a cached HTML page and a fresh script (or vice-versa) could briefly see a mismatch right after a deploy. If this matters, add `?v=<n>` to the `<script src>`/`<link>` URLs when changing shared files.
 6. **Full Test flow** starts games directly instead of through `launchGame`, duplicating the `_gen++` bookkeeping (`js/zapn/test.js`). Works; a small `openGame`-like helper taking a title override would remove the duplication.
-7. **Skyscraper `LEVELS` is duplicated** in `tests/skyscraper-gen.test.js` (keep in sync).
+7. ~~Skyscraper `LEVELS` duplicated in the test~~ — resolved: the level table lives in the generated `skyscraper-bank.js`; the test reads it.
 
 ## Change log (what was done and why)
+
+Skyscraper pass (`fix/skyscraper-fit-and-instant-levels`):
+
+- ◆ **Fits a 1920×1080 screen without scrolling.** Sizes moved from inline JS pixels (7 blocks × 58px + 7 × 42px + 64px of padding ≈ 1050px of game) to CSS driven by `--sk-h`, which scales with viewport height (max 50px). Tighter padding/margins on the Skyscraper panel only.
+- ◆ **Levels load instantly.** Puzzles are pre-solved offline (`tools/gen-skyscraper-bank.js` → `js/zapn/skyscraper-bank.js`, 40 per level, 13 KB) and varied at runtime by relabelling blocks and permuting piles (optimal move count is invariant). Removed the play-time BFS and the next-level prefetch. The test now verifies all stored puzzles against two solvers.
 
 Docs pass (`docs/agent-friendly-documentation`): README, AGENTS.md, docs/*.md.
 

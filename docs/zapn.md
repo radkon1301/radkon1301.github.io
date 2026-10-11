@@ -16,7 +16,8 @@
 | `stockmaster.js` | 236 | Game 7 `startStockMaster` (canvas gauges, rAF loop) |
 | `bart.js` | 507 | Game 8 `startBART` (largest; inner helpers `optimalPumps`, `expectedValue`, `popDistribution`; `grep -n '^  function' js/zapn/bart.js`) |
 | `test.js` | 85 | Full Test: `startTest` |
-| `skyscraper-gen.js` | 156 | Game 9 puzzle generator: **pure logic, no DOM** (see below) |
+| `skyscraper-bank.js` | ~270 | **Generated** (`tools/gen-skyscraper-bank.js`): level table + 40 pre-solved puzzles per level. Loaded before `skyscraper-gen.js` |
+| `skyscraper-gen.js` | ~170 | Game 9 puzzle logic: `skyPuzzleFromBank` (runtime) + BFS generator (offline tool/tests). **Pure logic, no DOM** |
 | `skyscraper.js` | 256 | Game 9 `startSkyscraper` (rendering, input, scoring) |
 | `registry.js` | 21 | `GAMES` array (10 entries incl. the Full Test card) + `renderDashboard()` init. **Loaded last.** |
 
@@ -46,12 +47,14 @@ Each `startX()` is `function startX(){ const g=myGen(); function alive(){…} �
 
 ## Skyscraper (game 9)
 
-- Levels: `LEVELS = [[nBlocks, minOptimal], …]` in `skyscraper.js` (10 levels; 4–7 blocks). `tests/skyscraper-gen.test.js` has a copy: keep in sync.
+- **Levels** come from `SKY_BANK` (`skyscraper-bank.js`): `LEVELS = SKY_BANK.map(l => [l.n, l.minOpt])` (10 levels; 4–7 blocks). The source of truth for the level table is `LEVELS` in `tools/gen-skyscraper-bank.js`; edit it there and regenerate.
 - Puzzle = `{start, target, optimal}`: piles of block ids `0..n-1` (index 0 = bottom). A move takes the top block of one pile onto another pile (unlimited height). `optimal` is the exact minimum number of moves.
-- **Generation** (`skyscraper-gen.js`): `skyGeneratePuzzle(n, minOpt, rng?)` runs **one BFS** from a random start (`skyDistances`) that gives the exact distance to every one of the `n!·C(n+2,2)` arrangements (181,440 for n=7, ~0.1 s), then `skyPickTarget` picks a target with distance ≥ `minOpt` and ≤ `maxPiles` non-empty piles (n≤3: 1, n≤5: 2, else 3). Shape (number of piles) is weighted by the fraction of that shape that is hard enough, which reproduces the target mix of the old guess-and-check generator. No retries, no hard-coded levels; falls back to the farthest reachable target after ≤8 starts. **Tuning limit:** from a random start the farthest arrangement is 8 / 11 / 14 / 17–18 moves away for 4 / 5 / 6 / 7 blocks, so a `minOptimal` above that is unreachable (level 6 = `[5,11]` already sits exactly at the ceiling; level 10 = `[7,16]` has little headroom).
-- Before this change levels 9–10 took 5 s median and up to 28 s (random pairs were rarely hard enough, each costing a BFS).
-- `skyscraper.js` builds the next level's puzzle with `setTimeout(…,0)` while the "Level solved" overlay is visible (`nextPuzzle`), so click-through is instant; `newLevel()` generates synchronously if the prefetch isn't ready.
+- **No computation at play time.** `puzzleFor(idx)` picks a random stored puzzle `[startStr, targetStr, optimal]` and `skyPuzzleFromBank` randomly relabels the block ids and permutes the three piles (identically for start and target). Both operations preserve the optimal move count, so each stored puzzle yields `n!·6` distinct-looking variants (e.g. 30,240 for 7 blocks) at ~microsecond cost. Start/target are never swapped (that could break the target-shape rule).
+- **Offline generation** (`node tools/gen-skyscraper-bank.js`, ~20 s, output committed): `skyGeneratePuzzle(n, minOpt, rng?)` runs **one BFS** from a random start (`skyDistances`) giving the exact distance to every one of the `n!·C(n+2,2)` arrangements (181,440 for n=7), then `skyPickTarget` picks a target at distance ≥ `minOpt` with ≤ `maxPiles` non-empty piles (n≤3: 1, n≤5: 2, else 3), weighting shapes by the fraction of each shape that is hard enough. **Tuning limit:** from a random start the farthest arrangement is 8 / 11 / 14 / 17–18 moves away for 4 / 5 / 6 / 7 blocks, so a `minOptimal` above that is unreachable (level 6 = `[5,11]` sits exactly at the ceiling, so all its stored puzzles are 11 moves).
+- History: levels 9–10 used to run a BFS-per-candidate loop at play time (5 s median, 28 s worst); then one BFS per puzzle (~0.14 s); now none.
+- **Layout (fits one screen, no scrolling):** all sizes are CSS in `css/zapn.css` derived from `--sk-h` (block height) = `clamp(22px, (100dvh − 320px)/12, 50px)`: 50px on a 1080p display, shrinking on shorter windows. Target and play areas each reserve height for 7 stacked blocks so nothing jumps between levels. The panel uses class `sky-panel` (tight padding; `.game-wrap:has(.sky-panel)` trims the page padding). Verified at 1920×1080/950/860 and 1366×650 with a 7-block tower. If you change block/margin/chrome sizes, re-derive the 320px/12 constants (chrome ≈ 304px + 12·`--sk-h`).
 - Win check compares `stateKey(piles)` with `stateKey(targetPiles)`; blocks are colour keys (`COLORS`), mapped from ids with `COLOR_KEYS.slice(0, n)`.
+- Verify: `node tests/skyscraper-gen.test.js` checks the generator and every stored puzzle (distance via BFS and an independent reference solver, shapes, variants).
 
 ## Adding a game (checklist)
 

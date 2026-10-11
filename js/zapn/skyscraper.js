@@ -20,36 +20,29 @@ function startSkyscraper(){
   };
   const COLOR_KEYS=Object.keys(COLORS);
 
-  // ── Level config: [nBlocks, minOptimal] ──────────
-  const LEVELS=[
-    [4,5],[4,6],[4,7],      // levels 1-3: 4 blocks
-    [5,7],[5,9],[5,11],     // levels 4-6: 5 blocks
-    [6,10],[6,13],          // levels 7-8: 6 blocks
-    [7,14],[7,16],          // levels 9-10: 7 blocks
-  ];
-  const TOTAL_LEVELS=10;
+  // ── Level config: [nBlocks, minOptimal], taken from the pre-solved bank (js/zapn/skyscraper-bank.js) ──
+  const LEVELS=SKY_BANK.map(l=>[l.n,l.minOpt]);   // levels 1-3: 4 blocks, 4-6: 5, 7-8: 6, 9-10: 7
+  const TOTAL_LEVELS=LEVELS.length;
 
   // ── State ────────────────────────────────────────
   let levelIdx=0, piles, targetPiles, selected, moves, optimal, roundStart;
   let overPars=[], times=[], optimals=[], userMoves=[];
 
   // ── Puzzles ──────────────────────────────────────
-  // Generation lives in skyscraper-gen.js: one BFS from a random start gives the exact distance to
-  // every arrangement, so a target of the required difficulty is picked directly (no retry loop).
+  // No search at play time: each level picks a pre-solved puzzle from SKY_BANK and randomly relabels the
+  // blocks / permutes the piles (skyPuzzleFromBank). Optimal move counts are exact and the pick is instant.
   function stateKey(p){return p.map(pile=>pile.join(',')).join('|');}
   const toColors=(pz,colors)=>pz.map(p=>p.map(i=>colors[i]));
-  let nextPuzzle=null;   // built while the "Level solved" overlay is showing, so the next level starts instantly
   function puzzleFor(idx){
-    const [nBlocks,minOpt]=LEVELS[idx];
-    return {idx,pz:skyGeneratePuzzle(nBlocks,minOpt)};
+    const lv=SKY_BANK[idx];
+    return skyPuzzleFromBank(lv.puzzles[Math.floor(Math.random()*lv.puzzles.length)],lv.n);
   }
 
   function newLevel(){
     if(!alive())return;
     const [nBlocks]=LEVELS[levelIdx];
     const colors=COLOR_KEYS.slice(0,nBlocks);
-    const {pz}=(nextPuzzle&&nextPuzzle.idx===levelIdx)?nextPuzzle:puzzleFor(levelIdx);
-    nextPuzzle=null;
+    const pz=puzzleFor(levelIdx);
 
     piles=toColors(pz.start,colors);
     targetPiles=toColors(pz.target,colors);
@@ -95,21 +88,18 @@ function startSkyscraper(){
     const panel=document.getElementById('game-panel');
     if(!panel)return;
 
-    // Use max possible blocks across all levels (7) so height never changes mid-game
-    const MAX_BLOCKS=7;
-    const gameH=60+MAX_BLOCKS*58;   // 7 blocks × 58px (block 52 + margin 6) + padding
-    const tgtH=40+MAX_BLOCKS*42;    // mini blocks ~36+gap
-
-    panel.className='game-panel wide top';
+    // Sizes live in CSS (css/zapn.css, --sk-h scales with viewport height); both areas reserve room for
+    // 7 stacked blocks so the layout never changes height between levels.
+    panel.className='game-panel wide top sky-panel';
     panel.innerHTML=`<div class="sky-wrap">
       <div class="sky-target-label">Target pattern — level ${levelIdx+1} of ${TOTAL_LEVELS}</div>
-      <div class="sky-target-area" style="min-height:${tgtH}px">
-        <div class="sky-piles-row" style="min-height:${tgtH-20}px;align-items:flex-end">
+      <div class="sky-target-area">
+        <div class="sky-piles-row target">
           ${renderPilesHTML(targetPiles,true,null)}
         </div>
       </div>
-      <div class="sky-game-area" id="sky-game" style="min-height:${gameH}px">
-        <div class="sky-piles-row" style="height:${gameH-50}px" id="sky-piles">
+      <div class="sky-game-area" id="sky-game">
+        <div class="sky-piles-row play" id="sky-piles">
           ${renderPilesHTML(piles,false,selected)}
         </div>
         <div class="sky-info-row">
@@ -191,8 +181,6 @@ function startSkyscraper(){
       newLevel();
     });
     gameArea.appendChild(ov);
-    // Build the next puzzle now (the player has to click the overlay anyway)
-    setTimeout(()=>{if(alive()&&ov.isConnected&&!nextPuzzle&&levelIdx+1<TOTAL_LEVELS)nextPuzzle=puzzleFor(levelIdx+1);},0);
     return true;
   }
 
@@ -252,5 +240,5 @@ function startSkyscraper(){
     <p>Rearrange coloured blocks across three piles to match the target pattern shown above the game area. Click a pile to pick up its top block, then click another pile to place it. 10 levels, 4 to 7 blocks — score is average moves over the optimal solution.</p>
     <button class="big-btn" onclick="skyGo()">Begin</button>
   </div>`);
-  window.skyGo=()=>{if(!alive())return;levelIdx=0;nextPuzzle=null;overPars=[];times=[];optimals=[];userMoves=[];newLevel();};
+  window.skyGo=()=>{if(!alive())return;levelIdx=0;overPars=[];times=[];optimals=[];userMoves=[];newLevel();};
 }
