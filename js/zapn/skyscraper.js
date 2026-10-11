@@ -33,89 +33,27 @@ function startSkyscraper(){
   let levelIdx=0, piles, targetPiles, selected, moves, optimal, roundStart;
   let overPars=[], times=[], optimals=[], userMoves=[];
 
-  // ── BFS ─────────────────────────────────────────
+  // ── Puzzles ──────────────────────────────────────
+  // Generation lives in skyscraper-gen.js: one BFS from a random start gives the exact distance to
+  // every arrangement, so a target of the required difficulty is picked directly (no retry loop).
   function stateKey(p){return p.map(pile=>pile.join(',')).join('|');}
-  function bfs(startP,tgtP){
-    const goal=stateKey(tgtP);
-    const start=startP.map(p=>[...p]);
-    const startKey=stateKey(start);
-    if(startKey===goal)return 0;
-    const visited=new Map([[startKey,null]]);
-    const queue=[start];
-    let head=0;
-    while(head<queue.length){
-      const cur=queue[head++];
-      const curKey=stateKey(cur);
-      for(let i=0;i<3;i++){
-        if(!cur[i].length)continue;
-        const top=cur[i][cur[i].length-1];
-        for(let j=0;j<3;j++){
-          if(i===j)continue;
-          const ns=cur.map(p=>[...p]);
-          ns[i].pop();ns[j].push(top);
-          const nk=stateKey(ns);
-          if(visited.has(nk))continue;
-          visited.set(nk,curKey);
-          if(nk===goal){
-            // count path length
-            let depth=0,k=nk;
-            while(visited.get(k)!==null){k=visited.get(k);depth++;}
-            return depth;
-          }
-          queue.push(ns);
-        }
-      }
-    }
-    return -1;
-  }
-
-  // ── Puzzle generation ────────────────────────────
-  function generateTarget(colors){
-    const n=colors.length;
-    const maxP=n<=3?1:n<=5?2:3;
-    const nP=rand(1,maxP);
-    const active=[...Array(3).keys()].sort(()=>Math.random()-.5).slice(0,nP);
-    const shuffled=[...colors].sort(()=>Math.random()-.5);
-    const tgt=[[],[],[]];
-    active.forEach((a,i)=>tgt[a].push(shuffled[i]));
-    shuffled.slice(nP).forEach(c=>tgt[active[Math.floor(Math.random()*nP)]].push(c));
-    return tgt;
-  }
-
-  function generateStart(colors,tgtP){
-    for(let attempt=0;attempt<200;attempt++){
-      const shuffled=[...colors].sort(()=>Math.random()-.5);
-      const nA=Math.random()<0.5?2:3;
-      const active=[...Array(3).keys()].sort(()=>Math.random()-.5).slice(0,nA);
-      const sp=[[],[],[]];
-      shuffled.forEach((c,ci)=>sp[active[ci%nA]].push(c));
-      if(active.some(a=>!sp[a].length))continue;
-      if(stateKey(sp)===stateKey(tgtP))continue;
-      return sp;
-    }
-    // fallback: all on pile 0
-    return [colors,[], []];
+  const toColors=(pz,colors)=>pz.map(p=>p.map(i=>colors[i]));
+  let nextPuzzle=null;   // built while the "Level solved" overlay is showing, so the next level starts instantly
+  function puzzleFor(idx){
+    const [nBlocks,minOpt]=LEVELS[idx];
+    return {idx,pz:skyGeneratePuzzle(nBlocks,minOpt)};
   }
 
   function newLevel(){
     if(!alive())return;
-    const [nBlocks,minOpt]=LEVELS[levelIdx];
+    const [nBlocks]=LEVELS[levelIdx];
     const colors=COLOR_KEYS.slice(0,nBlocks);
+    const {pz}=(nextPuzzle&&nextPuzzle.idx===levelIdx)?nextPuzzle:puzzleFor(levelIdx);
+    nextPuzzle=null;
 
-    let tgt,sp,opt;
-    let attempts=0;
-    do{
-      attempts++;
-      tgt=generateTarget(colors);
-      sp=generateStart(colors,tgt);
-      opt=bfs(sp,tgt);
-    }while((opt<minOpt||opt<0)&&attempts<300);
-
-    if(opt<0)opt=minOpt; // fallback
-
-    piles=sp.map(p=>[...p]);
-    targetPiles=tgt;
-    optimal=opt;
+    piles=toColors(pz.start,colors);
+    targetPiles=toColors(pz.target,colors);
+    optimal=pz.optimal;
     selected=null;
     moves=0;
     roundStart=performance.now();
@@ -253,6 +191,8 @@ function startSkyscraper(){
       newLevel();
     });
     gameArea.appendChild(ov);
+    // Build the next puzzle now (the player has to click the overlay anyway)
+    setTimeout(()=>{if(alive()&&ov.isConnected&&!nextPuzzle&&levelIdx+1<TOTAL_LEVELS)nextPuzzle=puzzleFor(levelIdx+1);},0);
     return true;
   }
 
@@ -312,5 +252,5 @@ function startSkyscraper(){
     <p>Rearrange coloured blocks across three piles to match the target pattern shown above the game area. Click a pile to pick up its top block, then click another pile to place it. 10 levels, 4 to 7 blocks — score is average moves over the optimal solution.</p>
     <button class="big-btn" onclick="skyGo()">Begin</button>
   </div>`);
-  window.skyGo=()=>{if(!alive())return;levelIdx=0;overPars=[];times=[];optimals=[];userMoves=[];newLevel();};
+  window.skyGo=()=>{if(!alive())return;levelIdx=0;nextPuzzle=null;overPars=[];times=[];optimals=[];userMoves=[];newLevel();};
 }
