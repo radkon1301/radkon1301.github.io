@@ -17,7 +17,9 @@
 .sky-piles-row.target { min-height:calc(7 * (var(--sk-mh) + 4px) + 12px); }
 .sky-piles-row.play   { min-height:calc(7 * (var(--sk-h) + 4px) + 12px); align-items:stretch; }
 .sky-piles-row.target .sky-base { width:calc(var(--sk-mh) * 1.9); }
-.sky-pile-col { display:flex; flex-direction:column; align-items:center; gap:0; flex:1; padding:0 6px; height:100%; justify-content:flex-end; }
+/* No height:100% here: the row only has a min-height, so a percentage would not resolve and the column would shrink to its
+   content (stacks floating at the top). Without it the column stretches to the row (play) or sits on the floor (target). */
+.sky-pile-col { display:flex; flex-direction:column; align-items:center; gap:0; flex:1; padding:0 6px; justify-content:flex-end; }
 .sky-base { width:calc(var(--sk-h) * 1.85); max-width:100%; height:8px; background:#4a4a7a; border-radius:3px; margin-top:2px; border:1px solid #6a6aaa; box-sizing:border-box; }
 .sky-block { width:calc(var(--sk-h) * 1.62); height:var(--sk-h); border-radius:7px; display:flex; align-items:center; justify-content:center; margin:2px 0; box-sizing:border-box; transition:transform .12s,box-shadow .12s; user-select:none; position:relative; }
 .sky-block::after { content:''; position:absolute; top:4px; left:8px; right:8px; height:5px; border-radius:3px; background:rgba(255,255,255,.22); pointer-events:none; }
