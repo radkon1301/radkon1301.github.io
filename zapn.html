@@ -20,25 +20,25 @@
     </div>
     <div class="dash-sub">Assessment Suite</div>
   </header>
-  <div class="dash-body">
+  <main class="dash-body">
     <div class="dash-intro">
-      <h2>Select an exercise</h2>
+      <h1>Select an exercise</h1>
       <p>Practice the cognitive skills assessed in trading and finance hiring. Each game is self-contained and progressively challenging.</p>
     </div>
     <div class="games-grid" id="games-grid"></div>
-  </div>
+  </main>
 </div>
 
 <!-- ── GAME SCREEN ── -->
 <div id="game-screen" style="display:none">
   <header class="game-header">
     <button class="back-btn" onclick="showDashboard()">&#8592; Zap-N</button>
-    <div class="game-name-bar" id="gs-name"></div>
-    <div class="stat-strip" id="gs-stats"></div>
+    <h1 class="game-name-bar" id="gs-name"></h1>
+    <div class="stat-strip" id="gs-stats" aria-live="off"></div>
   </header>
-  <div class="game-wrap">
+  <main class="game-wrap">
     <div class="game-panel" id="game-panel"></div>
-  </div>
+  </main>
 </div>
 
 <script src="js/common.js"></script>

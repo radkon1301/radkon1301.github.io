@@ -19,7 +19,7 @@ function runTest(gameId, isMultipleChoice) {
 
   let currentIdx = 0;
   let timeLeft = TIME_LIMIT;
-  let timerInterval = null;
+  let countdown = null;
   let submitted = false;
   let reviewIdx = 0;
 
@@ -27,12 +27,17 @@ function runTest(gameId, isMultipleChoice) {
   const answers = new Array(TOTAL_Q).fill(null);
 
   function startTimer() {
-    timerInterval = setInterval(() => {
-      if (!alive()) { clearInterval(timerInterval); return; }
-      timeLeft--;
-      updateTimerEl();
-      if (timeLeft <= 0) { clearInterval(timerInterval); submitTest(); }
-    }, 1000);
+    // Clock-based (not `timeLeft--` per tick) so throttled / background tabs cannot stretch the 8 minutes.
+    countdown = createCountdown(TIME_LIMIT, {
+      alive,
+      onTick: s => {
+        timeLeft = s;
+        updateTimerEl();
+        if (s === 60) announce('One minute remaining');
+        else if (s === 10) announce('Ten seconds remaining');
+      },
+      onDone: () => { submitTest(); }
+    });
   }
 
   function fmtTime(s) {
@@ -72,7 +77,7 @@ function runTest(gameId, isMultipleChoice) {
       const prev = answers[idx] ? answers[idx].raw : '';
       bodyHTML = `
         <div class="arith-input-wrap">
-          <input class="arith-input" id="arith-input" type="text"
+          <input class="arith-input" id="arith-input" type="text" aria-label="Your answer"
             value="${prev.replace(/"/g,'&quot;')}"
             placeholder="Enter answer…"
             onkeydown="arithInputKey(event, ${idx})"
@@ -84,7 +89,7 @@ function runTest(gameId, isMultipleChoice) {
     setPanel(`<div class="arith-wrap">
       <div class="arith-nav-bar">
         <span class="arith-q-counter">Q ${idx+1} / ${TOTAL_Q}</span>
-        <span class="arith-timer" id="arith-timer">${fmtTime(timeLeft)}</span>
+        <span class="arith-timer" id="arith-timer" role="timer" aria-label="Time remaining">${fmtTime(timeLeft)}</span>
       </div>
       <div class="arith-prog-wrap">
         <div class="arith-prog-track"><div class="arith-prog-fill" style="width:${pct}%"></div></div>
@@ -141,7 +146,7 @@ function runTest(gameId, isMultipleChoice) {
   window.submitTest = function() {
     if (!alive()) return;
     submitted = true;
-    clearInterval(timerInterval);
+    if (countdown) countdown.stop();
 
     let correct = 0, incorrect = 0, skipped = 0;
     answers.forEach((a, i) => {
@@ -238,9 +243,9 @@ function runTest(gameId, isMultipleChoice) {
 
     document.getElementById('review-body').innerHTML = `
       <div class="arith-review-nav">
-        <button class="arith-review-arrow" onclick="arithReviewGoto(${idx-1})" ${idx===0?'disabled':''}>&#8592;</button>
+        <button class="arith-review-arrow" onclick="arithReviewGoto(${idx-1})" aria-label="Previous question" ${idx===0?'disabled':''}>&#8592;</button>
         <div class="arith-review-q-label">Q ${idx+1} / ${TOTAL_Q}</div>
-        <button class="arith-review-arrow" onclick="arithReviewGoto(${idx+1})" ${idx===TOTAL_Q-1?'disabled':''}>&#8594;</button>
+        <button class="arith-review-arrow" onclick="arithReviewGoto(${idx+1})" aria-label="Next question" ${idx===TOTAL_Q-1?'disabled':''}>&#8594;</button>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div class="arith-question-label" style="margin:0">What is</div>

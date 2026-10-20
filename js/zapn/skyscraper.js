@@ -58,7 +58,7 @@ function startSkyscraper(){
   function blockHTML(colorKey,mini=false,floating=false){
     const c=COLORS[colorKey];
     const cls='sky-block'+(mini?' mini':'')+(floating?' sky-floating':'');
-    return`<div class="${cls}" style="background:${c.bg};border-bottom:3px solid ${c.dark};box-shadow:0 3px 8px rgba(0,0,0,.35)"></div>`;
+    return`<div class="${cls}" style="background:${c.bg};border-bottom:3px solid ${c.dark};box-shadow:0 3px 8px rgba(0,0,0,.35)"><span class="sky-lbl" aria-hidden="true">${mini?'':c.label}</span></div>`;
   }
 
   function emptySlotHTML(mini=false){

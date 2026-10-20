@@ -59,19 +59,24 @@ function startSeqTest() {
   let currentIdx = 0;
   // answers[i] = chosen string, or null (unanswered/skipped)
   const answers = new Array(TOTAL).fill(null);
-  let timerInterval = null;
+  let countdown = null;
   let timeLeft = TIME_LIMIT;
   let submitted = false;
   let reviewIdx = 0;
 
   // ── Timer ──
   function startTimer() {
-    timerInterval = setInterval(() => {
-      if (!alive()) { clearInterval(timerInterval); return; }
-      timeLeft--;
-      renderTimerDisplay();
-      if (timeLeft <= 0) { clearInterval(timerInterval); submitTest(); }
-    }, 1000);
+    // Clock-based (not `timeLeft--` per tick) so throttled / background tabs cannot stretch the 8 minutes.
+    countdown = createCountdown(TIME_LIMIT, {
+      alive,
+      onTick: s => {
+        timeLeft = s;
+        renderTimerDisplay();
+        if (s === 60) announce('One minute remaining');
+        else if (s === 10) announce('Ten seconds remaining');
+      },
+      onDone: () => { submitTest(); }
+    });
   }
 
   function fmtTime(s) {
@@ -120,10 +125,10 @@ function startSeqTest() {
       <div class="test-nav-bar">
         <span class="test-q-counter">Q ${idx+1} / ${TOTAL}</span>
         <div class="test-nav-arrows">
-          <button class="test-arrow" onclick="testGoto(${idx-1})" ${idx===0?'disabled':''}>&#8592;</button>
-          <button class="test-arrow" onclick="testGoto(${idx+1})" ${idx===TOTAL-1?'disabled':''}>&#8594;</button>
+          <button class="test-arrow" onclick="testGoto(${idx-1})" aria-label="Previous question" ${idx===0?'disabled':''}>&#8592;</button>
+          <button class="test-arrow" onclick="testGoto(${idx+1})" aria-label="Next question" ${idx===TOTAL-1?'disabled':''}>&#8594;</button>
         </div>
-        <span class="test-timer" id="test-timer">${fmtTime(timeLeft)}</span>
+        <span class="test-timer" id="test-timer" role="timer" aria-label="Time remaining">${fmtTime(timeLeft)}</span>
       </div>
       <div class="seq-question-label">What comes next?</div>
       <div class="seq-terms" id="test-terms">${termsHTML}</div>
@@ -212,7 +217,7 @@ function startSeqTest() {
     if (!alive()) return;
     submitted = true;
     window._testConfirmPending = false;
-    clearInterval(timerInterval);
+    if (countdown) countdown.stop();
 
     // Compute score
     let correct = 0, incorrect = 0, skipped = 0;
@@ -295,9 +300,9 @@ function startSeqTest() {
 
     document.getElementById('review-body').innerHTML = `
       <div class="test-review-nav">
-        <button class="test-arrow" onclick="testReviewGoto(${idx-1})" ${idx===0?'disabled':''}>&#8592;</button>
+        <button class="test-arrow" onclick="testReviewGoto(${idx-1})" aria-label="Previous question" ${idx===0?'disabled':''}>&#8592;</button>
         <div class="test-review-q-label">Q ${idx+1} / ${TOTAL} &nbsp;•&nbsp; ${q.typeName}</div>
-        <button class="test-arrow" onclick="testReviewGoto(${idx+1})" ${idx===TOTAL-1?'disabled':''}>&#8594;</button>
+        <button class="test-arrow" onclick="testReviewGoto(${idx+1})" aria-label="Next question" ${idx===TOTAL-1?'disabled':''}>&#8594;</button>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div class="seq-question-label" style="margin:0">What comes next?</div>

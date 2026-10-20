@@ -83,7 +83,7 @@ body {
 .dash-sub { font-size: .75rem; color: var(--muted); letter-spacing: .12em; text-transform: uppercase; font-weight: 500; }
 .dash-body { max-width: 1060px; margin: 0 auto; padding: 48px 32px 80px; }
 .dash-intro { margin-bottom: 40px; }
-.dash-intro h2 { font-family: 'Instrument Serif', serif; font-size: 2rem; font-weight: 400; margin-bottom: 6px; }
+.dash-intro h1 { font-family: 'Instrument Serif', serif; font-size: 2rem; font-weight: 400; margin-bottom: 6px; }
 .dash-intro p { color: var(--text2); font-size: .9rem; line-height: 1.6; }
 .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 18px; }
 .game-card {
@@ -97,7 +97,7 @@ body {
 .game-card:hover { box-shadow: var(--shadow-lg); border-color: var(--border2); transform: translateY(-2px); }
 .card-tag { display: inline-block; font-size: .68rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); background: var(--accent-light); border-radius: 20px; padding: 3px 10px; margin-bottom: 14px; }
 .card-icon-row { font-size: 1.8rem; margin-bottom: 10px; }
-.card-title { font-family: 'Instrument Serif', serif; font-size: 1.25rem; margin-bottom: 6px; }
+.card-title { font-family: 'Instrument Serif', serif; font-size: 1.25rem; font-weight: 400; margin-bottom: 6px; }
 .card-desc { color: var(--text2); font-size: .83rem; line-height: 1.55; margin-bottom: 18px; }
 .card-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
 .play-btn { width: 100%; padding: 11px; background: var(--text); color: white; border: none; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: .85rem; cursor: pointer; transition: background .15s; }
@@ -117,7 +117,7 @@ body {
   top: 0;
   z-index: 10;
 }
-.game-name-bar { font-family: 'Instrument Serif', serif; font-size: 1.05rem; }
+.game-name-bar { font-family: 'Instrument Serif', serif; font-size: 1.05rem; font-weight: 400; }
 .stat-strip { display: flex; gap: 8px; margin-left: auto; }
 .stat-pill { font-family: 'DM Mono', monospace; font-size: .72rem; padding: 4px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; color: var(--text2); }
 .stat-pill b { color: var(--accent); font-weight: 500; }
@@ -141,3 +141,11 @@ body {
 /* ─── PROGRESS ─── */
 .prog-track { width: 100%; height: 3px; background: var(--border); border-radius: 2px; margin-bottom: 32px; }
 .prog-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width .4s ease; }
+
+/* ─── ACCESSIBILITY ─── */
+.sr-only { position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.game-panel:focus { outline: none; }                 /* focused programmatically when a game opens; not a control */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}

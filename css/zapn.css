@@ -23,6 +23,7 @@
 .sky-base { width:calc(var(--sk-h) * 1.85); max-width:100%; height:8px; background:#4a4a7a; border-radius:3px; margin-top:2px; border:1px solid #6a6aaa; box-sizing:border-box; }
 .sky-block { width:calc(var(--sk-h) * 1.62); height:var(--sk-h); border-radius:7px; display:flex; align-items:center; justify-content:center; margin:2px 0; box-sizing:border-box; transition:transform .12s,box-shadow .12s; user-select:none; position:relative; }
 .sky-block::after { content:''; position:absolute; top:4px; left:8px; right:8px; height:5px; border-radius:3px; background:rgba(255,255,255,.22); pointer-events:none; }
+.sky-lbl { position:relative; z-index:1; font-family:'DM Mono',monospace; font-size:calc(var(--sk-h) * .26); font-weight:500; letter-spacing:.06em; text-transform:uppercase; color:rgba(0,0,0,.55); pointer-events:none; }
 .sky-block.mini { width:calc(var(--sk-mh) * 1.7); height:var(--sk-mh); border-radius:5px; margin:2px 0; }
 .sky-block.mini::after { top:3px; left:6px; right:6px; height:3px; }
 .sky-pile-slot { width:calc(var(--sk-h) * 1.62); height:var(--sk-h); margin:2px 0; }

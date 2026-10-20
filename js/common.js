@@ -11,6 +11,7 @@
 // `const g = myGen(); const alive = () => myGen() === g;` and checks alive() in every
 // timer/callback, so abandoned games go silent.
 let _gen = 0;
+let _lastLaunched = null;                                   // id of the game opened last (for focus return)
 function myGen() { return _gen; }
 
 // ── random helpers ──
@@ -21,6 +22,45 @@ function shuffle(arr) {                                                       //
     const j = rand(0, i); [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr;
+}
+
+// ── drift-free countdown ──
+// A bare setInterval(() => timeLeft--, 1000) loses time whenever the browser throttles timers (background tab,
+// laptop sleep, heavy page). This derives the remaining time from the clock instead, so it can never run long.
+// opts: { onTick(secondsLeft), onDone(), alive(), now() (injectable for tests), intervalMs }
+// Returns { stop(), remaining() }. onTick fires only when the whole-second value changes; onDone fires once.
+function createCountdown(seconds, opts) {
+  opts = opts || {};
+  const now = opts.now || (() => performance.now());
+  const end = now() + seconds * 1000;
+  let left = seconds, id = null, done = false;
+  function stop() {
+    if (id != null) { clearInterval(id); id = null; }
+    if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', check);
+  }
+  function check() {
+    if (opts.alive && !opts.alive()) { stop(); return; }
+    const l = Math.max(0, Math.ceil((end - now()) / 1000));
+    if (l !== left) { left = l; if (opts.onTick) opts.onTick(l); }
+    if (l <= 0 && !done) { done = true; stop(); if (opts.onDone) opts.onDone(); }
+  }
+  id = setInterval(check, opts.intervalMs || 250);
+  if (typeof document !== 'undefined') document.addEventListener('visibilitychange', check);   // catch up the moment the tab is visible again
+  return { stop, remaining: () => left };
+}
+
+// ── screen-reader announcements ──
+// announce('text') speaks via a visually hidden polite live region (created on first use).
+function announce(msg) {
+  let el = document.getElementById('sr-status');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'sr-status'; el.className = 'sr-only';
+    el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite'); el.setAttribute('aria-atomic', 'true');
+    document.body.appendChild(el);
+  }
+  el.textContent = '';
+  setTimeout(() => { el.textContent = msg; }, 30);     // clear-then-set so repeated identical messages are re-announced
 }
 
 // ── panel helpers ──
@@ -76,20 +116,29 @@ function createScoreStore(storageKey, opts) {
   };
 }
 
+// ── focus management ──
+// After a game opens, focus its panel so keyboard / screen-reader users land in the game, not on the hidden dashboard.
+function focusPanel() {
+  const p = document.getElementById('game-panel');
+  if (!p) return;
+  p.setAttribute('tabindex', '-1');
+  p.focus({ preventScroll: true });
+}
+
 // ── dashboard cards + screen switching ──
 // games: [{id, title, icon, tag, desc, meta[], start}]; getLabel(id) -> best-score label or null.
 function renderGameCards(gridId, games, getLabel) {
   document.getElementById(gridId).innerHTML = games.map(g => `
     <div class="game-card" onclick="launchGame('${g.id}')">
       <div class="card-tag">${g.tag}</div>
-      <div class="card-icon-row">${g.icon}</div>
-      <div class="card-title">${g.title}</div>
+      <div class="card-icon-row" aria-hidden="true">${g.icon}</div>
+      <h3 class="card-title">${g.title}</h3>
       <div class="card-desc">${g.desc}</div>
       <div class="card-meta">
         ${g.meta.map(m => `<span class="chip">${m}</span>`).join('')}
         ${getLabel(g.id) != null ? `<span class="chip hi">Best: ${getLabel(g.id)}</span>` : ''}
       </div>
-      <button class="play-btn">Start exercise →</button>
+      <button class="play-btn" data-game-id="${g.id}" aria-label="Start ${g.title.replace(/"/g, '&quot;')}">Start exercise →</button>
     </div>`).join('');
 }
 function openGame(games, id) {
@@ -101,11 +150,16 @@ function openGame(games, id) {
   document.getElementById('gs-stats').innerHTML = '';
   const p = document.getElementById('game-panel');
   p.innerHTML = ''; p.className = 'game-panel';
+  _lastLaunched = id;
   g.start();
+  focusPanel();
 }
 function closeGame() {
   _gen++;                                   // invalidate all running game callbacks
   document.getElementById('dashboard').style.display = 'block';
   document.getElementById('game-screen').style.display = 'none';
   renderDashboard();
+  // Return keyboard focus to the card that launched the game (or the page heading).
+  const btn = _lastLaunched && document.querySelector('.play-btn[data-game-id="' + _lastLaunched + '"]');
+  if (btn) btn.focus({ preventScroll: true });
 }

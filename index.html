@@ -8,7 +8,7 @@
 <style>
 .landing-body { max-width: 860px; margin: 0 auto; padding: 60px 32px 100px; }
 .landing-intro { margin-bottom: 44px; }
-.landing-intro h2 { font-family: 'Instrument Serif', serif; font-size: 2.1rem; font-weight: 400; margin-bottom: 8px; }
+.landing-intro h1 { font-family: 'Instrument Serif', serif; font-size: 2.1rem; font-weight: 400; margin-bottom: 8px; }
 .landing-intro p { color: var(--text2); font-size: .9rem; line-height: 1.65; max-width: 540px; }
 .category-list { display: flex; flex-direction: column; gap: 12px; }
 .category-btn {
@@ -24,7 +24,7 @@
 }
 .category-btn:hover { box-shadow: var(--shadow-lg); border-color: var(--border2); transform: translateY(-1px); }
 .category-btn-left { display: flex; flex-direction: column; gap: 4px; }
-.category-btn-name { font-family: 'Instrument Serif', serif; font-size: 1.3rem; color: var(--text); }
+.category-btn-name { font-family: 'Instrument Serif', serif; font-size: 1.3rem; font-weight: 400; color: var(--text); }
 .category-btn-desc { font-size: .82rem; color: var(--text2); line-height: 1.5; }
 .category-btn-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
 .category-btn-arrow {
@@ -42,16 +42,16 @@
   <div class="site-sub">Assessment Suite</div>
 </header>
 
-<div class="landing-body">
+<main class="landing-body">
   <div class="landing-intro">
-    <h2>Select a test suite</h2>
+    <h1>Select a test suite</h1>
     <p>Choose a category below to begin. Each suite contains a set of self-contained exercises targeting specific cognitive skills.</p>
   </div>
   <div class="category-list">
 
     <a class="category-btn" href="zapn.html">
       <div class="category-btn-left">
-        <div class="category-btn-name">Zap-N</div>
+        <h2 class="category-btn-name">Zap-N</h2>
         <div class="category-btn-desc">Cognitive exercises for trading and finance hiring — reaction, memory, arithmetic, logic, switching, risk, and planning.</div>
         <div class="category-btn-meta">
           <span class="chip">9 exercises</span>
@@ -63,7 +63,7 @@
 
     <a class="category-btn" href="sequences.html">
       <div class="category-btn-left">
-        <div class="category-btn-name">Sequences</div>
+        <h2 class="category-btn-name">Sequences</h2>
         <div class="category-btn-desc">Pattern recognition and sequence extrapolation — arithmetic, geometric, prime-based, fractional, recursive, and more. Identify the rule, complete the sequence.</div>
         <div class="category-btn-meta">
           <span class="chip">51 sequence types</span>
@@ -75,7 +75,7 @@
 
     <a class="category-btn" href="arithmetic.html">
       <div class="category-btn-left">
-        <div class="category-btn-name">Arithmetic</div>
+        <h2 class="category-btn-name">Arithmetic</h2>
         <div class="category-btn-desc">Fast-paced arithmetic drills — addition, subtraction, multiplication, division, fractions, decimals, and percentages. 80 questions, 8 minutes, multiple choice or free response.</div>
         <div class="category-btn-meta">
           <span class="chip">2 exercises</span>
@@ -88,7 +88,7 @@
     <!-- Add new category buttons here. Example:
     <a class="category-btn" href="newcategory.html">
       <div class="category-btn-left">
-        <div class="category-btn-name">Category Name</div>
+        <h2 class="category-btn-name">Category Name</div>
         <div class="category-btn-desc">Description of the category.</div>
         <div class="category-btn-meta">
           <span class="chip">N exercises</span>
@@ -99,7 +99,7 @@
     -->
 
   </div>
-</div>
+</main>
 
 </body>
 </html>
