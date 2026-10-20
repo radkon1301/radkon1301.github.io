@@ -134,7 +134,7 @@ function startPinCode(){
     if(!alive())return;
     clearKeys();saveScore('pincode',seqScore);setStats('');
     setPanel(`<div class="result-card">
-      <h3>PinCode complete</h3>
+      <h2>PinCode complete</h2>
       <div class="result-num">${seqScore}</div>
       <div class="result-sub">Sequences recalled correctly</div>
       <button class="again-btn" onclick="startPinCode()">Play again</button>
@@ -142,7 +142,7 @@ function startPinCode(){
   }
   setStats('');
   setPanel(`<div class="start-card">
-    <h3>PinCode</h3>
+    <h2>PinCode</h2>
     <p>A number sequence will be revealed one digit at a time. Memorise it, then type it back. Mode 1: forward. Mode 2: reversed. Mode 3: sorted low to high. The sequence grows longer with each success.</p>
     <button class="big-btn" onclick="pcGo()">Begin</button>
   </div>`);

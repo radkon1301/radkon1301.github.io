@@ -479,7 +479,7 @@ function startBART(){
   setStats('');
   setPanel(`<div class="bart-wrap">
     <div class="start-card">
-      <h3>BART</h3>
+      <h2>BART</h2>
       <p>Pump balloons to earn money — but pump too much and they pop! Two rounds: 30 balloons at $0.10/pump, then 20 at $0.20/pump with a pop penalty. Find the sweet spot between greed and caution.</p>
       <button class="big-btn" onclick="bartGo()">Begin</button>
     </div>

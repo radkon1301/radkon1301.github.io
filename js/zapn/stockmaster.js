@@ -202,7 +202,7 @@ function startStockMaster(){
     cancelAnimationFrame(rafId);
     saveScore('stockmaster',score);setStats('');
     setPanel(`<div class="result-card">
-      <h3>Stock Master complete</h3>
+      <h2>Stock Master complete</h2>
       <div class="result-num">${score}</div>
       <div class="result-sub">Stocks bought in 2 minutes</div>
       <button class="again-btn" onclick="startStockMaster()">Play again</button>
@@ -235,7 +235,7 @@ function startStockMaster(){
 
   setStats('');
   setPanel(`<div class="start-card">
-    <h3>Stock Master</h3>
+    <h2>Stock Master</h2>
     <p>Gauges appear across the screen, each with a spinning needle and a <strong>green zone</strong>. Click a gauge when its needle is inside the green zone to buy a stock. Gauges fade in and out — act fast. 2 minutes on the clock.</p>
     <button class="big-btn" onclick="smGo()">Begin</button>
   </div>`);

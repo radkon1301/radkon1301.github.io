@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap'); /* Overview: docs/shared.md */
 
 :root {
+  color-scheme: light;
   --bg: #f4f2ee;
   --surface: #ffffff;
   --surface2: #f9f8f6;
@@ -9,20 +10,109 @@
   --accent: #1a56db;
   --accent-light: #e8edfc;
   --accent2: #0f3db5;
-  --green: #16a34a;
+  --accent-border: #c3cff7;
+  --accent-ring: #93b5f8;
+  --on-accent: #ffffff;                 /* text/icons drawn on an --accent / --green fill */
+  --green: #117d39;
   --green-light: #dcfce7;
-  --red: #dc2626;
+  --green-border: #86efac;
+  --red: #c72222;
   --red-light: #fee2e2;
-  --yellow: #ca8a04;
+  --yellow: #956603;
   --yellow-light: #fef9c3;
+  --yellow-border: #fde68a;
+  --purple: #7c3aed;
+  --purple-light: #f3e8ff;
+  --purple-border: #ddd6fe;
   --text: #1a1916;
   --text2: #4a4740;
-  --muted: #9c9690;
+  --muted: #6f6a66;
+  --btn-bg: #1a1916;                    /* primary buttons: inverted relative to the page */
+  --btn-fg: #ffffff;
+  --btn-hover: #000000;
+  --panel-grad-a: #f0f4ff;              /* explanation / feedback panels */
+  --panel-grad-b: #f8f6ff;
+  --panel-border: #d0d8f8;
   --shadow: 0 1px 3px rgba(0,0,0,.07), 0 4px 16px rgba(0,0,0,.05);
   --shadow-lg: 0 4px 24px rgba(0,0,0,.1);
   --radius: 14px;
   --radius-sm: 8px;
 }
+/* Dark theme: follows the OS unless the user picked a theme with the toggle (js/theme.js sets data-theme). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { 
+  color-scheme: dark;
+  --bg: #121317;
+  --surface: #1c1e25;
+  --surface2: #242730;
+  --border: #343847;
+  --border2: #484d60;
+  --accent: #7aa2f7;
+  --accent-light: #1d2850;
+  --accent2: #9db9ff;
+  --accent-border: #33427a;
+  --accent-ring: #4a68b8;
+  --on-accent: #0b1020;
+  --green: #3dbd6a;
+  --green-light: #12331f;
+  --green-border: #1f6b3a;
+  --red: #f07070;
+  --red-light: #3a1818;
+  --yellow: #e0a020;
+  --yellow-light: #37300f;
+  --yellow-border: #5c4a12;
+  --purple: #b794f6;
+  --purple-light: #2a1d4a;
+  --purple-border: #4a3a7a;
+  --text: #ececf0;
+  --text2: #b0b2bb;
+  --muted: #8c8f98;
+  --btn-bg: #ececf0;
+  --btn-fg: #14151a;
+  --btn-hover: #ffffff;
+  --panel-grad-a: #1b2140;
+  --panel-grad-b: #1f1d3d;
+  --panel-border: #343b66;
+  --shadow: 0 1px 3px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.3);
+  --shadow-lg: 0 4px 24px rgba(0,0,0,.5);
+   }
+}
+:root[data-theme="dark"] { 
+  color-scheme: dark;
+  --bg: #121317;
+  --surface: #1c1e25;
+  --surface2: #242730;
+  --border: #343847;
+  --border2: #484d60;
+  --accent: #7aa2f7;
+  --accent-light: #1d2850;
+  --accent2: #9db9ff;
+  --accent-border: #33427a;
+  --accent-ring: #4a68b8;
+  --on-accent: #0b1020;
+  --green: #3dbd6a;
+  --green-light: #12331f;
+  --green-border: #1f6b3a;
+  --red: #f07070;
+  --red-light: #3a1818;
+  --yellow: #e0a020;
+  --yellow-light: #37300f;
+  --yellow-border: #5c4a12;
+  --purple: #b794f6;
+  --purple-light: #2a1d4a;
+  --purple-border: #4a3a7a;
+  --text: #ececf0;
+  --text2: #b0b2bb;
+  --muted: #8c8f98;
+  --btn-bg: #ececf0;
+  --btn-fg: #14151a;
+  --btn-hover: #ffffff;
+  --panel-grad-a: #1b2140;
+  --panel-grad-b: #1f1d3d;
+  --panel-border: #343b66;
+  --shadow: 0 1px 3px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.3);
+  --shadow-lg: 0 4px 24px rgba(0,0,0,.5);
+   }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   font-family: 'DM Sans', sans-serif;
@@ -54,17 +144,17 @@ body {
 /* ─── SHARED BUTTONS ─── */
 .back-btn { display: flex; align-items: center; gap: 6px; font-size: .83rem; font-weight: 600; color: var(--text2); background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 14px; cursor: pointer; transition: border-color .15s; font-family: 'DM Sans', sans-serif; text-decoration: none; }
 .back-btn:hover { border-color: var(--border2); color: var(--text); }
-.big-btn { padding:13px 40px; background:var(--text); color:white; border:none; border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; font-weight:700; font-size:.95rem; cursor:pointer; transition:background .15s; }
-.big-btn:hover { background:#111; }
-.again-btn { padding:12px 36px; background:var(--text); color:white; border:none; border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; font-weight:700; font-size:.88rem; cursor:pointer; transition:background .15s; }
-.again-btn:hover { background:#111; }
+.big-btn { padding:13px 40px; background:var(--btn-bg); color:var(--btn-fg); border:none; border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; font-weight:700; font-size:.95rem; cursor:pointer; transition:background .15s; }
+.big-btn:hover { background:var(--btn-hover); }
+.again-btn { padding:12px 36px; background:var(--btn-bg); color:var(--btn-fg); border:none; border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; font-weight:700; font-size:.88rem; cursor:pointer; transition:background .15s; }
+.again-btn:hover { background:var(--btn-hover); }
 
 /* ─── SHARED CARDS / RESULTS ─── */
 .start-card { text-align:center; }
-.start-card h3 { font-family:'Instrument Serif',serif; font-size:1.6rem; margin-bottom:8px; font-weight:400; }
+.start-card h2 { font-family:'Instrument Serif',serif; font-size:1.6rem; margin-bottom:8px; font-weight:400; }
 .start-card p { color:var(--text2); font-size:.88rem; line-height:1.6; margin-bottom:28px; max-width:400px; }
 .result-card { text-align:center; }
-.result-card h3 { font-family:'Instrument Serif',serif; font-size:1.3rem; font-weight:400; color:var(--muted); margin-bottom:6px; }
+.result-card h2 { font-family:'Instrument Serif',serif; font-size:1.3rem; font-weight:400; color:var(--muted); margin-bottom:6px; }
 .result-num { font-family:'Instrument Serif',serif; font-size:5rem; line-height:1; color:var(--accent); margin:12px 0; }
 .result-sub { color:var(--muted); font-size:.85rem; margin-bottom:32px; }
 
@@ -87,6 +177,7 @@ body {
 .dash-intro p { color: var(--text2); font-size: .9rem; line-height: 1.6; }
 .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 18px; }
 .game-card {
+  display: flex; flex-direction: column;          /* lets the Start button sit on the bottom edge so buttons align across a row */
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -100,8 +191,8 @@ body {
 .card-title { font-family: 'Instrument Serif', serif; font-size: 1.25rem; font-weight: 400; margin-bottom: 6px; }
 .card-desc { color: var(--text2); font-size: .83rem; line-height: 1.55; margin-bottom: 18px; }
 .card-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
-.play-btn { width: 100%; padding: 11px; background: var(--text); color: white; border: none; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: .85rem; cursor: pointer; transition: background .15s; }
-.play-btn:hover { background: #111; }
+.play-btn { margin-top: auto; width: 100%; padding: 11px; background: var(--btn-bg); color: var(--btn-fg); border: none; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: .85rem; cursor: pointer; transition: background .15s; }
+.play-btn:hover { background: var(--btn-hover); }
 
 /* ─── GAME SCREEN ─── */
 #game-screen { display: flex; flex-direction: column; min-height: 100vh; }
@@ -149,3 +240,8 @@ body {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
+
+/* ─── THEME TOGGLE ─── */
+.hdr-right { display: flex; align-items: center; gap: 16px; }
+.theme-toggle { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 50%; background: var(--surface2); color: var(--text2); cursor: pointer; font-size: 1rem; line-height: 1; transition: border-color .15s, color .15s; }
+.theme-toggle:hover { border-color: var(--border2); color: var(--text); }

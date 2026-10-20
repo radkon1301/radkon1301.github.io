@@ -97,7 +97,7 @@ function startSeqPractice() {
   };
 
   setPanel(`<div class="start-card">
-    <h3>Sequence Practice</h3>
+    <h2>Sequence Practice</h2>
     <p>Identify the pattern in each sequence and choose the next number. Covers arithmetic, geometric, prime-based, Fibonacci-type, fractional sequences, and many more.</p>
     <button class="big-btn" onclick="seqGo()">Begin</button>
   </div>`);

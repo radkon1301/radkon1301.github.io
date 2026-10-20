@@ -77,7 +77,7 @@ function startTest(){
   const p=document.getElementById('game-panel');
   p.innerHTML='';p.className='game-panel';
   setPanel(`<div class="start-card">
-    <h3>Full Test</h3>
+    <h2>Full Test</h2>
     <p>All 9 exercises back-to-back in a randomised order. A <strong>Next game →</strong> button replaces the usual "Play again" after each one. Scores update your personal bests automatically.</p>
     <p style="font-size:.85rem;color:var(--muted);margin-top:8px">Order: ${order.map(id=>GAMES.find(x=>x.id===id).title).join(' → ')}</p>
     <button class="big-btn" onclick="window._testAdvance&&window._testAdvance()">Begin</button>

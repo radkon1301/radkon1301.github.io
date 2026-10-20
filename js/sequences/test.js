@@ -323,7 +323,7 @@ function startSeqTest() {
 
   // ── Start ──
   setPanel(`<div class="start-card">
-    <h3>Sequence Test</h3>
+    <h2>Sequence Test</h2>
     <p>26 questions &nbsp;·&nbsp; 25 minutes</p>
     <p style="font-size:.85rem;color:var(--text2);margin-top:8px">Navigate freely between questions. Skip any question and return later. Correct answers and explanations are revealed after you submit.</p>
     <p style="font-size:.82rem;color:var(--text2);margin-top:6px"><strong>Score = correct − incorrect.</strong> Skipped questions score 0.</p>

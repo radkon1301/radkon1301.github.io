@@ -266,7 +266,7 @@ function runTest(gameId, isMultipleChoice) {
   // ── START SCREEN ──
   const modeName = isMultipleChoice ? 'Multiple Choice' : 'Free Response';
   setPanel(`<div class="start-card">
-    <h3>80 in 8 — ${modeName}</h3>
+    <h2>80 in 8 — ${modeName}</h2>
     <p>80 arithmetic questions &nbsp;·&nbsp; 8 minutes</p>
     <p style="font-size:.85rem;color:var(--text2);margin-top:8px">
       ${isMultipleChoice

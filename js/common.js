@@ -132,7 +132,7 @@ function renderGameCards(gridId, games, getLabel) {
     <div class="game-card" onclick="launchGame('${g.id}')">
       <div class="card-tag">${g.tag}</div>
       <div class="card-icon-row" aria-hidden="true">${g.icon}</div>
-      <h3 class="card-title">${g.title}</h3>
+      <h2 class="card-title">${g.title}</h2>
       <div class="card-desc">${g.desc}</div>
       <div class="card-meta">
         ${g.meta.map(m => `<span class="chip">${m}</span>`).join('')}

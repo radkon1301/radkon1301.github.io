@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mental Edge — Assessment Suite</title>
+<script src="js/theme.js"></script>
 <link rel="stylesheet" href="shared.css">
 <style>
 .landing-body { max-width: 860px; margin: 0 auto; padding: 60px 32px 100px; }
@@ -31,7 +32,7 @@
   flex-shrink: 0; width: 36px; height: 36px;
   background: var(--accent); border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  color: white; font-size: 1.1rem; line-height: 1;
+  color: var(--on-accent); font-size: 1.1rem; line-height: 1;
 }
 </style>
 </head>
@@ -39,7 +40,7 @@
 
 <header class="site-header">
   <div class="site-logo">Mental<span>Edge</span></div>
-  <div class="site-sub">Assessment Suite</div>
+  <div class="hdr-right"><button type="button" class="theme-toggle" data-theme-toggle aria-label="Dark mode" aria-pressed="false" title="Toggle dark mode"><span class="theme-icon" aria-hidden="true">&#9790;</span></button><div class="site-sub">Assessment Suite</div></div>
 </header>
 
 <main class="landing-body">

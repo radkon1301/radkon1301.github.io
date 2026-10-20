@@ -120,8 +120,8 @@
 
 .arith-submit-btn {
   padding: 14px 22px;
-  background: var(--text);
-  color: white;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
   border: none;
   border-radius: var(--radius-sm);
   font-family: 'DM Sans', sans-serif;
@@ -131,14 +131,14 @@
   transition: background .15s;
   white-space: nowrap;
 }
-.arith-submit-btn:hover { background: #111; }
+.arith-submit-btn:hover { background: var(--btn-hover); }
 .arith-submit-btn:disabled { opacity: .4; cursor: default; }
 
 .arith-feedback {
   margin-top: 16px;
   padding: 13px 16px;
-  background: linear-gradient(135deg, #f0f4ff 0%, #f8f6ff 100%);
-  border: 1px solid #d0d8f8;
+  background: linear-gradient(135deg, var(--panel-grad-a) 0%, var(--panel-grad-b) 100%);
+  border: 1px solid var(--panel-border);
   border-radius: 10px;
   font-size: .84rem;
   color: var(--text2);
@@ -158,8 +158,8 @@
   margin-top: 12px;
   width: 100%;
   padding: 13px;
-  background: var(--text);
-  color: white;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
   border: none;
   border-radius: var(--radius-sm);
   font-family: 'DM Sans', sans-serif;
@@ -169,7 +169,7 @@
   transition: background .15s;
   animation: fadeSlideIn .3s ease .05s both;
 }
-.arith-next-btn:hover { background: #111; }
+.arith-next-btn:hover { background: var(--btn-hover); }
 
 /* ── PROGRESS BAR ── */
 .arith-prog-wrap {
@@ -276,7 +276,7 @@
   display: flex; align-items: center; justify-content: center;
   transition: background .12s;
 }
-.arith-q-dot.active   { background: var(--accent); border-color: var(--accent); color: #fff; }
+.arith-q-dot.active   { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .arith-q-dot.dot-correct { background: var(--green-light); border-color: var(--green); color: var(--green); }
 .arith-q-dot.dot-wrong   { background: var(--red-light);   border-color: var(--red);   color: var(--red);   }
 .arith-q-dot.dot-skip    { border-style: dashed; color: var(--muted); }

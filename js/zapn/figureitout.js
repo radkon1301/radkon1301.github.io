@@ -145,7 +145,7 @@ function startFigureItOut(){
     saveScore('figureitout', avgR, label);
     setStats('');
     setPanel(`<div class="result-card">
-      <h3>FigureItOut complete</h3>
+      <h2>FigureItOut complete</h2>
       <div class="result-num">${avgR.toFixed(2)}</div>
       <div class="result-sub">Avg steps per round — lower is better</div>
       <button class="again-btn" onclick="startFigureItOut()">Play again</button>
@@ -153,7 +153,7 @@ function startFigureItOut(){
   }
   setStats('');
   setPanel(`<div class="start-card">
-    <h3>FigureItOut</h3>
+    <h2>FigureItOut</h2>
     <p>A hidden figure has three properties: shape, colour, and pattern. Submit a guess and you'll see how many of the three properties you got right — but not which ones. Deduce the figure in as few guesses as possible. 5 rounds.</p>
     <button class="big-btn" onclick="fiGo()">Begin</button>
   </div>`);
