@@ -435,7 +435,7 @@ function startBART(){
         <span style="color:var(--red)">●</span> under-pumping &nbsp;
         <span style="color:var(--yellow)">●</span> over-pumping
       </div>
-      <div style="text-align:center">
+      <div style="text-align:center" data-result>
         <div style="font-family:'Instrument Serif',serif;font-size:2.5rem;color:var(--accent)">${scoreLabel}</div>
         <div style="color:var(--muted);font-size:.82rem;margin-bottom:20px">total earned · green averages</div>
         <button class="again-btn" onclick="startBART()">Play again</button>
