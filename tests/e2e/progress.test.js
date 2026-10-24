@@ -20,7 +20,7 @@ test('empty state: zeros, every game says "No runs yet", no errors', async () =>
   const page = await open();
   const tiles = await page.$$eval('.pr-tile-val', n => n.map(x => x.textContent.trim()));
   assert.deepEqual(tiles.slice(0, 2), ['0', '0']); assert.equal(tiles[4], '—');
-  assert.equal(await page.locator('.pr-card.empty').count(), 12);              // 9 + 1 + 2 games
+  assert.equal(await page.locator('.pr-card.empty').count(), 15);              // 9 + 1 + 2 + 3 games
   assert.deepEqual(page.errors, []);
 });
 
@@ -60,7 +60,7 @@ test('hostile labels from storage are shown as text and never executed', async (
 
 test('corrupt storage does not break the page', async () => {
   const page = await open({}, { me_scores_hist: '{oops', me_seq_scores_hist: '[null,1,"x"]', me_arith_scores_hist: '{"a":1}' });
-  assert.equal(await page.locator('.pr-card.empty').count(), 12); assert.deepEqual(page.errors, []);
+  assert.equal(await page.locator('.pr-card.empty').count(), 15); assert.deepEqual(page.errors, []);
 });
 
 test('export, reset, import restores everything; bad files and cancelled confirms change nothing', async () => {
@@ -72,20 +72,20 @@ test('export, reset, import restores everything; bad files and cancelled confirm
   assert.equal(exp.format, 'mental-edge-progress'); assert.equal(exp.data.me_scores_hist.length, 8); assert.ok(!('me_theme' in exp.data));
 
   page.once('dialog', d => d.dismiss());
-  await page.click('#pr-reset'); assert.equal(await page.locator('.pr-card.empty').count(), 11, 'cancelled reset keeps data');
+  await page.click('#pr-reset'); assert.equal(await page.locator('.pr-card.empty').count(), 14, 'cancelled reset keeps data');
   page.once('dialog', d => d.accept());
-  await page.click('#pr-reset'); assert.equal(await page.locator('.pr-card.empty').count(), 12);
+  await page.click('#pr-reset'); assert.equal(await page.locator('.pr-card.empty').count(), 15);
   assert.equal(await page.evaluate(() => localStorage.getItem('me_scores_hist')), null);
 
   fs.writeFileSync('/tmp/me-bad.json', '{"format":"nope"}');
   await page.setInputFiles('#pr-file', '/tmp/me-bad.json'); await waitStatus(page, /not a Mental Edge/);
-  assert.match(await page.textContent('#pr-status'), /not a Mental Edge/); assert.equal(await page.locator('.pr-card.empty').count(), 12);
+  assert.match(await page.textContent('#pr-status'), /not a Mental Edge/); assert.equal(await page.locator('.pr-card.empty').count(), 15);
 
   page.once('dialog', d => d.dismiss());
-  await page.setInputFiles('#pr-file', file); await waitStatus(page, /cancelled/); assert.match(await page.textContent('#pr-status'), /cancelled/); assert.equal(await page.locator('.pr-card.empty').count(), 12);
+  await page.setInputFiles('#pr-file', file); await waitStatus(page, /cancelled/); assert.match(await page.textContent('#pr-status'), /cancelled/); assert.equal(await page.locator('.pr-card.empty').count(), 15);
   page.once('dialog', d => d.accept());
   await page.setInputFiles('#pr-file', file); await waitStatus(page, /Imported/);
-  assert.equal(await page.locator('.pr-card.empty').count(), 11);
+  assert.equal(await page.locator('.pr-card.empty').count(), 14);
   assert.match(await page.locator('.pr-card', { hasText: 'ShapeShift' }).locator('.pr-num b').nth(1).textContent(), /0\.520s/);
   assert.equal(await page.evaluate(() => JSON.parse(localStorage.me_scores).shapeshift.v), 0.52);
   assert.deepEqual(page.errors, []);

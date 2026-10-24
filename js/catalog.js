@@ -20,5 +20,10 @@ const ME_CATALOG = [
     { id: 'arith-mc', title: '80 in 8 — Multiple Choice' },
     { id: 'arith-fr', title: '80 in 8 — Free Response' },
   ] },
+  { suite: 'extras', name: 'Extras', page: 'extras.html', key: 'me_extra_scores', games: [
+    { id: 'nback',  title: 'N-Back' },
+    { id: 'stroop', title: 'Stroop', lowerBetter: true },
+    { id: 'ev',     title: 'Expected Value' },
+  ] },
 ];
 if (typeof module !== 'undefined') module.exports = { ME_CATALOG };

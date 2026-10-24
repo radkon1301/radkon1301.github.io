@@ -16,6 +16,12 @@ test('Zap-N: games and titles match registry; lowerBetter matches core.js', () =
   const lb = read('js/zapn/core.js').match(/LOWER_BETTER=new Set\(\[([^\]]*)\]\)/)[1].match(/'([^']+)'/g).map(s => s.replace(/'/g, '')).sort();
   assert.deepEqual(suite('zapn').games.filter(g => g.lowerBetter).map(g => g.id).sort(), lb);
 });
+test('Extras: games match registry; lowerBetter matches core.js', () => {
+  const reg = [...read('js/extras/registry.js').matchAll(/id: '(\w+)', title: '([^']+)'/g)];
+  assert.deepEqual(suite('extras').games.map(g => [g.id, g.title]), reg.map(m => [m[1], m[2]]));
+  const lb = read('js/extras/core.js').match(/EXTRA_LOWER_BETTER = new Set\(\[([^\]]*)\]\)/)[1].match(/'([^']+)'/g).map(x => x.replace(/'/g, '')).sort();
+  assert.deepEqual(suite('extras').games.filter(g => g.lowerBetter).map(g => g.id).sort(), lb);
+});
 test('every id a game saves is in the catalog, and vice versa', () => {
   const saved = new Map();   // file -> ids
   const files = ['js/zapn', 'js/sequences', 'js/arithmetic', 'js/extras'].flatMap(d => fs.existsSync(path.join(__dirname, '..', d)) ? fs.readdirSync(path.join(__dirname, '..', d)).map(f => d + '/' + f) : []);

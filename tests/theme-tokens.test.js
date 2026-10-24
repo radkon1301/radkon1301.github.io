@@ -43,7 +43,7 @@ test('every token used by var(--x) in the stylesheets and scripts is defined', (
   const files = ['shared.css', 'index.html', 'progress.html', ...fs.readdirSync(path.join(dir, 'css')).map(f => 'css/' + f),
     ...['js', 'js/zapn', 'js/sequences', 'js/arithmetic', 'js/extras'].flatMap(d => fs.existsSync(path.join(dir, d)) ? fs.readdirSync(path.join(dir, d)).filter(f => f.endsWith('.js')).map(f => d + '/' + f) : [])]
     .filter(f => fs.existsSync(path.join(dir, f)));
-  const LOCAL = /^(sk-h|sk-mh|dx|dy)$/;                    // per-component custom properties (sizes / animation offsets), not theme colours
+  const LOCAL = /^(sk-h|sk-mh|dx|dy|st-fix)$/;                    // per-component custom properties (sizes / animation offsets), not theme colours
   const bad = [];
   for (const f of files) for (const m of fs.readFileSync(path.join(dir, f), 'utf8').matchAll(/var\(--([\w-]+)/g)) {
     if (!defined.has(m[1]) && !LOCAL.test(m[1])) bad.push(f + ': --' + m[1]);

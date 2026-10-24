@@ -164,6 +164,8 @@ function countUp(el) {
   if (!node || node.nodeType !== 3 || reducedMotion()) return;
   const txt = node.nodeValue, m = txt.trim().match(/^(-?\d+(?:\.\d+)?)$/);
   if (!m) return;
+  // The visible digits animate, so give assistive tech the FINAL value up front (role=img + aria-label ignores the churn).
+  el.setAttribute('role', 'img'); el.setAttribute('aria-label', el.textContent.replace(/\s+/g, ' ').trim());
   const target = parseFloat(m[1]), dec = (m[1].split('.')[1] || '').length, t0 = performance.now(), dur = 650;
   function step(now) {
     if (!node.parentNode) return;                       // panel was replaced meanwhile
