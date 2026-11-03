@@ -114,7 +114,7 @@ function startTheSwitch(){
     saveScore('theswitch', avg, label);
     setStats('');
     setPanel(`<div class="result-card">
-      <h3>The Switch complete</h3>
+      <h2>The Switch complete</h2>
       <div class="result-num">${avgS}<span style="font-size:2rem;color:var(--muted)">s</span></div>
       <div class="result-sub">Avg response time · Accuracy: ${acc}%</div>
       <button class="again-btn" onclick="startTheSwitch()">Play again</button>
@@ -124,7 +124,7 @@ function startTheSwitch(){
   let _swRound=genRound();
   setStats('');
   setPanel(`<div class="start-card">
-    <h3>The Switch</h3>
+    <h2>The Switch</h2>
     <p>Two boxes appear each round — one asks if the math answer is even, the other asks if the two arrow sequences match. Only the <strong>larger, brighter box</strong> is your task for that round. Answer <strong>Yes</strong> or <strong>No</strong>. 35 rounds.</p>
     <button class="big-btn" onclick="swGo()">Begin</button>
   </div>`);

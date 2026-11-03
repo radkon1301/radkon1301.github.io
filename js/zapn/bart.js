@@ -435,7 +435,7 @@ function startBART(){
         <span style="color:var(--red)">●</span> under-pumping &nbsp;
         <span style="color:var(--yellow)">●</span> over-pumping
       </div>
-      <div style="text-align:center">
+      <div style="text-align:center" data-result>
         <div style="font-family:'Instrument Serif',serif;font-size:2.5rem;color:var(--accent)">${scoreLabel}</div>
         <div style="color:var(--muted);font-size:.82rem;margin-bottom:20px">total earned · green averages</div>
         <button class="again-btn" onclick="startBART()">Play again</button>
@@ -479,7 +479,7 @@ function startBART(){
   setStats('');
   setPanel(`<div class="bart-wrap">
     <div class="start-card">
-      <h3>BART</h3>
+      <h2>BART</h2>
       <p>Pump balloons to earn money — but pump too much and they pop! Two rounds: 30 balloons at $0.10/pump, then 20 at $0.20/pump with a pop penalty. Find the sweet spot between greed and caution.</p>
       <button class="big-btn" onclick="bartGo()">Begin</button>
     </div>

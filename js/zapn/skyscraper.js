@@ -58,7 +58,7 @@ function startSkyscraper(){
   function blockHTML(colorKey,mini=false,floating=false){
     const c=COLORS[colorKey];
     const cls='sky-block'+(mini?' mini':'')+(floating?' sky-floating':'');
-    return`<div class="${cls}" style="background:${c.bg};border-bottom:3px solid ${c.dark};box-shadow:0 3px 8px rgba(0,0,0,.35)"></div>`;
+    return`<div class="${cls}" style="background:${c.bg};border-bottom:3px solid ${c.dark};box-shadow:0 3px 8px rgba(0,0,0,.35)"><span class="sky-lbl" aria-hidden="true">${c.label}</span></div>`;
   }
 
   function emptySlotHTML(mini=false){
@@ -208,7 +208,7 @@ function startSkyscraper(){
 
     setPanel(`<div style="width:100%;display:flex;flex-direction:column;gap:20px;align-items:center">
       <div class="result-card" style="width:100%">
-        <h3>Skyscraper complete</h3>
+        <h2>Skyscraper complete</h2>
         <div class="result-num">${avgOver.toFixed(2)}<span style="font-size:2rem;color:var(--muted)"> over par</span></div>
         <div class="result-sub">Avg extra moves per level · Avg solve time: ${avgTime.toFixed(1)}s</div>
       </div>
@@ -241,7 +241,7 @@ function startSkyscraper(){
   // ── Start screen ─────────────────────────────────
   setStats('');
   setPanel(`<div class="start-card">
-    <h3>Skyscraper</h3>
+    <h2>Skyscraper</h2>
     <p>Rearrange coloured blocks across three piles to match the target pattern shown beside the game area. Click a pile to pick up its top block, then click another pile to place it. 10 levels, 4 to 7 blocks — score is average moves over the optimal solution.</p>
     <button class="big-btn" onclick="skyGo()">Begin</button>
   </div>`);

@@ -62,7 +62,7 @@ function startCodeCompare(){
     if(!alive())return;
     saveScore('codecompare',score);setStats('');
     setPanel(`<div class="result-card">
-      <h3>CodeCompare complete</h3>
+      <h2>CodeCompare complete</h2>
       <div class="result-num">${score}<span style="font-size:2rem;color:var(--muted)">/${TOTAL}</span></div>
       <div class="result-sub">Accuracy: ${Math.round(score/TOTAL*100)}%</div>
       <button class="again-btn" onclick="startCodeCompare()">Play again</button>
@@ -70,7 +70,7 @@ function startCodeCompare(){
   }
   setStats('');
   setPanel(`<div class="start-card">
-    <h3>CodeCompare</h3>
+    <h2>CodeCompare</h2>
     <p>A target sequence is shown at the top. Find the identical match among four options before the timer runs out. The timer shrinks from 5 s to 3 s over 30 rounds.</p>
     <button class="big-btn" onclick="ccGo()">Begin</button>
   </div>`);

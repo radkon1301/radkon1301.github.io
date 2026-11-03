@@ -126,8 +126,8 @@
 .seq-explanation {
   margin-top: 18px;
   padding: 14px 18px;
-  background: linear-gradient(135deg, #f0f4ff 0%, #f8f6ff 100%);
-  border: 1px solid #d0d8f8;
+  background: linear-gradient(135deg, var(--panel-grad-a) 0%, var(--panel-grad-b) 100%);
+  border: 1px solid var(--panel-border);
   border-radius: 10px;
   font-size: .84rem;
   color: var(--text2);
@@ -146,8 +146,8 @@
   margin-top: 14px;
   width: 100%;
   padding: 13px;
-  background: var(--text);
-  color: white;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
   border: none;
   border-radius: var(--radius-sm);
   font-family: 'DM Sans', sans-serif;
@@ -157,7 +157,7 @@
   transition: background .15s;
   animation: fadeSlideIn .3s ease .1s both;
 }
-.seq-next-btn:hover { background: #111; }
+.seq-next-btn:hover { background: var(--btn-hover); }
 .seq-type-toggle {
   display: flex;
   align-items: center;
@@ -190,7 +190,7 @@
 }
 .seq-type-toggle-btn.revealed {
   color: var(--accent);
-  border-color: #c3cff7;
+  border-color: var(--accent-border);
   background: var(--accent-light);
 }
 .seq-toggle-dot {
@@ -302,7 +302,7 @@
 .test-q-dot:hover { border-color: var(--border2); background: var(--surface2); }
 .test-q-dot.answered { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
 .test-q-dot.skipped { border-style: dashed; color: var(--muted); }
-.test-q-dot.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.test-q-dot.active { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .test-q-dot.dot-correct { background: var(--green-light); border-color: var(--green); color: var(--green); }
 .test-q-dot.dot-wrong { background: var(--red-light); border-color: var(--red); color: var(--red); }
 
@@ -313,8 +313,8 @@
 }
 .test-submit-btn {
   padding: 12px 36px;
-  background: var(--text);
-  color: #fff;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
   border: none;
   border-radius: var(--radius-sm);
   font-family: 'DM Sans', sans-serif;
@@ -323,7 +323,7 @@
   cursor: pointer;
   transition: background .15s;
 }
-.test-submit-btn:hover { background: #111; }
+.test-submit-btn:hover { background: var(--btn-hover); }
 
 /* Review screen */
 .test-review-header {

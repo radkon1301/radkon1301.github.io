@@ -30,3 +30,14 @@ Refactor pass (`refactor/split-and-cleanup`), each step verified with the jsdom 
 - ◆ Full Test "★ New best" now uses a strict-improvement flag from the score store instead of comparing label strings (a tie is no longer "new").
 - Removed unused/contradictory `TIER_COUNTS` and a stale comment (arithmetic); deduped `.arith-dash-*`/`.seq-dash-*` CSS onto the identical shared `.dash-header/.dash-logo`; fixed "all 8 games" banner; sequence type count is derived (`SEQ_TYPE_COUNT`), `index.html` says 51.
 - ◆ **Skyscraper generation**: one BFS per puzzle instead of up to 300 (levels 9–10: median 5 s, worst 28 s → ~0.14 s; next level prefetched behind the "solved" overlay). Mean optimal moves per level within ~0.1 of the old generator; target-shape mix similar (weighted by the fraction of each shape that is hard enough). See `docs/zapn.md`.
+
+Feature pass (`feat/dark-mode-progress-extras`), verified in real Chromium (Playwright) with a fake clock; tests added for each item:
+
+- ◆ **Timer drift fixed**: Arithmetic and Sequences tests counted down with `timeLeft--` per `setInterval` tick, so a throttled tab stretched the 8 / 25 minutes (simulated: 7:58 left after 91 s). Now `createCountdown()` derives the time from the clock.
+- ◆ **Stock Master**: canvas scaled by `devicePixelRatio` (was blurry on HiDPI), resized only when the size changes, and the stats bar is written ~1×/s instead of every frame.
+- **Dark mode** (`js/theme.js`, token set in `shared.css`, toggle in every header); hard-coded light colours in the page CSS moved onto tokens.
+- ◆ **Contrast**: existing light-theme text colours failing WCAG AA were darkened slightly (`--muted` 2.6:1 → 4.6:1, green/yellow/red text, BART Cash Out label).
+- **Accessibility basics**: landmarks, one `h1`, heading order, labelled controls, focus ring, reduced motion, `role=timer` + announcements, focus moved into/out of games, Skyscraper blocks show colour names. axe-core: 0 violations on every screen in both themes.
+- **Run history + result polish** (best-score badge, count-up, confetti), **Progress page** (export / import / reset), **Extras suite** (N-Back, Stroop, Expected Value).
+- Start buttons now align across a row of cards.
+- Tests: `tests/e2e` (playwright-core + axe-core, in `tests/package.json` only; the site still has no dependencies), plus unit tests listed in README → Verify. Not covered: touch/mobile (deliberately out of scope), Safari/Firefox rendering.

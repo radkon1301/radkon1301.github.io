@@ -1,0 +1,51 @@
+<!DOCTYPE html><!-- Code map: docs/extras.md -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Extras — Mental Edge</title>
+<script src="js/theme.js"></script>
+<link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="css/extras.css">
+</head>
+<body>
+
+<!-- ── DASHBOARD ── -->
+<div id="dashboard">
+  <header class="dash-header">
+    <div style="display:flex;align-items:center;gap:16px">
+      <a class="back-btn" href="index.html" style="border-color:transparent">&#8592; Home</a>
+      <div class="dash-logo">Extras</div>
+    </div>
+    <div class="hdr-right"><a class="hdr-link" href="progress.html">Progress</a><button type="button" class="theme-toggle" data-theme-toggle aria-label="Dark mode" aria-pressed="false" title="Toggle dark mode"><span class="theme-icon" aria-hidden="true">&#9790;</span></button><div class="dash-sub">Assessment Suite</div></div>
+  </header>
+  <main class="dash-body">
+    <div class="dash-intro">
+      <h1>Select an exercise</h1>
+      <p>Extra practice beyond the Zap-N set: working memory, resisting interference, and probability / expected-value reasoning.</p>
+    </div>
+    <div class="games-grid" id="extra-games-grid"></div>
+  </main>
+</div>
+
+<!-- ── GAME SCREEN ── -->
+<div id="game-screen" style="display:none">
+  <header class="game-header">
+    <button class="back-btn" onclick="showDashboard()">&#8592; Extras</button>
+    <h1 class="game-name-bar" id="gs-name"></h1>
+    <div class="stat-strip" id="gs-stats" aria-live="off"></div>
+  </header>
+  <main class="game-wrap">
+    <div class="game-panel" id="game-panel"></div>
+  </main>
+</div>
+
+<script src="js/common.js"></script>
+<script src="js/extras/logic.js"></script>
+<script src="js/extras/core.js"></script>
+<script src="js/extras/nback.js"></script>
+<script src="js/extras/stroop.js"></script>
+<script src="js/extras/ev.js"></script>
+<script src="js/extras/registry.js"></script>
+</body>
+</html>

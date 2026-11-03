@@ -23,7 +23,7 @@ function startShapeShift(){
   });
 
   setPanel(`<div class="start-card">
-    <h3>ShapeShift</h3>
+    <h2>ShapeShift</h2>
     <p>A shape flashes briefly on the left or right. Press <strong>←</strong> for a square and <strong>→</strong> for a circle. Focus on the + in the centre and react quickly — 60 rounds.</p>
     <button class="big-btn" onclick="ssGo()">Begin</button>
   </div>`);
@@ -119,7 +119,7 @@ function startShapeShift(){
     saveScore('shapeshift', avg, label);
     setStats('');
     setPanel(`<div class="result-card">
-      <h3>ShapeShift complete</h3>
+      <h2>ShapeShift complete</h2>
       <div class="result-num">${avgS}<span style="font-size:2rem;color:var(--muted)">s</span></div>
       <div class="result-sub">Avg response time · Accuracy: ${acc}%</div>
       <button class="again-btn" onclick="startShapeShift()">Play again</button>

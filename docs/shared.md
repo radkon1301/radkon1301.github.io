@@ -1,6 +1,6 @@
 # Shared pieces: common.js, shared.css, index.html
 
-## js/common.js (111 lines, loaded first on every suite page)
+## js/common.js (256 lines, loaded first on every suite page)
 
 Contract with a page: DOM ids `#dashboard #game-screen #gs-name #gs-stats #game-panel`; the page defines `renderDashboard()`; optionally `afterSetPanel()` (zapn's Full Test hook).
 
@@ -11,17 +11,21 @@ Contract with a page: DOM ids `#dashboard #game-screen #gs-name #gs-stats #game-
 | `setStats(html)`, `setPanel(html, top?)` | write `#gs-stats` / `#game-panel` (`top` adds class `top`); `setPanel` then calls `afterSetPanel()` if defined |
 | `createScoreStore(key, {lowerBetter?, onSave?})` | → `{scores, save(id,v,label)→isNewBest, label(id)}`; best-only; drops malformed stored entries; `onSave(id,v,label,isNewBest)` runs on every save |
 | `renderGameCards(gridId, games, getLabel)` | dashboard cards (`onclick="launchGame('id')"`, "Best: …" chip) |
-| `openGame(games, id)`, `closeGame()` | switch to game screen and call `start()`; back to dashboard and `renderDashboard()` |
+| `openGame(games, id)`, `closeGame()` | switch to game screen and call `start()`; back to dashboard and `renderDashboard()`. Focus moves into `#game-panel` on open and back to the launching card's button on close |
+| `createCountdown(seconds, {onTick, onDone, alive, now?})` | **drift-free** timer: remaining time is derived from the clock (`performance.now`), not from counting ticks, so throttled/background tabs cannot stretch a timed test. Used by the Arithmetic and Sequences tests. Never use `setInterval(() => t--, 1000)` |
+| `announce(msg)` | screen-reader announcement through a hidden polite live region |
+| `readScoreHistory(key)` | validated run history for a store key (`key_hist`); `save()` appends to it on every run |
+| `decorateResult()` (called by `setPanel`) | if the panel holds `.result-card` (or any `[data-result]`) and a score was saved in the last 5 s: adds the best-score badge (`First score saved` / `New personal best` / `Personal best` + previous run), counts `.result-num` up (final value is exposed via `aria-label` immediately), confetti on a new best, `announce()`s the result. Respects `prefers-reduced-motion`. Games just call `saveScore()` **before** `setPanel(result)` |
 
 Pages wrap these in thin `launchGame(id)` / `showDashboard()` (HTML `onclick` names) in their `core.js`.
 
-## shared.css (143 lines, read in full if needed)
+## shared.css (261 lines)
 
 Imports Google Fonts (DM Sans, DM Mono, Instrument Serif): the only external dependency. Sections (`grep -n '/\* ───' shared.css`):
 
 | Section | Contents |
 |---|---|
-| `:root` | Tokens: `--bg --surface --surface2 --border --border2 --accent --accent-light --accent2 --green(-light) --red(-light) --yellow(-light) --text --text2 --muted --shadow --shadow-lg --radius --radius-sm` |
+| `:root` + dark | Light tokens, then the dark palette twice (`@media (prefers-color-scheme: dark)` for no saved choice, and `:root[data-theme="dark"]`); `tests/theme-tokens.test.js` checks both copies are identical and every text/background pair meets WCAG AA. Use `--on-accent` for text on an accent/green fill and `--btn-bg/-fg/-hover` for primary buttons (**never `color:white` or `var(--text)` as a background**: both break in dark mode). Tokens: `--bg --surface --surface2 --border --border2 --accent --accent-light --accent2 --green(-light) --red(-light) --yellow(-light) --text --text2 --muted --shadow --shadow-lg --radius --radius-sm` |
 | SHARED HEADER | `.site-header`, `.site-logo`, `.site-sub` (index.html) |
 | CHIP | `.chip`, `.chip.hi` (the "Best: …" highlight) |
 | SHARED BUTTONS | `.back-btn`, `.big-btn`, `.again-btn` (**`.again-btn` is also a JS hook in zapn's Full Test**) |
@@ -32,6 +36,14 @@ Imports Google Fonts (DM Sans, DM Mono, Instrument Serif): the only external dep
 
 Page-specific CSS lives in `css/<page>.css` and should use these tokens.
 
-## index.html (105 lines, read in full if needed)
+## js/theme.js
 
-Landing page with an inline `<style>` (`.landing-body`, `.category-btn*`), a header, and `.category-list` with three `<a class="category-btn">` cards (Zap-N, Sequences, Arithmetic). A template comment for a new category sits at the bottom of the list. Card text hard-codes counts ("9 exercises", "~35 min full test", "51 sequence types", "2 exercises", "8 min each"); update when pages change.
+Loaded in `<head>` on every page (applies the saved theme before first paint). `me_theme` = `light` | `dark`; absent = follow the OS. Any element with `data-theme-toggle` becomes the toggle button. Exposes `window.MEtheme`.
+
+## Accessibility conventions
+
+`:focus-visible` ring and `prefers-reduced-motion` handling are global in `shared.css`; `.sr-only` hides text visually. Pages use `<main>`, one `<h1>`, `h2` card/section titles. Timers carry `role="timer"`. Icon-only buttons need `aria-label`. `tests/e2e/*` run axe-core on every screen in both themes: keep it at zero violations.
+
+## index.html (131 lines, read in full if needed)
+
+Landing page with an inline `<style>` (`.landing-body`, `.category-btn*`), a header, and `.category-list` with five `<a class="category-btn">` cards (Zap-N, Sequences, Arithmetic, Extras, Progress). A template comment for a new category sits at the bottom of the list. Card text hard-codes counts ("9 exercises", "~35 min full test", "51 sequence types", "2 exercises", "8 min each"); update when pages change.

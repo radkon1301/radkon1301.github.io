@@ -9,9 +9,10 @@ Static site on GitHub Pages: plain HTML/CSS/vanilla JS, **no build step, no depe
 ## Layout
 
 ```
-index.html            landing page (3 cards)                                   → docs/shared.md
+index.html            landing page (5 cards)                                   → docs/shared.md
 shared.css            design tokens + components used by every page            → docs/shared.md
-js/common.js          helpers shared by the 3 suite pages (111 lines)          → docs/shared.md
+js/common.js          helpers shared by the suite pages (countdown, score store + history, result polish) → docs/shared.md
+js/theme.js           light/dark theme (loaded in <head>)                      → docs/shared.md
 zapn.html             Zap-N: 9 cognitive mini-games + Full Test                → docs/zapn.md
   css/zapn.css          page CSS (one banner per game)
   js/zapn/              core, one file per game, test (Full Test), skyscraper-bank (generated), skyscraper-gen, registry
@@ -21,26 +22,34 @@ sequences.html        Sequences: 51 generators, Practice + 26-question Test   �
 arithmetic.html       Arithmetic: 80 questions / 8 min, multiple choice or free response → docs/arithmetic.md
   css/arithmetic.css
   js/arithmetic/        core, questions, answers, run-test, registry
-tests/                skyscraper-gen.test.js (node, no deps)
+extras.html           Extras: N-Back, Stroop, Expected Value                  → docs/extras.md
+  css/extras.css
+  js/extras/            logic (pure), core, one file per game, registry
+progress.html         Progress: run history, trends, streaks, export/import   → docs/progress.md
+  css/progress.css
+  js/catalog.js, js/progress-stats.js, js/progress.js
+tests/                unit tests (node, no deps) + tests/e2e (real browser; see Verify)
 tools/                gen-skyscraper-bank.js (offline builder for the puzzle bank)
 docs/ISSUES.md        remaining cleanup ideas + log of what was changed and why
 ```
 
-Each suite `*.html` is a ~50-line skeleton: head + header + `#dashboard` + `#game-screen` + `<script src>` tags.
+Each suite `*.html` (zapn, sequences, arithmetic, extras) is a ~50-line skeleton: head + header + `#dashboard` + `#game-screen` + `<script src>` tags.
 
-## Architecture (same on all three suite pages)
+## Architecture (same on all four suite pages)
 
 - **Script order matters** (classic scripts sharing globals): `js/common.js` → `core.js` → feature files (games / generators / engine) → **`registry.js` last**. The registry builds the game list with `start: startX` references and calls `renderDashboard()`, so everything it references must already be loaded. A new file must be added to the page's `<script>` list before `registry.js`.
-- **Registry** (`GAMES` / `SEQ_GAMES` / `ARITH_GAMES`): `{id, title, icon, tag, desc, meta[], start}` per game; drives dashboard cards. `launchGame(id)` → `openGame()` hides the dashboard and calls `start()`.
+- **Registry** (`GAMES` / `SEQ_GAMES` / `ARITH_GAMES` / `EXTRA_GAMES`): `{id, title, icon, tag, desc, meta[], start}` per game; drives dashboard cards. `launchGame(id)` → `openGame()` hides the dashboard and calls `start()`.
 - **A game** is a function `startX()` with its state in a closure. It renders via `setPanel(html, top?)` / `setStats(html)` (innerHTML replacement). Inline `onclick=` handlers are exposed as `window.*`.
 - **Generation guard (always keep it):** `const g = myGen(); const alive = () => myGen() === g;` and check `alive()` at the top of every timer/callback. `openGame()`/`closeGame()` bump `_gen`, silencing abandoned games.
-- **Scores:** `createScoreStore(key, {lowerBetter?, onSave?})` in `common.js`; best-only; entries `{v:number, label:string}` in localStorage:
+- **Scores:** `createScoreStore(key, {lowerBetter?, onSave?})` in `common.js`; best-only; entries `{v:number, label:string}` in localStorage. Every run is also appended to `<key>_hist` (`{id,v,label,t}`, 100 per game) for the Progress page:
 
   | Page | localStorage key | Better |
   |---|---|---|
   | zapn | `me_scores` | higher, except ids in `LOWER_BETTER` (`js/zapn/core.js`) |
   | sequences | `me_seq_scores` | higher |
   | arithmetic | `me_arith_scores` | higher |
+  | extras | `me_extra_scores` | higher, except `stroop` (`EXTRA_LOWER_BETTER`) |
+  | (theme) | `me_theme` | `light` / `dark`; unset = follow the OS |
 
 - **Shared random helpers** in `common.js`: `rand(a,b)`, `randChoice(arr)`, `shuffle(arr)` (Fisher–Yates). Never shuffle with `sort(() => Math.random() - .5)` (biased).
 
@@ -51,13 +60,23 @@ Each suite `*.html` is a ~50-line skeleton: head + header + `#dashboard` + `#gam
 | Add/change a Zap-N game | `docs/zapn.md` → "Adding a game" |
 | Add a sequence type | `docs/sequences.md` → "Adding a sequence type" |
 | Add an arithmetic question type | `docs/arithmetic.md` → "Adding a question type" |
+| Add an Extras game | `docs/extras.md` → "Adding an Extras game" |
 | Add a suite page | copy a suite skeleton (e.g. `arithmetic.html`), add a card in `index.html` (template comment at the bottom of `.category-list`), new `me_*_scores` key |
 | Colours, fonts, spacing | `:root` variables in `shared.css`; page CSS uses `var(--…)` |
 
 ## Verify
 
-- `node tests/skyscraper-gen.test.js` checks the Skyscraper generator and every stored puzzle against independent BFS solvers (~30 s).
-- Everything else is manual: `python3 -m http.server`, open the page, play the changed game, check the console. (A jsdom smoke/differential harness was used for the refactor; it is not committed. See `docs/ISSUES.md`.)
+The site has no dependencies; only the tests do.
+
+```
+node --test tests/*.test.js                 # unit tests, no install needed (~1 min with the skyscraper bank check)
+cd tests && npm install && npm run test:e2e # browser tests: playwright-core + axe-core; set CHROME_PATH if no Chromium is found
+```
+
+- `tests/*.test.js`: skyscraper generator vs independent BFS solvers; `common.js` store/history/countdown; colour-token contrast (WCAG AA, both themes); Extras game logic (property tests, brute-force check of every expected-value answer); progress stats and import validation; catalog vs registries.
+- `tests/e2e/*.test.js` (real Chromium, fake clock): timer drift and HiDPI canvas, theme, result screens, Progress page, Extras games played end to end, and axe-core on every screen in light and dark. Set `SITE_ROOT=/path/to/other/checkout` to run the same tests against another copy (e.g. `main`).
+- After editing Skyscraper levels run `node tools/gen-skyscraper-bank.js` first.
+- Then still play the changed game once with the console open.
 
 ## Keeping docs current
 

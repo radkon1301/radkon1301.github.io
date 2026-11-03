@@ -8,7 +8,7 @@ function startStockMaster(){
   const DURATION=120; // 2 minutes in seconds
   let score=0,timeLeft=DURATION,gameOver=false;
   let gauges=[]; // [{id,x,y,angle,speed,dir,greenStart,greenEnd,lifeLeft,maxLife,fading}]
-  let nextId=0,rafId=null,lastTs=null,spawnTimer=0;
+  let nextId=0,rafId=null,lastTs=null,spawnTimer=0,lastStats='';
   const g=myGen();
   function alive(){return myGen()===g;}
 
@@ -106,8 +106,13 @@ function startStockMaster(){
     const canvas=document.getElementById('sm-canvas');
     if(!arena||!canvas)return;
     const W=arena.clientWidth,H=arena.clientHeight;
-    canvas.width=W;canvas.height=H;
+    // Back the canvas with devicePixelRatio× pixels so gauges stay sharp on HiDPI screens, and only resize when the
+    // size actually changed (assigning canvas.width reallocates the bitmap, which used to happen every frame).
+    const dpr=window.devicePixelRatio||1;
+    const bw=Math.round(W*dpr),bh=Math.round(H*dpr);
+    if(canvas.width!==bw||canvas.height!==bh){canvas.width=bw;canvas.height=bh;}
     const ctx=canvas.getContext('2d');
+    ctx.setTransform(dpr,0,0,dpr,0,0);          // draw in CSS pixels; gauge coordinates and click maths stay unchanged
     ctx.clearRect(0,0,W,H);
 
     // Spawn timer
@@ -134,10 +139,12 @@ function startStockMaster(){
     if(label){
       const m=Math.floor(timeLeft/60);
       const s=Math.floor(timeLeft%60);
-      label.textContent=`${m}:${s.toString().padStart(2,'0')}`;
+      const t=`${m}:${s.toString().padStart(2,'0')}`;
+      if(label.textContent!==t)label.textContent=t;
     }
-    // Stats
-    setStats(`<div class="stat-pill">Score <b>${score}</b></div><div class="stat-pill">Time <b>${Math.ceil(timeLeft)}s</b></div>`);
+    // Stats (only touch the DOM when the visible text changes: ~1/s instead of 60/s)
+    const statsHtml=`<div class="stat-pill">Score <b>${score}</b></div><div class="stat-pill">Time <b>${Math.ceil(timeLeft)}s</b></div>`;
+    if(statsHtml!==lastStats){lastStats=statsHtml;setStats(statsHtml);}
   }
 
   function handleClick(e){
@@ -195,7 +202,7 @@ function startStockMaster(){
     cancelAnimationFrame(rafId);
     saveScore('stockmaster',score);setStats('');
     setPanel(`<div class="result-card">
-      <h3>Stock Master complete</h3>
+      <h2>Stock Master complete</h2>
       <div class="result-num">${score}</div>
       <div class="result-sub">Stocks bought in 2 minutes</div>
       <button class="again-btn" onclick="startStockMaster()">Play again</button>
@@ -208,7 +215,7 @@ function startStockMaster(){
       <div class="sm-timer-bar"><div class="sm-timer-fill" id="sm-fill" style="width:100%"></div></div>
       <div class="sm-time-label" id="sm-time">2:00</div>
       <div class="sm-arena" id="sm-arena">
-        <canvas id="sm-canvas" style="display:block;width:100%;height:100%"></canvas>
+        <canvas id="sm-canvas" role="img" aria-label="Gauge arena. Click a gauge when its needle is in the green zone." style="display:block;width:100%;height:100%"></canvas>
       </div>
     </div>`,true);
 
@@ -228,7 +235,7 @@ function startStockMaster(){
 
   setStats('');
   setPanel(`<div class="start-card">
-    <h3>Stock Master</h3>
+    <h2>Stock Master</h2>
     <p>Gauges appear across the screen, each with a spinning needle and a <strong>green zone</strong>. Click a gauge when its needle is inside the green zone to buy a stock. Gauges fade in and out — act fast. 2 minutes on the clock.</p>
     <button class="big-btn" onclick="smGo()">Begin</button>
   </div>`);

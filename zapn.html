@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Zap-N — Mental Edge</title>
+<script src="js/theme.js"></script>
 <link rel="stylesheet" href="shared.css">
 <link rel="stylesheet" href="css/zapn.css">
 </head>
@@ -18,27 +19,27 @@
       <a class="back-btn" href="index.html" style="border-color:transparent">&#8592; Home</a>
       <div class="dash-logo">Zap-N</div>
     </div>
-    <div class="dash-sub">Assessment Suite</div>
+    <div class="hdr-right"><a class="hdr-link" href="progress.html">Progress</a><button type="button" class="theme-toggle" data-theme-toggle aria-label="Dark mode" aria-pressed="false" title="Toggle dark mode"><span class="theme-icon" aria-hidden="true">&#9790;</span></button><div class="dash-sub">Assessment Suite</div></div>
   </header>
-  <div class="dash-body">
+  <main class="dash-body">
     <div class="dash-intro">
-      <h2>Select an exercise</h2>
+      <h1>Select an exercise</h1>
       <p>Practice the cognitive skills assessed in trading and finance hiring. Each game is self-contained and progressively challenging.</p>
     </div>
     <div class="games-grid" id="games-grid"></div>
-  </div>
+  </main>
 </div>
 
 <!-- ── GAME SCREEN ── -->
 <div id="game-screen" style="display:none">
   <header class="game-header">
     <button class="back-btn" onclick="showDashboard()">&#8592; Zap-N</button>
-    <div class="game-name-bar" id="gs-name"></div>
-    <div class="stat-strip" id="gs-stats"></div>
+    <h1 class="game-name-bar" id="gs-name"></h1>
+    <div class="stat-strip" id="gs-stats" aria-live="off"></div>
   </header>
-  <div class="game-wrap">
+  <main class="game-wrap">
     <div class="game-panel" id="game-panel"></div>
-  </div>
+  </main>
 </div>
 
 <script src="js/common.js"></script>

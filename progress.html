@@ -1,0 +1,43 @@
+<!DOCTYPE html><!-- Overview: README.md, docs/progress.md -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Progress — Mental Edge</title>
+<script src="js/theme.js"></script>
+<link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="css/progress.css">
+</head>
+<body>
+<header class="dash-header">
+  <div style="display:flex;align-items:center;gap:16px">
+    <a class="back-btn" href="index.html" style="border-color:transparent">&#8592; Home</a>
+    <div class="dash-logo">Progress</div>
+  </div>
+  <div class="hdr-right"><button type="button" class="theme-toggle" data-theme-toggle aria-label="Dark mode" aria-pressed="false" title="Toggle dark mode"><span class="theme-icon" aria-hidden="true">&#9790;</span></button><div class="dash-sub">Assessment Suite</div></div>
+</header>
+<main class="dash-body">
+  <div class="dash-intro">
+    <h1>Your progress</h1>
+    <p>Every completed run is recorded in this browser only: nothing is uploaded. Export a backup below if you want to keep it or move it to another device.</p>
+  </div>
+  <section aria-labelledby="sum-h"><h2 id="sum-h" class="sr-only">Summary</h2><div class="pr-summary" id="pr-summary"></div></section>
+  <div id="pr-suites"></div>
+  <section class="pr-data" aria-labelledby="data-h">
+    <h2 id="data-h">Your data</h2>
+    <p>Best scores and run history for all suites. Theme preference is not included.</p>
+    <div class="pr-actions">
+      <button type="button" class="pr-btn" id="pr-export">Export JSON</button>
+      <button type="button" class="pr-btn" id="pr-import">Import JSON…</button>
+      <button type="button" class="pr-btn danger" id="pr-reset">Reset all progress</button>
+      <input type="file" id="pr-file" accept="application/json,.json" class="sr-only" tabindex="-1" aria-label="Choose a progress file to import">
+    </div>
+    <div id="pr-status" class="pr-status" role="status" aria-live="polite"></div>
+  </section>
+</main>
+<script src="js/common.js"></script>
+<script src="js/catalog.js"></script>
+<script src="js/progress-stats.js"></script>
+<script src="js/progress.js"></script>
+</body>
+</html>

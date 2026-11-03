@@ -234,7 +234,7 @@ function startNumberBox(){
     saveScore('numberbox', avg, label);
     setStats('');
     setPanel(`<div class="result-card">
-      <h3>NumberBox complete</h3>
+      <h2>NumberBox complete</h2>
       <div class="result-num">${score}<span style="font-size:2rem;color:var(--muted)">/${TOTAL}</span></div>
       <div class="result-sub">Solved · Avg time: ${avgS}s</div>
       <button class="again-btn" onclick="startNumberBox()">Play again</button>
@@ -243,7 +243,7 @@ function startNumberBox(){
 
   setStats('');
   setPanel(`<div class="start-card">
-    <h3>NumberBox</h3>
+    <h2>NumberBox</h2>
     <p>Four numbers sit at the corners. Combine any two using +&nbsp;−&nbsp;×&nbsp;÷ to create an intermediate result (shown in purple). Keep combining — using all four originals — until you reach the target. 5 puzzles.</p>
     <button class="big-btn" onclick="nbGo()">Begin</button>
   </div>`);
